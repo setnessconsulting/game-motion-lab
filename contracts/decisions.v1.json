@@ -1,0 +1,76 @@
+{
+  "contractId": "motion-lab.decisions",
+  "version": "1.0.0",
+  "status": "frozen",
+  "jiraAuthority": "GAME-382",
+  "frozenBy": "GAME-383",
+  "sourceDocument": "docs/DECISIONS.md",
+  "changeControl": {
+    "frozenChangeRequires": [
+      "documented implementation finding",
+      "entry in this register",
+      "jira reference",
+      "owner authorization where architectural, privacy-affecting, or scope/science-altering"
+    ]
+  },
+  "frozen": [
+    { "id": "D-001", "decision": "science authority is a pure TypeScript package with no DOM, React, Phaser, storage or network dependency", "ownedBy": "docs/ARCHITECTURE.md" },
+    { "id": "D-002", "decision": "React and Phaser are presentation only, coupled by a typed view model and bounded intents", "ownedBy": "docs/adr/0002-react-phaser-presentation-boundary.md" },
+    { "id": "D-003", "decision": "motion is analytical and 1D; no physics engine or numerical integrator produces an authoritative value", "ownedBy": "docs/adr/0003-analytical-1d-motion-over-rigid-body-engine.md" },
+    { "id": "D-004", "decision": "SI units, +x is rightward, x0 = 0 and v0 = 0 by default, inertial lab frame", "ownedBy": "docs/SCIENCE_MODEL.md" },
+    { "id": "D-005", "decision": "governing relations are Fnet = sum(F), a = Fnet/m, v(t) = v0 + a*t, x(t) = x0 + v0*t + 0.5*a*t^2", "ownedBy": "docs/SCIENCE_MODEL.md" },
+    { "id": "D-006", "decision": "resistive force exists only when explicitly declared, is constant within a segment and opposes the declared motion; drag and friction transitions are out of v1", "ownedBy": "docs/SCIENCE_MODEL.md" },
+    { "id": "D-007", "decision": "authoritative values are never rounded; display rounding uses one canonical round-half-away-from-zero rule and never feeds back", "ownedBy": "docs/adr/0004-display-rounding-separated-from-correctness.md" },
+    { "id": "D-008", "decision": "numeric answer tolerance is authored and recorded; categorical answers are exact; a sign error always fails", "ownedBy": "docs/SCIENCE_MODEL.md" },
+    { "id": "D-009", "decision": "one independent variable changes at a time in every assessed comparison", "ownedBy": "docs/CURRICULUM.md" },
+    { "id": "D-010", "decision": "v1 is bounded to the 1D NGSS MS-PS2-2 slice; projectile, rotational, collision, energy and momentum curriculum is out of scope", "ownedBy": "docs/CURRICULUM.md" },
+    { "id": "D-011", "decision": "difficulty increases through reasoning burden, not numeric size", "ownedBy": "docs/CURRICULUM.md" },
+    { "id": "D-012", "decision": "four canonical mission families are the v1 content set", "ownedBy": "docs/MISSIONS.md" },
+    { "id": "D-013", "decision": "Thruster Test carries the mandated graph-interpretation requirement", "ownedBy": "docs/MISSIONS.md" },
+    { "id": "D-014", "decision": "Mystery Cart is diagnosed from controlled evidence, never an answer key", "ownedBy": "docs/MISSIONS.md" },
+    { "id": "D-015", "decision": "scored comparators are PhET Forces and Motion: Basics, Algodoo and Poly Bridge 3; Kerbal Space Program is reference-only", "ownedBy": "docs/COMPARATORS.md" },
+    { "id": "D-016", "decision": "quality scorecard rows and Meets/Below definitions are frozen, including gate summaries", "ownedBy": "docs/QUALITY_SCORECARD.md" },
+    { "id": "D-017", "decision": "the complete investigation is completable with semantic controls without precision canvas interaction", "ownedBy": "docs/ACCESSIBILITY.md" },
+    { "id": "D-018", "decision": "automated accessibility checks never constitute accessibility sign-off; manual evidence is required and never fabricated", "ownedBy": "docs/ACCESSIBILITY.md" },
+    { "id": "D-019", "decision": "the learner runtime is local-first with no accounts, trackers, telemetry, LLM calls or remote learner data", "ownedBy": "docs/adr/0005-local-first-no-learner-telemetry.md" },
+    { "id": "D-020", "decision": "no third-party observability SDK ships to measure performance", "ownedBy": "docs/PERFORMANCE.md" },
+    { "id": "D-021", "decision": "performance is a measurement methodology plus a pinned ML-02 baseline; thresholds are not invented to pass an issue", "ownedBy": "docs/PERFORMANCE.md" },
+    { "id": "D-022", "decision": "every production scenario carries a complete schema-valid provenance manifest; an unreviewed scenario may not ship", "ownedBy": "docs/PROVENANCE.md" },
+    { "id": "D-023", "decision": "every nontrivial asset records origin, tool or author, license and derivation; unknown-origin assets may not ship", "ownedBy": "docs/PROVENANCE.md" },
+    { "id": "D-024", "decision": "released candidates are immutable and identified by source SHA, lockfile digest, version, build hash, prefix and games-site pointer", "ownedBy": "docs/RELEASE.md" },
+    { "id": "D-025", "decision": "promotion selects an already-qualified artifact without rebuild; rollback is exercised and never mutates immutable artifacts", "ownedBy": "docs/RELEASE.md" },
+    { "id": "D-026", "decision": "technology baseline is TypeScript, React 19, Vite, Phaser 4.2.1, SVG/React graphs, Vitest, Playwright, axe-core, Figma, Web Audio", "ownedBy": "docs/adr/0006-frozen-technology-baseline.md" },
+    { "id": "D-027", "decision": "LevelBest integration is out of scope for GAME-382 and must not be added", "ownedBy": "docs/RELEASE.md" },
+    { "id": "D-028", "decision": "ML-11 is a hard gate: no production content expansion or final polish before the vertical slice proves the loop", "ownedBy": "docs/DEFINITION_OF_DONE.md" },
+    { "id": "D-029", "decision": "target grade band is 6-8 and instructional copy targets a grade 6-7 reading level", "ownedBy": "docs/PRODUCT.md" },
+    { "id": "D-030", "decision": "session shape is one self-contained mission of 6-12 minutes with no hub, currency or unlock grind", "ownedBy": "docs/PRODUCT.md" }
+  ],
+  "delegated": [
+    { "id": "G-01", "deferredTo": "ML-02", "decision": "exact performance thresholds and budgets", "guardrail": "set with the baseline capture and versioned next to it; may not loosen the frozen methodology" },
+    { "id": "G-02", "deferredTo": "ML-02", "decision": "exact package manager, lockfile and CI workflow shape", "guardrail": "credential-free and runs the same authoritative commands locally" },
+    { "id": "G-03", "deferredTo": "ML-02", "decision": "Phaser chunk lazy-loading strategy", "guardrail": "must not change the science authority or add a remote asset or telemetry path" },
+    { "id": "G-04", "deferredTo": "ML-05", "decision": "exact scenario values, mission copy and variant seeds", "guardrail": "must stay within the frozen numeric bands and content rules" },
+    { "id": "G-05", "deferredTo": "ML-05", "decision": "exact golden-trace format", "guardrail": "must stay human-readable enough for independent science review" },
+    { "id": "G-06", "deferredTo": "ML-07", "decision": "instrument presentation details", "guardrail": "values stay textually available and never derive from renderer state" },
+    { "id": "G-07", "deferredTo": "ML-09", "decision": "exact graph domain/scale selection algorithm", "guardrail": "deterministic and tested, labelled axes, no misleading axes, always a table equivalent" },
+    { "id": "G-08", "deferredTo": "ML-10", "decision": "exact scoring weights and hint framing", "guardrail": "keeps prediction, validity, evidence and claim separable; rewards reasoning not dexterity; never reveals an answer key; adds no pressure mechanic" },
+    { "id": "G-09", "deferredTo": "ML-10", "decision": "exact retry bound", "guardrail": "unlimited or clearly bounded and non-punitive" },
+    { "id": "G-10", "deferredTo": "ML-12", "decision": "production art and audio asset list", "guardrail": "original, provenance-recorded and IP-separated from comparators" },
+    { "id": "G-11", "deferredTo": "ML-13", "decision": "number of variants per family and their value sets", "guardrail": "variants preserve the assessed relationship and do not require re-review of the science contract" },
+    { "id": "G-12", "deferredTo": "ML-DESIGN", "decision": "detailed visual and interaction design including responsive breakpoints", "guardrail": "no visual implies a science value inconsistent with authoritative state; semantic DOM controls preserved; reduced-motion, non-colour and focus states included" }
+  ],
+  "ownerGated": [
+    { "id": "O-01", "gate": "production design authority", "ownerAction": "provide or approve a real Figma file or equivalent recorded production design authority", "issue": "GAME-387" },
+    { "id": "O-02", "gate": "science review", "ownerAction": "named reviewer independently reviews scenario science and closes high-severity findings", "issue": "GAME-389/GAME-397/GAME-400" },
+    { "id": "O-03", "gate": "target-age learner playtest", "ownerAction": "observe an actual target-age learner on the exact candidate", "issue": "GAME-395/GAME-400" },
+    { "id": "O-04", "gate": "manual accessibility review", "ownerAction": "human keyboard, screen-reader, zoom, reduced-motion and non-colour review", "issue": "GAME-400" },
+    { "id": "O-05", "gate": "real device and browser observation", "ownerAction": "observe the candidate on real hardware", "issue": "GAME-400" },
+    { "id": "O-06", "gate": "production promotion authorization", "ownerAction": "authorize promoting the exact approved candidate", "issue": "GAME-401" },
+    { "id": "O-07", "gate": "rollback authorization", "ownerAction": "authorize and serve the production rollback rehearsal", "issue": "GAME-401" }
+  ],
+  "openDecisions": [],
+  "openDecisionsStatement": "No decision remains open that can materially change ML-02 through ML-11.",
+  "changeLog": [
+    { "date": "2026-09-24", "entry": "ML-01 initial freeze", "change": "D-001..D-030, G-01..G-12, O-01..O-07 established" }
+  ]
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vite/
+.lighthouseci/
+playwright-report/
+test-results/
+performance-results/
+*.local
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example

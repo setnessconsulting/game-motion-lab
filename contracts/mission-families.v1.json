@@ -1,0 +1,142 @@
+{
+  "contractId": "motion-lab.mission-families",
+  "version": "1.0.0",
+  "status": "frozen",
+  "jiraAuthority": "GAME-382",
+  "frozenBy": "GAME-383",
+  "sourceDocument": "docs/MISSIONS.md",
+  "targetStandard": "NGSS MS-PS2-2",
+  "investigationRule": "one independent variable changes at a time in every assessed comparison",
+  "difficultyLevels": [
+    { "id": "guided", "description": "the game identifies the variable to change" },
+    { "id": "supported", "description": "the learner chooses which variable should change" },
+    { "id": "independent", "description": "the learner designs the controlled trial" },
+    { "id": "diagnosis", "description": "the learner determines which experiments distinguish competing explanations" },
+    { "id": "evidence-challenge", "description": "the learner must support a claim with multiple trials and/or graphs" }
+  ],
+  "families": [
+    {
+      "id": "calibration-run",
+      "name": "Calibration Run",
+      "primaryConcept": "balanced versus unbalanced force and net-force reasoning",
+      "scienceQuestion": "What is the net force on the cart, and how does the cart's motion reflect it?",
+      "independentVariable": "two collinear applied forces (or one force versus none)",
+      "dependentVariable": "resulting motion: rest, constant velocity, or accelerated motion",
+      "controlledVariables": ["mass", "initialVelocity", "resistiveForce", "observationWindow"],
+      "expectedRelationship": "equal-and-opposite forces give Fnet = 0 and no change in motion; unequal opposing forces give a signed nonzero Fnet and a = Fnet/m directed toward the larger force",
+      "requiredEvidence": "at least one balanced trial and one unbalanced trial compared on net force, acceleration, and resulting motion",
+      "misconceptions": [
+        "balanced forces mean the object is stopped",
+        "a constant push means constant speed",
+        "the object stores force"
+      ],
+      "difficultyLevels": ["guided", "supported", "independent"],
+      "graphRequirement": { "level": "none", "graphs": [], "note": "numeric instruments suffice" },
+      "answerKeyBounded": true
+    },
+    {
+      "id": "thruster-test",
+      "name": "Thruster Test",
+      "primaryConcept": "greater applied force produces greater acceleration at constant mass",
+      "scienceQuestion": "How does the change in the cart's motion depend on the applied force when mass is controlled?",
+      "independentVariable": "applied force",
+      "dependentVariable": "acceleration and change in velocity",
+      "controlledVariables": ["mass", "initialVelocity", "resistiveForce", "observationWindow"],
+      "expectedRelationship": "at constant mass a = Fnet/m, so acceleration is proportional to force; doubling force doubles acceleration",
+      "requiredEvidence": "two trials differing only in force with acceleration and/or the velocity-time slope compared, naming mass as the controlled variable",
+      "misconceptions": [
+        "more force always means a bigger speed rather than a bigger change",
+        "a longer run means more force",
+        "force and acceleration are unrelated"
+      ],
+      "difficultyLevels": ["guided", "supported", "independent", "evidence-challenge"],
+      "graphRequirement": {
+        "level": "required",
+        "graphs": ["velocity-time"],
+        "note": "the mandated graph-interpretation requirement: the slope of the velocity-time graph is the acceleration"
+      },
+      "answerKeyBounded": true
+    },
+    {
+      "id": "cargo-load-test",
+      "name": "Cargo Load Test",
+      "primaryConcept": "greater mass produces less acceleration at constant applied force",
+      "scienceQuestion": "How does the change in motion depend on the cart's mass when the applied force is controlled?",
+      "independentVariable": "cart mass",
+      "dependentVariable": "acceleration and change in velocity",
+      "controlledVariables": ["appliedForce", "initialVelocity", "resistiveForce", "observationWindow"],
+      "expectedRelationship": "at constant net force a = Fnet/m, so acceleration is inversely proportional to mass; doubling mass halves acceleration",
+      "requiredEvidence": "two trials differing only in mass with acceleration compared and the applied force explicitly identified as controlled",
+      "misconceptions": [
+        "a heavier cart always accelerates less for any reason, independent of force",
+        "changing mass and force together is still a controlled test"
+      ],
+      "difficultyLevels": ["guided", "supported", "independent", "evidence-challenge"],
+      "graphRequirement": {
+        "level": "optional",
+        "graphs": ["position-time"],
+        "note": "a more curved position-time trace indicates greater acceleration; never the only path to the data"
+      },
+      "answerKeyBounded": true
+    },
+    {
+      "id": "mystery-cart",
+      "name": "Mystery Cart Investigation",
+      "primaryConcept": "diagnose one bounded hidden cause from controlled experimental evidence",
+      "scienceQuestion": "Which of the bounded explanations is consistent with the experimental evidence?",
+      "independentVariable": "learner-chosen comparison variable",
+      "dependentVariable": "which bounded explanation the evidence supports",
+      "controlledVariables": ["declared per variant"],
+      "expectedRelationship": "exactly one declared candidate cause is consistent with the controlled comparisons; each competing explanation predicts a distinguishable deficit pattern",
+      "requiredEvidence": "at least two controlled comparisons that distinguish the candidate explanations; a single uncontrolled observation does not count",
+      "misconceptions": [
+        "one anomalous observation is enough to name a cause",
+        "a comparison in which two variables changed can still isolate a cause",
+        "the cart is faulty because it is slower than a sibling measured under different conditions"
+      ],
+      "difficultyLevels": ["independent", "diagnosis", "evidence-challenge"],
+      "graphRequirement": {
+        "level": "required",
+        "graphs": ["velocity-time"],
+        "note": "at least one variant requires overlaying two velocity-time traces to compare slopes; the semantic table exposes the same data"
+      },
+      "answerKeyBounded": true,
+      "candidateCauses": [
+        {
+          "id": "incorrect-cargo-mass",
+          "manifestation": "lower than expected acceleration at nominal force",
+          "distinguishingTest": "vary mass with force controlled; the anomalous trial matches the heavier-mass curve"
+        },
+        {
+          "id": "weak-thruster",
+          "manifestation": "lower than expected acceleration at nominal mass",
+          "distinguishingTest": "vary force at nominal mass; the anomalous trial matches the lower-force curve"
+        },
+        {
+          "id": "unexpected-resistive-force",
+          "manifestation": "lower than expected acceleration that tracks the declared resistive force",
+          "distinguishingTest": "compare a run with the resistive force declared zero against one with it declared"
+        },
+        {
+          "id": "correct-calibration",
+          "manifestation": "every trial matches the nominal model within tolerance",
+          "distinguishingTest": "every controlled comparison matches prediction within tolerance"
+        }
+      ]
+    }
+  ],
+  "contentRules": [
+    "original-content-only",
+    "one-independent-variable-per-assessed-comparison",
+    "small-deliberate-numbers-within-frozen-bands",
+    "variants-preserve-the-assessed-relationship",
+    "provenance-manifest-required-for-every-scenario",
+    "at-least-one-scenario-requires-graph-interpretation",
+    "no-answer-key-guessing-solvable"
+  ],
+  "graphInterpretationRequirement": {
+    "satisfied": true,
+    "satisfiedBy": "thruster-test",
+    "alsoRequiredBy": ["mystery-cart"]
+  }
+}

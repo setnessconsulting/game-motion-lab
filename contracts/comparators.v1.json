@@ -1,0 +1,90 @@
+{
+  "contractId": "motion-lab.comparators",
+  "version": "1.0.0",
+  "status": "frozen",
+  "jiraAuthority": "GAME-382",
+  "frozenBy": "GAME-383",
+  "sourceDocument": "docs/COMPARATORS.md",
+  "ipBoundary": {
+    "permitted": [
+      "learning from a comparator's mechanics and quality level",
+      "describing the gap in our own words"
+    ],
+    "prohibited": [
+      "comparator art, sprites, textures, models or audio",
+      "comparator UI layouts, control placements or iconography",
+      "comparator names, brands, logos or trademarks in the product or its assets",
+      "comparator story, characters, mission text or dialogue",
+      "comparator level designs, track shapes or scene composition",
+      "any bundled, downloaded or CDN-fetched comparator asset"
+    ],
+    "reviewOwner": "GAME-400",
+    "unresolvedOriginalityFindingIsReleaseBlocking": true
+  },
+  "scored": [
+    {
+      "id": "phet-forces-and-motion-basics",
+      "name": "PhET Forces and Motion: Basics",
+      "scored": true,
+      "informsDimensionRows": ["Q-01", "Q-02", "Q-03", "Q-04"],
+      "whyItIsTheBar": "makes force, net force and motion legible and inspectable with honest readouts",
+      "whereMotionLabMustDiffer": "more game-like and more instructionally bounded; matching its openness would be a regression",
+      "doNotBorrow": ["layout", "control arrangement", "colour scheme", "copy", "simulation framing"]
+    },
+    {
+      "id": "algodoo",
+      "name": "Algodoo",
+      "scored": true,
+      "informsDimensionRows": ["Q-02", "Q-07", "Q-08", "Q-09", "Q-10"],
+      "whyItIsTheBar": "visible cause and effect, immediate measurement, graphs close to the experiment, fast iteration",
+      "whereMotionLabMustDiffer": "stays much more instructionally bounded; unconstrained exploration is out of scope",
+      "doNotBorrow": ["tools", "UI", "scene styling", "sandbox-first structure"]
+    },
+    {
+      "id": "poly-bridge-3",
+      "name": "Poly Bridge 3",
+      "scored": true,
+      "informsDimensionRows": ["Q-10", "Q-11", "Q-12", "Q-13", "Q-14"],
+      "whyItIsTheBar": "tight, satisfying build-test-revise loop with informative failure and cheap revision",
+      "whereMotionLabMustDiffer": "iteration is a scientific iteration, not a structural-engineering iteration; no budget economy or star-rating pressure",
+      "doNotBorrow": ["visual identity", "bridge or vehicle content", "art", "audio", "level design"]
+    }
+  ],
+  "referenceOnly": [
+    {
+      "id": "kerbal-space-program",
+      "name": "Kerbal Space Program",
+      "scored": false,
+      "globallyScoredAgainstMotionLab": false,
+      "usedFor": ["mission fantasy", "scientific agency", "purposeful instruments"],
+      "usageBoundary": "informs qualitative ML-16 discussion only; never a global score",
+      "doNotBorrow": ["names", "art", "audio", "story", "characters", "content"]
+    }
+  ],
+  "dimensionMapping": [
+    { "row": "Q-01", "dimension": "Scientific clarity", "comparators": ["phet-forces-and-motion-basics"] },
+    { "row": "Q-02", "dimension": "Measurement clarity", "comparators": ["phet-forces-and-motion-basics", "algodoo"] },
+    { "row": "Q-03", "dimension": "Visual force representation", "comparators": ["phet-forces-and-motion-basics"] },
+    { "row": "Q-04", "dimension": "Inspectability of authoritative state", "comparators": ["phet-forces-and-motion-basics"] },
+    { "row": "Q-05", "dimension": "Evidence dependence", "comparators": [] },
+    { "row": "Q-06", "dimension": "Graph interpretation required", "comparators": [] },
+    { "row": "Q-07", "dimension": "Experimentation / trial design", "comparators": ["algodoo"] },
+    { "row": "Q-08", "dimension": "Visual cause-and-effect", "comparators": ["algodoo"] },
+    { "row": "Q-09", "dimension": "Graph usability and honesty", "comparators": ["algodoo"] },
+    { "row": "Q-10", "dimension": "Rapid trial iteration", "comparators": ["algodoo", "poly-bridge-3"] },
+    { "row": "Q-11", "dimension": "Revision / recovery cycle", "comparators": ["poly-bridge-3"] },
+    { "row": "Q-12", "dimension": "Game feel / immediate feedback", "comparators": ["poly-bridge-3"] },
+    { "row": "Q-13", "dimension": "Clarity of simulation outcome", "comparators": ["poly-bridge-3"] },
+    { "row": "Q-14", "dimension": "Presentation quality", "comparators": ["poly-bridge-3"] },
+    { "row": "Q-15", "dimension": "Mission clarity (first use)", "comparators": [] },
+    { "row": "Q-16", "dimension": "Deterministic authority separation", "comparators": [] },
+    { "row": "Q-17", "dimension": "Determinism and replay", "comparators": [] },
+    { "row": "Q-18", "dimension": "Accessibility / input parity", "comparators": [] },
+    { "row": "Q-19", "dimension": "Performance / responsiveness", "comparators": [] },
+    { "row": "Q-20", "dimension": "Privacy integrity", "comparators": [] },
+    { "row": "Q-21", "dimension": "Originality / IP separation", "comparators": [] },
+    { "row": "Q-22", "dimension": "Content completeness", "comparators": [] },
+    { "row": "Q-23", "dimension": "Content originality of science copy", "comparators": [] }
+  ],
+  "accessibilityNote": "Motion Lab's accessibility bar is deliberately higher than every comparator's; comparator scores never justify lowering it."
+}
