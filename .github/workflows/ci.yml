@@ -1,0 +1,81 @@
+name: CI
+
+# GAME-384 requires CI to use the same authoritative commands that run locally, to be
+# credential-free, and to add no learner-runtime network path. This workflow installs
+# nothing from a private registry, needs no secrets, and does not deploy anything.
+#
+# The authoritative local equivalent is:  npm run verify
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      MOTION_LAB_PORT: "4183"
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Contract and foundation consistency
+        run: |
+          npm run contracts
+          npm run foundation
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (includes the science/domain import boundary)
+        run: npm run lint
+
+      - name: Unit and architecture tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Bundle budget against the pinned baseline
+        run: npm run perf:check
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser lanes (semantic shell, accessibility)
+        run: |
+          npm run test:e2e:run
+          npm run test:a11y
+
+      - name: Real Phaser renderer lane and performance capture
+        run: npm run test:phaser-render
+
+      - name: Upload performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: motion-lab-performance-${{ github.sha }}
+          path: performance-results/
+          if-no-files-found: warn
+          retention-days: 14

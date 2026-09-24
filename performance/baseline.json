@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "milestone": "ML-02",
+  "jiraAuthority": "GAME-382",
+  "capturedBy": "GAME-384",
+  "sourceSha": "9d775ba78ab9c02f9aedca75acf1d4437d7c64bb",
+  "sourceBranch": "main",
+  "workingTreeDirty": true,
+  "capturedAt": "2026-09-24T22:27:14.132Z",
+  "toolchain": {
+    "node": "v24.15.0",
+    "platform": "win32-x64"
+  },
+  "measurementLabels": {
+    "bundle": "exact production build output (Vite), gzip level 9",
+    "lcpCls": "browser lab (Chromium via Playwright, PerformanceObserver) - NOT field data",
+    "field": "unavailable: no learner telemetry and no public CrUX-eligible route",
+    "lighthouse": "not run: not a repository dependency; see docs/PERFORMANCE.md"
+  },
+  "bundle": {
+    "bucketsGzipBytes": {
+      "initialJs": 65283,
+      "gameChunk": 353743,
+      "rendererChunk": 1825,
+      "css": 1512,
+      "html": 452,
+      "other": 0
+    },
+    "totalGzipBytes": 422815,
+    "assets": [
+      {
+        "path": "index.html",
+        "rawBytes": 823,
+        "gzipBytes": 452,
+        "kind": "html"
+      },
+      {
+        "path": "assets/index-BmbtKz38.css",
+        "rawBytes": 4263,
+        "gzipBytes": 1512,
+        "kind": "css"
+      },
+      {
+        "path": "assets/index-DK2lFn6j.js",
+        "rawBytes": 210699,
+        "gzipBytes": 65283,
+        "kind": "initialJs"
+      },
+      {
+        "path": "assets/phaser-CTbIuaw5.js",
+        "rawBytes": 1374548,
+        "gzipBytes": 353743,
+        "kind": "gameChunk"
+      },
+      {
+        "path": "assets/renderer-DSuC6foh.js",
+        "rawBytes": 3898,
+        "gzipBytes": 1825,
+        "kind": "rendererChunk"
+      }
+    ]
+  },
+  "runtimeMetrics": {
+    "lcpMs": 148,
+    "cls": 0.0008393338521321615,
+    "domContentLoadedMs": 38,
+    "longTasks": {
+      "count": 1,
+      "maxMs": 94,
+      "totalMs": 94
+    },
+    "firstUsefulActionMs": 90,
+    "inputToFrameMs": 13.400000000372529,
+    "stateTransitionMs": 11,
+    "rendererFramesPerSecond": 61,
+    "heapStartBytes": 17100000,
+    "heapEndBytes": 17100000,
+    "recordedAt": "2026-09-24T22:27:02.547Z"
+  },
+  "runtimeMetricsReason": null,
+  "regressionTolerance": {
+    "initialJsGzipRatio": 0.05,
+    "gameChunkGzipRatio": 0.05,
+    "totalPayloadGzipRatio": 0.05,
+    "rationale": "Set alongside the ML-02 baseline (delegated decision G-01). A 5% band absorbs build-tool noise without hiding a real payload regression."
+  }
+}

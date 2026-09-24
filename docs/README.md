@@ -32,6 +32,8 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 | [`PROVENANCE.md`](PROVENANCE.md) | scenario/science provenance schema | ML-05, ML-13, ML-14 |
 | [`RELEASE.md`](RELEASE.md) | candidate identity, qualification, promotion, rollback | ML-15, ML-PROMOTE, ML-18 |
 | [`DEFINITION_OF_DONE.md`](DEFINITION_OF_DONE.md) | issue and Epic Definition of Done | all |
+| [`BOOTSTRAP.md`](BOOTSTRAP.md) | clean-clone setup, local commands, package boundaries, renderer-failure behaviour | ML-02 onward |
+| [`PERFORMANCE_BASELINE.md`](PERFORMANCE_BASELINE.md) | the captured ML-02 performance baseline and its measurement labels | ML-11, ML-14 |
 
 ## Machine-readable contracts
 

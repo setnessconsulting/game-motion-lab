@@ -93,12 +93,42 @@ dependency-free checker that also asserts documentation/contract consistency:
 node scripts/verify-contracts.mjs
 ```
 
+## Local development and verification
+
+Requires **Node 24.x** (see `.nvmrc`) and npm. Full details, including the clean-clone steps and
+the package boundaries, are in [`docs/BOOTSTRAP.md`](docs/BOOTSTRAP.md).
+
+```bash
+npm ci
+npx playwright install chromium
+
+npm run dev            # development server
+npm run build          # production static build into dist/
+npm run test           # unit + architecture/purity tests
+npm run test:e2e:run   # semantic-shell browser lane
+npm run test:a11y      # axe-core lane (assistive, not sign-off)
+npm run test:phaser-render   # real Phaser renderer lane + performance capture
+npm run perf:baseline  # capture the exact-SHA performance baseline
+npm run perf:check     # compare the build against the pinned baseline
+npm run verify         # the whole credential-free gate (what CI runs)
+```
+
 ## Status
 
-This repository is at **ML-01 (GAME-383)**: product, NGSS, science, architecture, comparator,
-quality, accessibility, privacy, provenance, performance, and release contracts are frozen before
-implementation begins. The application foundation, physics kernel, content, renderer, and release
-work are the downstream GAME-382 children.
+**ML-01 (GAME-383) — complete and merged.** Product, NGSS, science, architecture, comparator,
+quality, accessibility, privacy, provenance, performance, and release contracts are frozen in
+[`docs/`](docs/), [`contracts/`](contracts/), and [`docs/adr/`](docs/adr/), and enforced by
+`npm run contracts`.
 
-No application build, test suite, or browser qualification exists yet. Nothing in this repository
-claims an unexecuted check passed.
+**ML-02 (GAME-384) — application foundation.** The repository now contains a React 19 +
+TypeScript + Vite application, the real Phaser 4.2.1 renderer, the enforceably separate
+science/domain/view-model/UI/renderer packages, the local verification commands and CI, and a
+pinned performance baseline.
+
+Only the **balanced-force** case (`Fnet = 0` → constant velocity) is implemented. The analytical
+physics kernel is GAME-386 (ML-03), the experiment/trial/evidence domain is GAME-388 (ML-04),
+the canonical missions are GAME-389 (ML-05), and the production renderer is GAME-390 (ML-06).
+No mission is scored, no graph is presented as evidence, and nothing here is a finished game.
+
+Unresolved independent review, science review, accessibility sign-off, playtest, promotion and
+rollback are **not** claimed anywhere in this repository.
