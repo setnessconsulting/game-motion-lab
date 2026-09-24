@@ -34,7 +34,7 @@ in `performance/` is committed, because it is evidence rather than scratch outpu
 
 | Concern | Value |
 | --- | --- |
-| Source SHA | `6efced8adcc506814e076f0a2a83785f391d7eda` |
+| Source SHA | `861b7d5bb9667824578d09c81688186147bbaec7` |
 | Branch | `g384-ml-02-foundation` (landed to `main`) |
 | Working tree | clean (`workingTreeDirty: false`) |
 | Node.js | 24.x (pinned by `.nvmrc`, `engines.node`) |
@@ -54,12 +54,12 @@ Production build output, gzip level 9. Buckets are defined in
 
 | Bucket | gzip |
 | --- | --- |
-| Initial JS (React + application shell) | 63.75 kB |
+| Initial JS (React + application shell) | 63.80 kB |
 | Game chunk (Phaser 4.2.1) | 345.45 kB |
 | Renderer chunk (scene wiring) | 1.78 kB |
 | CSS | 1.48 kB |
 | HTML | 0.44 kB |
-| **Total payload** | **412.91 kB** |
+| **Total payload** | **412.95 kB** |
 
 The Phaser chunk dominates the payload. That is expected and is the reason the renderer is a
 separate chunk: [`ARCHITECTURE.md`](ARCHITECTURE.md) allows the renderer to be loaded lazily, and
@@ -72,26 +72,30 @@ has evidence.
 
 | Metric | Baseline | Reading |
 | --- | --- | --- |
-| LCP | 152 ms | lab, Chromium |
+| LCP | 148 ms | lab, Chromium |
 | CLS | 0.0008 | lab, Chromium |
-| DOMContentLoaded | 41 ms | lab |
-| First useful action readiness | 232 ms | first mission action enabled |
-| Input-to-frame proxy | 6 ms | custom proxy, **not** INP (`PERFORMANCE.md` §3.5) |
-| State-transition latency | 9 ms | intent commit → authoritative state rendered |
-| Long tasks | 1 task, 119 ms max | during the bounded interaction window |
-| Phaser frames | 60 fps | during trajectory playback |
-| Heap across repeated trials | 17.1 MB → 17.1 MB | no upward trend in the measured window |
+| DOMContentLoaded | 39 ms | lab |
+| First useful action readiness | 90 ms | first mission action enabled |
+| Input-to-frame proxy | 10.9 ms | custom proxy, **not** INP (`PERFORMANCE.md` §3.5) |
+| State-transition latency | 6 ms | intent commit → authoritative state rendered |
+| Long tasks | 1 task, 100 ms max | during the bounded interaction window |
+| Phaser frames | 61 fps | during trajectory playback |
+| Heap across repeated trials | 16.1 MB → 16.1 MB | no upward trend in the measured window |
 
 Three honest readings of these numbers:
 
-1. **Wall-clock rows move between identical runs, and this document says so.** Two captures of the
-   *same* production build in the same browser on the same machine produced
-   `firstUsefulActionMs` 90 ms then 232 ms, `inputToFrameMs` 13.4 ms then 6 ms, and a longest task of
-   94 ms then 119 ms, while every bundle row and CLS were byte-identical. That spread is normal
-   cold-start variance on a shared workstation, and it is the reason `perf:check` enforces only the
-   deterministic bundle rows (§5) and reports runtime rows as deltas rather than failing on them.
-   Do not read a single runtime row as a hard bound, and do not tighten this baseline on the
+1. **Wall-clock rows move between identical runs, and this document says so.** Three captures in the
+   same browser on the same machine produced `firstUsefulActionMs` 90 / 232 / 90 ms,
+   `inputToFrameMs` 13.4 / 6 / 10.9 ms, a longest task of 94 / 119 / 100 ms, and a sampled heap of
+   17.1 / 17.1 / 16.1 MB — while every bundle row and CLS stayed effectively identical. That spread
+   is normal cold-start variance on a shared workstation, and it is the reason `perf:check` enforces
+   only the deterministic bundle rows (§5) and reports runtime rows as deltas rather than failing on
+   them. Do not read a single runtime row as a hard bound, and do not tighten this baseline on the
    strength of one lucky run.
+
+   The three captures are also evidence that the budget gate is not vacuous: the second budget check
+   after the hook refactor in §3 reported `initial JS 63.75 -> 63.80 kB gzip (+0.07%)`, which is a
+   real, detected delta of ~40 bytes rather than a check that always passes.
 2. **The one long task is the Phaser chunk being parsed and the game booting** — load-time cost, not
    interaction jank. It is the single most likely thing to regress as the real lab environment,
    instruments, and particle effects arrive in ML-06/ML-07. Later milestones should expect this
@@ -141,5 +145,6 @@ are never silently overwritten in a narrative. `performance/baseline.json` carri
 A baseline captured from a **dirty** working tree is a provisional capture: it describes code that
 is not yet any single commit. Such a capture must be superseded by a clean capture at the commit
 that lands the milestone before it is cited as the pinned reference. This record is a **clean**
-capture (`workingTreeDirty: false`) at `6efced8`, taken after the ML-02 work was committed, so it is
-citable as the pinned reference.
+capture (`workingTreeDirty: false`) at `861b7d5`, taken after the ML-02 work was committed, so it is
+citable as the pinned reference. The intermediate capture at `6efced8` was superseded by this one,
+because the hook-correctness commit changed emitted bytes.

@@ -3,10 +3,10 @@
   "milestone": "ML-02",
   "jiraAuthority": "GAME-382",
   "capturedBy": "GAME-384",
-  "sourceSha": "6efced8adcc506814e076f0a2a83785f391d7eda",
+  "sourceSha": "861b7d5bb9667824578d09c81688186147bbaec7",
   "sourceBranch": "g384-ml-02-foundation",
   "workingTreeDirty": false,
-  "capturedAt": "2026-09-24T22:29:22.474Z",
+  "capturedAt": "2026-09-24T22:32:38.654Z",
   "toolchain": {
     "node": "v24.15.0",
     "platform": "win32-x64"
@@ -19,14 +19,14 @@
   },
   "bundle": {
     "bucketsGzipBytes": {
-      "initialJs": 65283,
+      "initialJs": 65328,
       "gameChunk": 353743,
       "rendererChunk": 1825,
       "css": 1512,
       "html": 452,
       "other": 0
     },
-    "totalGzipBytes": 422815,
+    "totalGzipBytes": 422860,
     "assets": [
       {
         "path": "index.html",
@@ -41,9 +41,9 @@
         "kind": "css"
       },
       {
-        "path": "assets/index-DK2lFn6j.js",
-        "rawBytes": 210699,
-        "gzipBytes": 65283,
+        "path": "assets/index-KBLwjQ1E.js",
+        "rawBytes": 210696,
+        "gzipBytes": 65328,
         "kind": "initialJs"
       },
       {
@@ -61,21 +61,21 @@
     ]
   },
   "runtimeMetrics": {
-    "lcpMs": 152,
+    "lcpMs": 148,
     "cls": 0.0008393338521321615,
-    "domContentLoadedMs": 40.899999998509884,
+    "domContentLoadedMs": 38.79999999888241,
     "longTasks": {
       "count": 1,
-      "maxMs": 119,
-      "totalMs": 119
+      "maxMs": 100,
+      "totalMs": 100
     },
-    "firstUsefulActionMs": 232,
-    "inputToFrameMs": 6,
-    "stateTransitionMs": 9,
-    "rendererFramesPerSecond": 60,
-    "heapStartBytes": 17100000,
-    "heapEndBytes": 17100000,
-    "recordedAt": "2026-09-24T22:29:18.560Z"
+    "firstUsefulActionMs": 90,
+    "inputToFrameMs": 10.899999998509884,
+    "stateTransitionMs": 6,
+    "rendererFramesPerSecond": 61,
+    "heapStartBytes": 16100000,
+    "heapEndBytes": 16100000,
+    "recordedAt": "2026-09-24T22:32:34.798Z"
   },
   "runtimeMetricsReason": null,
   "regressionTolerance": {
