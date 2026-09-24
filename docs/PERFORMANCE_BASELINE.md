@@ -35,7 +35,7 @@ in `performance/` is committed, because it is evidence rather than scratch outpu
 
 | Concern | Value |
 | --- | --- |
-| Source SHA | `861b7d5bb9667824578d09c81688186147bbaec7` |
+| Source SHA | `919c872d7b4638bd50faf92c0fd71439f3d5f45e` |
 | Branch | `g384-ml-02-foundation` (landed to `main`) |
 | Working tree | clean (`workingTreeDirty: false`) |
 | Node.js | 24.x (pinned by `.nvmrc`, `engines.node`) |
@@ -73,30 +73,31 @@ has evidence.
 
 | Metric | Baseline | Reading |
 | --- | --- | --- |
-| LCP | 148 ms | lab, Chromium, unthrottled (the throttled Lighthouse LCP is a separate row in §4b) |
+| LCP | 144 ms | lab, Chromium, unthrottled (the throttled Lighthouse LCP is a separate row in §4b) |
 | CLS | 0.0008 | lab, Chromium |
-| DOMContentLoaded | 39 ms | lab |
-| First useful action readiness | 90 ms | first mission action enabled |
-| Input-to-frame proxy | 10.9 ms | custom proxy, **not** INP (`PERFORMANCE.md` §3.5) |
-| State-transition latency | 6 ms | intent commit → authoritative state rendered |
-| Long tasks | 1 task, 100 ms max | during the bounded interaction window |
+| DOMContentLoaded | 35 ms | lab |
+| First useful action readiness | 85 ms | first mission action enabled |
+| Input-to-frame proxy | 9.8 ms | custom proxy, **not** INP (`PERFORMANCE.md` §3.5) |
+| State-transition latency | 7 ms | intent commit → authoritative state rendered |
+| Long tasks | 1 task, 87 ms max | during the bounded interaction window |
 | Phaser frames | 61 fps | during trajectory playback |
 | Heap across repeated trials | 16.1 MB → 16.1 MB | no upward trend in the measured window |
 
 Three honest readings of these numbers:
 
-1. **Wall-clock rows move between identical runs, and this document says so.** Three captures in the
-   same browser on the same machine produced `firstUsefulActionMs` 90 / 232 / 90 ms,
-   `inputToFrameMs` 13.4 / 6 / 10.9 ms, a longest task of 94 / 119 / 100 ms, and a sampled heap of
-   17.1 / 17.1 / 16.1 MB — while every bundle row and CLS stayed effectively identical. That spread
-   is normal cold-start variance on a shared workstation, and it is the reason `perf:check` enforces
-   only the deterministic bundle rows (§5) and reports runtime rows as deltas rather than failing on
-   them. Do not read a single runtime row as a hard bound, and do not tighten this baseline on the
+1. **Wall-clock rows move between identical runs, and this document says so.** Five captures in the
+   same browser on the same machine produced `firstUsefulActionMs` 90 / 232 / 90 / 89 / 85 ms,
+   `inputToFrameMs` 13.4 / 6 / 10.9 / 10.2 / 9.8 ms, a longest task of 94 / 119 / 100 / 90 / 87 ms,
+   and a sampled heap of 17.1 / 17.1 / 16.1 / 16.1 / 16.1 MB — while every bundle row and CLS
+   stayed effectively identical. `lcpMs` in this lane moved 148 → 152 → 144. That spread is normal
+   cold-start variance on a shared workstation, and it is the reason `perf:check` enforces only the
+   deterministic bundle rows (§5) and reports runtime rows as deltas rather than failing on them.
+   Do not read a single runtime row as a hard bound, and do not tighten this baseline on the
    strength of one lucky run.
 
-   The three captures are also evidence that the budget gate is not vacuous: the second budget check
-   after the hook refactor in §3 reported `initial JS 63.75 -> 63.80 kB gzip (+0.07%)`, which is a
-   real, detected delta of ~40 bytes rather than a check that always passes.
+   The captures are also evidence that the budget gate is not vacuous: the budget check after the
+   hook refactor in §3 reported `initial JS 63.75 -> 63.80 kB gzip (+0.07%)`, a real, detected delta
+   of ~40 bytes rather than a check that always passes.
 2. **The one long task is the Phaser chunk being parsed and the game booting** — load-time cost, not
    interaction jank. It is the single most likely thing to regress as the real lab environment,
    instruments, and particle effects arrive in ML-06/ML-07. Later milestones should expect this
@@ -116,11 +117,14 @@ the IPv4 loopback and drives the Chromium that Playwright already installed (res
 | Metric | Baseline |
 | --- | --- |
 | Lighthouse performance score | 1.00 |
-| FCP | 1311 ms |
-| LCP | 1396 ms |
+| FCP | 1316 ms |
+| LCP | 1402 ms |
 | CLS | 0 |
-| TBT | 41 ms |
+| TBT | 59 ms |
 | Throttling | `simulate`, CPU ×4, RTT 150 ms, 1.6 Mbps, mobile form factor |
+
+TBT moved 41 → 51 → 59 ms across the three Lighthouse runs of this milestone, which is the same
+host-contention variance discussed in §4 and is why no score here is a gate.
 
 **A finding worth acting on downstream.** The first Lighthouse capture in this milestone measured
 LCP at **9061 ms** with a performance score of **0.53**, because the capture server served assets
@@ -131,6 +135,9 @@ LCP **1396 ms** and score **1.00**. The game's payload is dominated by the 1.37 
 - the numbers above assume gzip, and `performance/lighthouse.json` says so in
   `hostingAssumption`; if the games-site host does not compress text assets, every number here is
   pessimistic and must be re-captured;
+- the two Lighthouse LCP figures quoted here were measured in the same session against the same
+  build, differing only in whether the capture server compressed, so the 6× gap is attributable to
+  compression and not to run-to-run noise;
 - confirming the real host's compression and cache headers is therefore a **hosting requirement**,
   not a nicety, and belongs to ML-HOST/ML-15;
 - if the host cannot compress, the renderer chunk's lazy-loading strategy becomes load-bearing rather
@@ -183,6 +190,19 @@ are never silently overwritten in a narrative. `performance/baseline.json` carri
 A baseline captured from a **dirty** working tree is a provisional capture: it describes code that
 is not yet any single commit. Such a capture must be superseded by a clean capture at the commit
 that lands the milestone before it is cited as the pinned reference. This record is a **clean**
-capture (`workingTreeDirty: false`) at `861b7d5`, taken after the ML-02 work was committed, so it is
-citable as the pinned reference. The intermediate capture at `6efced8` was superseded by this one,
-because the hook-correctness commit changed emitted bytes.
+capture (`workingTreeDirty: false`, no source paths changed) at `919c872`, so it is citable as the
+pinned reference. Two earlier captures were superseded explicitly: `6efced8` because the
+hook-correctness commit changed emitted bytes, and `861b7d5` because the Lighthouse tooling and its
+`package.json` wiring changed.
+
+**On `workingTreeDirty`.** The flag asks a precise question — "does the measured *source* differ from
+`sourceSha`?" — and deliberately ignores the generated evidence directories, because this record
+embeds the SHA of the commit it describes and is itself a tracked file. Counting its own rewrite
+would make the flag permanently true and therefore meaningless. When it is true, the paths are
+listed in `workingTreeDirtyPaths` so the claim is diagnosable rather than mysterious.
+
+**A note on commit ordering.** SHA-bound evidence is inherently written one commit after the commit
+it names: `performance/baseline.json` names `919c872`, and the file itself lands in a later commit.
+That offset is expected and is not a mismatch. What would be a mismatch is a record naming a commit
+whose code was not the code measured, which is why `perf-baseline.mjs` refuses a Lighthouse row
+captured at a different SHA instead of quietly folding it in.
