@@ -3,10 +3,10 @@
   "milestone": "ML-02",
   "jiraAuthority": "GAME-382",
   "capturedBy": "GAME-384",
-  "sourceSha": "9d775ba78ab9c02f9aedca75acf1d4437d7c64bb",
-  "sourceBranch": "main",
-  "workingTreeDirty": true,
-  "capturedAt": "2026-09-24T22:27:14.132Z",
+  "sourceSha": "6efced8adcc506814e076f0a2a83785f391d7eda",
+  "sourceBranch": "g384-ml-02-foundation",
+  "workingTreeDirty": false,
+  "capturedAt": "2026-09-24T22:29:22.474Z",
   "toolchain": {
     "node": "v24.15.0",
     "platform": "win32-x64"
@@ -61,21 +61,21 @@
     ]
   },
   "runtimeMetrics": {
-    "lcpMs": 148,
+    "lcpMs": 152,
     "cls": 0.0008393338521321615,
-    "domContentLoadedMs": 38,
+    "domContentLoadedMs": 40.899999998509884,
     "longTasks": {
       "count": 1,
-      "maxMs": 94,
-      "totalMs": 94
+      "maxMs": 119,
+      "totalMs": 119
     },
-    "firstUsefulActionMs": 90,
-    "inputToFrameMs": 13.400000000372529,
-    "stateTransitionMs": 11,
-    "rendererFramesPerSecond": 61,
+    "firstUsefulActionMs": 232,
+    "inputToFrameMs": 6,
+    "stateTransitionMs": 9,
+    "rendererFramesPerSecond": 60,
     "heapStartBytes": 17100000,
     "heapEndBytes": 17100000,
-    "recordedAt": "2026-09-24T22:27:02.547Z"
+    "recordedAt": "2026-09-24T22:29:18.560Z"
   },
   "runtimeMetricsReason": null,
   "regressionTolerance": {

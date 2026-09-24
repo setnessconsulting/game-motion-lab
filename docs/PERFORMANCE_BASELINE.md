@@ -34,8 +34,9 @@ in `performance/` is committed, because it is evidence rather than scratch outpu
 
 | Concern | Value |
 | --- | --- |
-| Source SHA | recorded as `sourceSha` in `performance/baseline.json` |
-| Branch | `main` |
+| Source SHA | `6efced8adcc506814e076f0a2a83785f391d7eda` |
+| Branch | `g384-ml-02-foundation` (landed to `main`) |
+| Working tree | clean (`workingTreeDirty: false`) |
 | Node.js | 24.x (pinned by `.nvmrc`, `engines.node`) |
 | Platform | `win32-x64` |
 | Build mode | Vite production build, gzip measured at level 9 |
@@ -71,23 +72,31 @@ has evidence.
 
 | Metric | Baseline | Reading |
 | --- | --- | --- |
-| LCP | 148 ms | lab, Chromium |
+| LCP | 152 ms | lab, Chromium |
 | CLS | 0.0008 | lab, Chromium |
-| DOMContentLoaded | 38 ms | lab |
-| First useful action readiness | 90 ms | first mission action enabled |
-| Input-to-frame proxy | 13.4 ms | custom proxy, **not** INP (`PERFORMANCE.md` §3.5) |
-| State-transition latency | 11 ms | intent commit → authoritative state rendered |
-| Long tasks | 1 task, 94 ms max | during the bounded interaction window |
-| Phaser frames | 61 fps | during trajectory playback |
+| DOMContentLoaded | 41 ms | lab |
+| First useful action readiness | 232 ms | first mission action enabled |
+| Input-to-frame proxy | 6 ms | custom proxy, **not** INP (`PERFORMANCE.md` §3.5) |
+| State-transition latency | 9 ms | intent commit → authoritative state rendered |
+| Long tasks | 1 task, 119 ms max | during the bounded interaction window |
+| Phaser frames | 60 fps | during trajectory playback |
 | Heap across repeated trials | 17.1 MB → 17.1 MB | no upward trend in the measured window |
 
-Two honest readings of these numbers:
+Three honest readings of these numbers:
 
-1. **The one 94 ms long task is the Phaser chunk being parsed and the game booting.** It is
-   load-time cost, not interaction jank, and it is the single most likely thing to regress as the
-   real lab environment, instruments, and particle effects arrive in ML-06/ML-07. Later milestones
-   should expect this number to move and should attribute it explicitly.
-2. **The memory window is small.** ML-02 only exercises the bootstrap path, and heap start and end
+1. **Wall-clock rows move between identical runs, and this document says so.** Two captures of the
+   *same* production build in the same browser on the same machine produced
+   `firstUsefulActionMs` 90 ms then 232 ms, `inputToFrameMs` 13.4 ms then 6 ms, and a longest task of
+   94 ms then 119 ms, while every bundle row and CLS were byte-identical. That spread is normal
+   cold-start variance on a shared workstation, and it is the reason `perf:check` enforces only the
+   deterministic bundle rows (§5) and reports runtime rows as deltas rather than failing on them.
+   Do not read a single runtime row as a hard bound, and do not tighten this baseline on the
+   strength of one lucky run.
+2. **The one long task is the Phaser chunk being parsed and the game booting** — load-time cost, not
+   interaction jank. It is the single most likely thing to regress as the real lab environment,
+   instruments, and particle effects arrive in ML-06/ML-07. Later milestones should expect this
+   number to move and should attribute the movement explicitly.
+3. **The memory window is small.** ML-02 only exercises the bootstrap path, and heap start and end
    are identical to the recorded precision. This is a *baseline*, not proof of long-session
    stability; repeated-trial memory stability must be re-measured once trials are real
    ([`PERFORMANCE.md`](PERFORMANCE.md) §2).
@@ -131,4 +140,6 @@ are never silently overwritten in a narrative. `performance/baseline.json` carri
 
 A baseline captured from a **dirty** working tree is a provisional capture: it describes code that
 is not yet any single commit. Such a capture must be superseded by a clean capture at the commit
-that lands the milestone before it is cited as the pinned reference.
+that lands the milestone before it is cited as the pinned reference. This record is a **clean**
+capture (`workingTreeDirty: false`) at `6efced8`, taken after the ML-02 work was committed, so it is
+citable as the pinned reference.
