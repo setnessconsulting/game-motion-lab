@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "milestone": "ML-02",
+  "jiraAuthority": "GAME-382",
+  "capturedBy": "GAME-384",
+  "sourceSha": "919c872d7b4638bd50faf92c0fd71439f3d5f45e",
+  "workingTreeDirty": false,
+  "capturedAt": "2026-09-24T22:41:26.016Z",
+  "target": "http://127.0.0.1:4193/",
+  "measurementLabel": "Lighthouse LAB measurement of the production dist/ served over loopback with gzip and default simulated throttling; NOT field data",
+  "hostingAssumption": "Responses were gzipped because a production static host compresses text assets. If the games-site host does not compress, every number here is pessimistic and must be re-captured. ML-HOST/ML-15 must confirm the real host's compression and cache headers.",
+  "toolchain": {
+    "node": "v24.15.0",
+    "lighthouse": "13.5.0",
+    "chrome": "C:\\Users\\setne\\AppData\\Local\\ms-playwright\\chromium-1243\\chrome-win64\\chrome.exe",
+    "platform": "win32-x64"
+  },
+  "metrics": {
+    "performanceScore": 1,
+    "lcpMs": 1401.9895,
+    "cls": 0,
+    "tbtMs": 59,
+    "fcpMs": 1315.99125,
+    "speedIndexMs": 1315.99125,
+    "bootupTimeMs": 616.2960000000021,
+    "mainThreadWorkMs": 1412.040000000002,
+    "throttling": {
+      "method": "simulate",
+      "cpuSlowdownMultiplier": 4,
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "formFactor": "mobile"
+    },
+    "emulatedDevice": "mobile",
+    "lighthouseVersion": "13.5.0"
+  },
+  "accessibilityAuditScoreNotSignOff": 1,
+  "thresholds": {
+    "enforced": false,
+    "reason": "No Lighthouse score is a project threshold. Scores vary with host, CPU contention, and throttle model; docs/PERFORMANCE.md requires a pinned baseline and explicit, recorded tolerances rather than invented limits. The enforceable numbers live in performance/baseline.json."
+  }
+}

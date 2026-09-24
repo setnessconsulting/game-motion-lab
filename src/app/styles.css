@@ -1,0 +1,326 @@
+/*
+ * Motion Lab application styles.
+ *
+ * Accessibility is a contract, not a preference (docs/ACCESSIBILITY.md):
+ *   - colour is never the only carrier of meaning;
+ *   - focus is always visible;
+ *   - text reflows without loss of function at 200% zoom;
+ *   - reduced motion removes non-essential transitions.
+ */
+
+:root {
+  color-scheme: dark;
+  --surface: #0e1726;
+  --surface-raised: #16243a;
+  --surface-sunken: #0a111c;
+  --border: #2b4569;
+  --ink: #e8f0fa;
+  --ink-muted: #a9bed8;
+  --accent: #57d2c2;
+  --accent-ink: #04231f;
+  --warn: #f2a03d;
+  --focus: #ffd166;
+  --radius: 10px;
+  --gap: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.55;
+}
+
+body {
+  min-height: 100vh;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.app {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.app__header h1 {
+  font-size: clamp(1.4rem, 1.2rem + 1.2vw, 2rem);
+  margin: 0.15rem 0 0.35rem;
+}
+
+.app__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.app__summary {
+  margin: 0;
+  color: var(--ink-muted);
+  max-width: 68ch;
+}
+
+.app__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--gap);
+  margin-block: var(--gap);
+}
+
+.app__column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.panel,
+.notice,
+.lab-region {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.notice {
+  border-left: 6px solid var(--accent);
+}
+
+.notice h2,
+.panel h2,
+.lab-region h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.panel h3,
+.lab-region h3 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.panel__hint,
+.field__help,
+.app__motion-note {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  margin: 0.35rem 0 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-block-end: 0.85rem;
+}
+
+.field label,
+.fieldset legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  margin: 0 0 0.85rem;
+}
+
+input[type="range"],
+input[type="number"],
+textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.45rem;
+}
+
+output {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 0.5rem;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+button.secondary {
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--border);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lab-region__canvas canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+.lab-region__canvas {
+  min-height: 160px;
+}
+
+.lab-region__fallback {
+  border: 1px dashed var(--warn);
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin-block-start: 0.5rem;
+  background: var(--surface-sunken);
+}
+
+.lab-region__detail {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.force-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.force-label__swatch {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+.readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.35rem 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.readouts__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px dotted var(--border);
+  padding-block: 0.2rem;
+}
+
+.readouts dt {
+  color: var(--ink-muted);
+}
+
+.readouts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+caption {
+  text-align: start;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  padding-block-end: 0.5rem;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.55rem;
+  text-align: start;
+  font-size: 0.9rem;
+}
+
+thead th {
+  background: var(--surface-sunken);
+}
+
+.phase-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+}
+
+.phase-list li {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.12rem 0.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.phase-list li[aria-current="step"] {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.app__footer {
+  margin-block-start: var(--gap);
+  border-top: 1px solid var(--border);
+  padding-block-start: var(--gap);
+}
+
+.app__footer h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

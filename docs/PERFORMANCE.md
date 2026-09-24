@@ -65,11 +65,18 @@ route at first). They are recorded as **unknown / pending**, never estimated.
 ## 4. Required tooling (delivered in ML-02)
 
 - a **bundle report** that reads the production build output and writes raw/gzip bytes plus deltas
-  against the pinned baseline;
-- a **Lighthouse-compatible local lab run** (filesystem-only, no upload) for LCP/CLS;
+  against the pinned baseline (`scripts/perf-baseline.mjs`, `scripts/check-bundle-budget.mjs`);
+- a **local Lighthouse lab run** (no upload, no cloud service) for LCP/CLS/TBT, driving the
+  Chromium that Playwright already installed rather than downloading a browser
+  (`scripts/lighthouse-baseline.mjs`);
 - **Playwright-based runtime measurement** for input-to-frame proxy, long tasks, state-transition
-  latency, frame behaviour, and repeated-trial memory;
-- an **evidence manifest** that binds each report to the exact SHA and digests.
+  latency, frame behaviour, and repeated-trial memory (`tests/e2e/performance.spec.ts`);
+- **SHA binding**, which is what makes the above citable: every record names the source SHA and
+  the toolchain, and the bundle baseline refuses a Lighthouse row captured at a different commit.
+
+No performance figure produced by this tooling is a pass/fail threshold except the payload
+buckets in §7. A Lighthouse score in particular is never a gate: it moves with host CPU contention
+and with the throttle model, and gating on it would invite loosening it to make an issue green.
 
 ## 5. Baseline capture requirement (ML-02 acceptance)
 

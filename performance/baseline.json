@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "milestone": "ML-02",
+  "jiraAuthority": "GAME-382",
+  "capturedBy": "GAME-384",
+  "sourceSha": "919c872d7b4638bd50faf92c0fd71439f3d5f45e",
+  "sourceBranch": "g384-ml-02-foundation",
+  "workingTreeDirty": false,
+  "workingTreeDirtyPaths": [],
+  "capturedAt": "2026-09-24T22:41:37.845Z",
+  "toolchain": {
+    "node": "v24.15.0",
+    "platform": "win32-x64"
+  },
+  "measurementLabels": {
+    "bundle": "exact production build output (Vite), gzip level 9",
+    "lcpCls": "browser lab (Chromium via Playwright, PerformanceObserver) - NOT field data",
+    "field": "unavailable: no learner telemetry and no public CrUX-eligible route",
+    "lighthouse": "not run: not a repository dependency; see docs/PERFORMANCE.md"
+  },
+  "bundle": {
+    "bucketsGzipBytes": {
+      "initialJs": 65328,
+      "gameChunk": 353743,
+      "rendererChunk": 1825,
+      "css": 1512,
+      "html": 452,
+      "other": 0
+    },
+    "totalGzipBytes": 422860,
+    "assets": [
+      {
+        "path": "index.html",
+        "rawBytes": 823,
+        "gzipBytes": 452,
+        "kind": "html"
+      },
+      {
+        "path": "assets/index-BmbtKz38.css",
+        "rawBytes": 4263,
+        "gzipBytes": 1512,
+        "kind": "css"
+      },
+      {
+        "path": "assets/index-KBLwjQ1E.js",
+        "rawBytes": 210696,
+        "gzipBytes": 65328,
+        "kind": "initialJs"
+      },
+      {
+        "path": "assets/phaser-CTbIuaw5.js",
+        "rawBytes": 1374548,
+        "gzipBytes": 353743,
+        "kind": "gameChunk"
+      },
+      {
+        "path": "assets/renderer-DSuC6foh.js",
+        "rawBytes": 3898,
+        "gzipBytes": 1825,
+        "kind": "rendererChunk"
+      }
+    ]
+  },
+  "runtimeMetrics": {
+    "lcpMs": 144,
+    "cls": 0.0008393338521321615,
+    "domContentLoadedMs": 34.90000000037253,
+    "longTasks": {
+      "count": 1,
+      "maxMs": 87,
+      "totalMs": 87
+    },
+    "firstUsefulActionMs": 85,
+    "inputToFrameMs": 9.800000000745058,
+    "stateTransitionMs": 7,
+    "rendererFramesPerSecond": 61,
+    "heapStartBytes": 16100000,
+    "heapEndBytes": 16100000,
+    "recordedAt": "2026-09-24T22:41:33.721Z"
+  },
+  "runtimeMetricsReason": null,
+  "lighthouse": {
+    "schemaVersion": 1,
+    "milestone": "ML-02",
+    "jiraAuthority": "GAME-382",
+    "capturedBy": "GAME-384",
+    "sourceSha": "919c872d7b4638bd50faf92c0fd71439f3d5f45e",
+    "workingTreeDirty": false,
+    "capturedAt": "2026-09-24T22:41:26.016Z",
+    "target": "http://127.0.0.1:4193/",
+    "measurementLabel": "Lighthouse LAB measurement of the production dist/ served over loopback with gzip and default simulated throttling; NOT field data",
+    "hostingAssumption": "Responses were gzipped because a production static host compresses text assets. If the games-site host does not compress, every number here is pessimistic and must be re-captured. ML-HOST/ML-15 must confirm the real host's compression and cache headers.",
+    "toolchain": {
+      "node": "v24.15.0",
+      "lighthouse": "13.5.0",
+      "chrome": "C:\\Users\\setne\\AppData\\Local\\ms-playwright\\chromium-1243\\chrome-win64\\chrome.exe",
+      "platform": "win32-x64"
+    },
+    "metrics": {
+      "performanceScore": 1,
+      "lcpMs": 1401.9895,
+      "cls": 0,
+      "tbtMs": 59,
+      "fcpMs": 1315.99125,
+      "speedIndexMs": 1315.99125,
+      "bootupTimeMs": 616.2960000000021,
+      "mainThreadWorkMs": 1412.040000000002,
+      "throttling": {
+        "method": "simulate",
+        "cpuSlowdownMultiplier": 4,
+        "rttMs": 150,
+        "throughputKbps": 1638.4,
+        "formFactor": "mobile"
+      },
+      "emulatedDevice": "mobile",
+      "lighthouseVersion": "13.5.0"
+    },
+    "accessibilityAuditScoreNotSignOff": 1,
+    "thresholds": {
+      "enforced": false,
+      "reason": "No Lighthouse score is a project threshold. Scores vary with host, CPU contention, and throttle model; docs/PERFORMANCE.md requires a pinned baseline and explicit, recorded tolerances rather than invented limits. The enforceable numbers live in performance/baseline.json."
+    }
+  },
+  "lighthouseReason": null,
+  "regressionTolerance": {
+    "initialJsGzipRatio": 0.05,
+    "gameChunkGzipRatio": 0.05,
+    "totalPayloadGzipRatio": 0.05,
+    "rationale": "Set alongside the ML-02 baseline (delegated decision G-01). A 5% band absorbs build-tool noise without hiding a real payload regression."
+  }
+}

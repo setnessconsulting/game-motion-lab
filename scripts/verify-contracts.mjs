@@ -107,6 +107,8 @@ const DOC_FILES = [
   'RELEASE.md',
   'DEFINITION_OF_DONE.md',
   'DECISIONS.md',
+  'BOOTSTRAP.md',
+  'PERFORMANCE_BASELINE.md',
 ];
 
 const JIRA_AUTHORITY = 'GAME-382';
@@ -540,8 +542,12 @@ for (const file of allDocs) {
   }
 }
 check(
-  'the repository states that no application build or CI exists yet',
-  /no application build|application foundation/i.test(rootReadme),
+  'the repository states its actual milestone rather than claiming a finished game',
+  /foundation/i.test(rootReadme) && !/\b(game is|game is fully|complete mission set)\b/i.test(rootReadme),
+);
+check(
+  'the repository does not claim the physics kernel or missions exist',
+  /physics kernel/i.test(rootReadme) && /(GAME-386|ML-03)/.test(rootReadme),
 );
 
 // ---------------------------------------------------------------------------
