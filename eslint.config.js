@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 /**
@@ -23,6 +24,18 @@ export default tseslint.config(
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    // React hooks correctness is part of the architecture contract, not a style
+    // preference: a missed dependency here is how authoritative state stops being
+    // rendered, which ADR 0002 forbids. Scoping the plugin to the React surfaces also
+    // makes `eslint-disable-next-line react-hooks/exhaustive-deps` a real rule rather
+    // than a silent no-op.
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { "react-hooks": reactHooks },
+    rules: {
+      ...reactHooks.configs["recommended-latest"].rules,
+    },
+  },
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {

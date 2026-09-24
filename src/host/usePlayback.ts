@@ -12,8 +12,10 @@ export interface PlaybackState {
  * NOT authoritative timing: changing the frame rate, pausing, or jumping to the end
  * cannot change a sample, a measurement, or a trial record.
  *
- * Under reduced motion the clock jumps straight to the end of the sample window so the
- * instructional result is visible immediately with no animation.
+ * Reduced motion is expressed as a **derivation** of the clock, not as a side effect
+ * inside the animation effect. When reduced motion is on, the displayed position is the
+ * end of the sample window and the clock does not run at all, so the instructional result
+ * is visible immediately with no animation and no animated frame is ever painted.
  */
 export function usePlayback(totalSeconds: number, reducedMotion: boolean) {
   const [state, setState] = useState<PlaybackState>({ seconds: 0, running: false });
@@ -35,15 +37,12 @@ export function usePlayback(totalSeconds: number, reducedMotion: boolean) {
   }, []);
 
   useEffect(() => {
+    // Reduced motion shows the result directly; there is no clock to advance.
+    if (reducedMotion) return;
     if (!state.running) return;
     // A trial may be dispatched before its window is known; wait for a real duration
     // rather than immediately finishing at zero.
     if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return;
-
-    if (reducedMotion) {
-      setState({ seconds: totalSeconds, running: false });
-      return;
-    }
 
     let frame = 0;
     let previous = performance.now();
@@ -65,5 +64,10 @@ export function usePlayback(totalSeconds: number, reducedMotion: boolean) {
     return () => cancelAnimationFrame(frame);
   }, [state.running, reducedMotion, totalSeconds]);
 
-  return { playback: state, start, stop, finish, reset };
+  // Derived, never mutated: reduced motion always presents the end of the sample window.
+  const playback: PlaybackState = reducedMotion
+    ? { seconds: totalSeconds, running: false }
+    : state;
+
+  return { playback, start, stop, finish, reset };
 }
