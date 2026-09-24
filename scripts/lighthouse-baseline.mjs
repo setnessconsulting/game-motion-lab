@@ -21,7 +21,6 @@
  * Usage:  npm run build && npm run perf:lighthouse
  */
 
-import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
@@ -30,6 +29,7 @@ import { gzipSync } from "node:zlib";
 import { launch } from "chrome-launcher";
 import lighthouse from "lighthouse";
 import { chromium } from "playwright-core";
+import { codeTreeDirty, headSha } from "./lib/repo-state.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const DIST = join(ROOT, "dist");
@@ -56,14 +56,6 @@ const MIME = {
 
 /** Types worth compressing; matches what a production static host would send gzipped. */
 const COMPRESSIBLE = new Set([".html", ".js", ".mjs", ".css", ".json", ".svg", ".map"]);
-
-function git(args) {
-  try {
-    return execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Serve dist/ so the measurement is of the real production artifact, not a dev server.
@@ -191,8 +183,10 @@ async function main() {
       milestone: "ML-02",
       jiraAuthority: "GAME-382",
       capturedBy: "GAME-384",
-      sourceSha: git(["rev-parse", "HEAD"]),
-      workingTreeDirty: (git(["status", "--porcelain"]) ?? "") !== "",
+      sourceSha: headSha(),
+      // The generated evidence directories are excluded, since writing this record modifies a
+      // tracked file. See scripts/lib/repo-state.mjs.
+      workingTreeDirty: codeTreeDirty(),
       capturedAt: new Date().toISOString(),
       target: `${ORIGIN}/`,
       measurementLabel:

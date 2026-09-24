@@ -22,10 +22,10 @@
  * Usage:  npm run build && npm run perf:baseline
  */
 
-import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join, relative, resolve, sep } from "node:path";
+import { codeTreeDirty, codeTreeDirtyPaths, currentBranch, headSha } from "./lib/repo-state.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const DIST = join(ROOT, "dist");
@@ -43,18 +43,8 @@ const REGRESSION_TOLERANCE = {
     "Set alongside the ML-02 baseline (delegated decision G-01). A 5% band absorbs build-tool noise without hiding a real payload regression.",
 };
 
-function git(args) {
-  try {
-    return execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim();
-  } catch {
-    return null;
-  }
-}
-
-/** The commit the baseline describes. Used to reject a stale Lighthouse record. */
-function headSha() {
-  return git(["rev-parse", "HEAD"]);
-}
+// git helpers live in ./lib/repo-state.mjs so this script and the Lighthouse capture agree
+// on what "dirty" means.
 
 function walk(dir) {
   const out = [];
@@ -132,8 +122,12 @@ function main() {
     jiraAuthority: "GAME-382",
     capturedBy: "GAME-384",
     sourceSha: headSha(),
-    sourceBranch: git(["rev-parse", "--abbrev-ref", "HEAD"]),
-    workingTreeDirty: (git(["status", "--porcelain"]) ?? "") !== "",
+    sourceBranch: currentBranch(),
+    // Excludes the generated evidence directories: writing this record necessarily modifies
+    // a tracked file, so counting that would make the flag permanently true. See
+    // scripts/lib/repo-state.mjs.
+    workingTreeDirty: codeTreeDirty(),
+    workingTreeDirtyPaths: codeTreeDirtyPaths(),
     capturedAt: new Date().toISOString(),
     toolchain: {
       node: process.version,
