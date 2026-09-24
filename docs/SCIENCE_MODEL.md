@@ -84,11 +84,11 @@ constant velocity. Balanced forces are **not** synonymous with "not moving".
 
 **Force and mass scaling (the two assessed relationships).**
 
-- At fixed mass, doubling `|Fnet|` doubles `|a|` and reverses nothing about the sign.
+- At fixed mass, doubling `|Fnet|` doubles `|a|` without changing its sign.
 - At fixed net force, doubling `m` halves `|a|`.
 
-Neither relationship may be described in learner-facing copy as anything other than proportional
-inverse/proportional within the assessed scenario's controlled conditions.
+Learner-facing copy must describe the first as **directly proportional** and the second as
+**inversely proportional**, always within the scenario's stated controlled conditions.
 
 **Composition of multiple forces.** Forces are combined by the signed sum along the track axis. In
 a canonical scenario where no resistive force is modeled, the applied force is the net force. When
@@ -103,7 +103,9 @@ It is never implicit and never a silent default.
 Frozen v1 resistive model:
 
 - The declared resistive force has a **constant magnitude** opposing the declared direction of
-  motion for that segment.
+  motion for that segment. The declared direction is part of the scenario declaration; the model
+  is undefined for motion in the opposite direction, and a segment whose velocity changes sign is
+  rejected (see below).
 - Within a segment, `Fnet = F_applied − F_resistive` (with `F_resistive ≥ 0` opposing the
   segment's motion direction), so `Fnet` is constant and the analytic equations in §3 apply
   unchanged.
@@ -191,8 +193,11 @@ For every canonical scenario, every displayed scientific value must satisfy
 
 Because `tolerance_floor` is at least **2× the half-increment** of the display increment for every
 quantity in §2 (see the table in §7.4), a learner who reads a displayed value and enters it
-verbatim is always within tolerance, including at an exact rounding half-boundary. Content authoring must additionally avoid placing an authoritative value within `1e-9`
-of a display rounding boundary; the content validator reports any such value as a content defect.
+verbatim is always within tolerance, including at an exact rounding half-boundary.
+
+Content authoring must additionally avoid placing an authoritative value within `1e-9` of a display
+rounding boundary; the content validator reports any such value as a content defect, because such a
+value is the one place where a display string could be read two ways.
 
 ### 7.4 Answer comparison
 
