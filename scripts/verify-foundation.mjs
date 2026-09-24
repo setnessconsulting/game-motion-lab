@@ -161,6 +161,59 @@ check(
 
 // ---------------------------------------------------------------------------
 check("the performance baseline record exists", exists("performance/baseline.json"));
+
+// GAME-384 acceptance criterion 3 names Lighthouse explicitly. These checks make the
+// Lighthouse row an inspectable artifact rather than a claim in a document.
+check(
+  "a Lighthouse capture script exists",
+  exists("scripts/lighthouse-baseline.mjs")
+);
+check(
+  "the Lighthouse capture is an npm script",
+  typeof pkg?.scripts?.["perf:lighthouse"] === "string",
+  pkg?.scripts?.["perf:lighthouse"] ?? "missing"
+);
+check(
+  "CI runs the Lighthouse capture",
+  exists(".github/workflows/ci.yml") &&
+    readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8").includes("npm run perf:lighthouse")
+);
+check(
+  "the bundle baseline folds in the Lighthouse record",
+  /lighthouse/i.test(readFileSync(join(ROOT, "scripts/perf-baseline.mjs"), "utf8"))
+);
+check(
+  "the Lighthouse capture drives the repository's own Chromium, not a downloaded browser",
+  /playwright-core/.test(readFileSync(join(ROOT, "scripts/lighthouse-baseline.mjs"), "utf8"))
+);
+if (exists("performance/lighthouse.json")) {
+  const lighthouseRecord = JSON.parse(readFileSync(join(ROOT, "performance/lighthouse.json"), "utf8"));
+  check(
+    "the Lighthouse record declares that no score is an enforced threshold",
+    lighthouseRecord.thresholds?.enforced === false &&
+      typeof lighthouseRecord.thresholds?.reason === "string"
+  );
+  check(
+    "the Lighthouse record is labelled a lab measurement, not field data",
+    /lab measurement/i.test(lighthouseRecord.measurementLabel ?? "") &&
+      /not field data/i.test(lighthouseRecord.measurementLabel ?? "")
+  );
+  check(
+    "the Lighthouse record names the throttling model it was measured under",
+    typeof lighthouseRecord.metrics?.throttling?.cpuSlowdownMultiplier === "number" &&
+      typeof lighthouseRecord.metrics?.throttling?.throughputKbps === "number"
+  );
+  check(
+    "the Lighthouse record states the hosting compression assumption",
+    typeof lighthouseRecord.hostingAssumption === "string" &&
+      lighthouseRecord.hostingAssumption.length > 0
+  );
+}
+check(
+  "docs/PERFORMANCE_BASELINE.md documents the Lighthouse row",
+  exists("docs/PERFORMANCE_BASELINE.md") &&
+    /lighthouse/i.test(readFileSync(join(ROOT, "docs/PERFORMANCE_BASELINE.md"), "utf8"))
+);
 check(
   "the bootstrap/setup documentation exists",
   exists("docs/BOOTSTRAP.md")

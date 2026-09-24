@@ -32,6 +32,7 @@ const DIST = join(ROOT, "dist");
 const BASELINE_DIR = join(ROOT, "performance");
 const BASELINE_FILE = join(BASELINE_DIR, "baseline.json");
 const RUNTIME_FILE = join(ROOT, "performance-results", "runtime.json");
+const LIGHTHOUSE_FILE = join(ROOT, "performance", "lighthouse.json");
 
 /** Regression tolerance stored WITH the baseline. A change here is a recorded decision. */
 const REGRESSION_TOLERANCE = {
@@ -48,6 +49,11 @@ function git(args) {
   } catch {
     return null;
   }
+}
+
+/** The commit the baseline describes. Used to reject a stale Lighthouse record. */
+function headSha() {
+  return git(["rev-parse", "HEAD"]);
 }
 
 function walk(dir) {
@@ -103,12 +109,29 @@ function main() {
       "tests/e2e/performance.spec.ts has not been run in this checkout; run `npm run test:phaser-render` before capturing the baseline.";
   }
 
+  // The Lighthouse row satisfies GAME-384 acceptance criterion 3. It is a separate record
+  // (scripts/lighthouse-baseline.mjs) because it needs its own Chrome launch; this file folds
+  // it in so a reader has one entry point. It carries its own SHA, which is checked here: a
+  // Lighthouse row captured from different code would silently misrepresent this baseline.
+  let lighthouse = null;
+  let lighthouseReason = null;
+  if (existsSync(LIGHTHOUSE_FILE)) {
+    const record = JSON.parse(readFileSync(LIGHTHOUSE_FILE, "utf8"));
+    if (record.sourceSha !== headSha()) {
+      lighthouseReason = `performance/lighthouse.json was captured at ${record.sourceSha}, not ${headSha()}; re-run \`npm run perf:lighthouse\` on this commit.`;
+    } else {
+      lighthouse = record;
+    }
+  } else {
+    lighthouseReason = "not captured; run `npm run perf:lighthouse` before capturing the baseline.";
+  }
+
   const baseline = {
     schemaVersion: 1,
     milestone: "ML-02",
     jiraAuthority: "GAME-382",
     capturedBy: "GAME-384",
-    sourceSha: git(["rev-parse", "HEAD"]),
+    sourceSha: headSha(),
     sourceBranch: git(["rev-parse", "--abbrev-ref", "HEAD"]),
     workingTreeDirty: (git(["status", "--porcelain"]) ?? "") !== "",
     capturedAt: new Date().toISOString(),
@@ -129,6 +152,8 @@ function main() {
     },
     runtimeMetrics,
     runtimeMetricsReason,
+    lighthouse,
+    lighthouseReason,
     regressionTolerance: REGRESSION_TOLERANCE,
   };
 
@@ -144,6 +169,9 @@ function main() {
   console.log(`  total payload : ${(totalGzip / 1024).toFixed(2)} kB gzip`);
   console.log(
     `  runtime metrics: ${runtimeMetrics === null ? "not captured (see runtimeMetricsReason)" : "captured"}`
+  );
+  console.log(
+    `  lighthouse     : ${lighthouse === null ? `not captured (${lighthouseReason})` : `perf ${lighthouse.metrics.performanceScore}, LCP ${lighthouse.metrics.lcpMs?.toFixed(0)} ms`}`
   );
   console.log(`  wrote ${relative(ROOT, BASELINE_FILE)}`);
 }

@@ -42,6 +42,7 @@ secrets and performs no deployment.
 | `npm run contracts` | ML-01 contract/documentation consistency |
 | `npm run foundation` | ML-02 foundation invariants (stack pins, boundaries, CI) |
 | `npm run perf:baseline` | capture the exact-SHA performance baseline record |
+| `npm run perf:lighthouse` | local Lighthouse lab capture (LCP/CLS/TBT), driving the Playwright Chromium |
 | `npm run perf:check` | compare the current build against the pinned baseline |
 | `npm run verify` | the whole gate, in order |
 
@@ -72,7 +73,14 @@ stronger statement than grepping for the word "document".
 **Contains:** the React 19 + TypeScript + Vite application shell, the real Phaser 4.2.1
 renderer wired through a typed view model with bounded intents, the package boundaries
 and their executable enforcement, the local verification and CI commands, the
-performance baseline capture, and graceful semantic fallback when the renderer fails.
+performance baseline capture (bundle, Playwright runtime, and Lighthouse), and graceful
+semantic fallback when the renderer fails.
+
+The clean-clone setup above needs `npx playwright install chromium` before `npm run verify`
+because the real-renderer lane and the Lighthouse capture both drive that Chromium rather
+than downloading a second browser. `npm run perf:lighthouse` is deliberately **not** part of
+`npm run verify`: it is an evidence capture, not a gate, and no Lighthouse score is enforced
+(see [`PERFORMANCE_BASELINE.md`](PERFORMANCE_BASELINE.md) §6).
 
 **Does not yet contain** (owned by later GAME-382 children):
 
@@ -104,7 +112,7 @@ aborting the renderer chunk.
 
 - Local commands in this document were executed during ML-02; see the Jira record for
   the exact commands and results.
-- CI is **authored** to run the same commands. Do not describe CI as passing until a run
-  for the exact commit has actually been observed.
+- CI is authored to run the same commands and was observed passing for the ML-02 branch commit
+  before merge. Re-check it for any later commit rather than assuming this still holds.
 - Manual accessibility review, science review, playtest and promotion remain open human
   gates and are never claimed here.

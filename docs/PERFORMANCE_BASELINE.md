@@ -23,7 +23,8 @@ npm ci
 npx playwright install chromium
 npm run build
 npm run test:phaser-render   # writes performance-results/runtime.json
-npm run perf:baseline        # folds it into performance/baseline.json
+npm run perf:lighthouse      # writes performance/lighthouse.json   (AC 3 Lighthouse row)
+npm run perf:baseline        # folds both into performance/baseline.json
 npm run perf:check           # compares the current build against the pinned baseline
 ```
 
@@ -72,7 +73,7 @@ has evidence.
 
 | Metric | Baseline | Reading |
 | --- | --- | --- |
-| LCP | 148 ms | lab, Chromium |
+| LCP | 148 ms | lab, Chromium, unthrottled (the throttled Lighthouse LCP is a separate row in §4b) |
 | CLS | 0.0008 | lab, Chromium |
 | DOMContentLoaded | 39 ms | lab |
 | First useful action readiness | 90 ms | first mission action enabled |
@@ -105,6 +106,41 @@ Three honest readings of these numbers:
    stability; repeated-trial memory stability must be re-measured once trials are real
    ([`PERFORMANCE.md`](PERFORMANCE.md) §2).
 
+## 4b. Lighthouse row
+
+`performance/lighthouse.json` is the Lighthouse record required by GAME-384 acceptance criterion 3.
+It is produced by `scripts/lighthouse-baseline.mjs`, which serves the production `dist/` over
+the IPv4 loopback and drives the Chromium that Playwright already installed (resolved from
+`playwright-core`) — nothing is downloaded to measure, so a clean clone can reproduce it.
+
+| Metric | Baseline |
+| --- | --- |
+| Lighthouse performance score | 1.00 |
+| FCP | 1311 ms |
+| LCP | 1396 ms |
+| CLS | 0 |
+| TBT | 41 ms |
+| Throttling | `simulate`, CPU ×4, RTT 150 ms, 1.6 Mbps, mobile form factor |
+
+**A finding worth acting on downstream.** The first Lighthouse capture in this milestone measured
+LCP at **9061 ms** with a performance score of **0.53**, because the capture server served assets
+raw. Enabling gzip — which any production static host does for text assets — moved the same build to
+LCP **1396 ms** and score **1.00**. The game's payload is dominated by the 1.37 MB Phaser chunk, so
+**host compression behaviour changes the perceived load time by more than 6×**. Consequences:
+
+- the numbers above assume gzip, and `performance/lighthouse.json` says so in
+  `hostingAssumption`; if the games-site host does not compress text assets, every number here is
+  pessimistic and must be re-captured;
+- confirming the real host's compression and cache headers is therefore a **hosting requirement**,
+  not a nicety, and belongs to ML-HOST/ML-15;
+- if the host cannot compress, the renderer chunk's lazy-loading strategy becomes load-bearing rather
+  than optional, which is the decision ML-15/ML-PROMOTE must make with this evidence in hand.
+
+The Lighthouse accessibility category is recorded too, and is explicitly **not** accessibility
+sign-off ([`ACCESSIBILITY.md`](ACCESSIBILITY.md)).
+
+No Lighthouse score is a threshold. See §6.
+
 ## 5. Regression tolerance
 
 The tolerance is stored **with** the baseline in `performance/baseline.json`, so loosening it is a
@@ -127,9 +163,11 @@ tempt future work to loosen the baseline for the wrong reason.
 ## 6. What this baseline does not claim
 
 - Not field data, and not a substitute for field data.
-- Not Lighthouse: the repository does not depend on Lighthouse, and a previous portfolio repository
-  recorded that the pinned launcher fails on this workstation. LCP/CLS come from a real browser
-  lane with `PerformanceObserver` instead, and are labelled lab measurements.
+- Not a Lighthouse gate. Lighthouse **is** run (§4b), but no score from it is enforced: scores move
+  with host CPU contention and with the simulated throttle model, and a gate would tempt a future
+  issue into loosening the budget for the wrong reason. The LCP/CLS numbers from the browser lane
+  and from Lighthouse are both lab measurements, and they are reported as two independent rows
+  rather than merged into one conveniently improved number.
 - Not a performance *approval*. It is a reference point. GAME-382's performance obligations are
   discharged by measuring later milestones against it, not by this document existing.
 - Not stable across machines on its wall-clock rows. Compare bundle rows across machines; compare

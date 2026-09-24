@@ -71,11 +71,19 @@ jobs:
       - name: Real Phaser renderer lane and performance capture
         run: npm run test:phaser-render
 
+      # GAME-384 acceptance criterion 3 asks for a Lighthouse row in the baseline. No Lighthouse
+      # score is a threshold: performance/lighthouse.json records a measurement, and the
+      # enforceable numbers stay in performance/baseline.json (docs/PERFORMANCE.md section 7).
+      - name: Lighthouse lab capture
+        run: npm run perf:lighthouse
+
       - name: Upload performance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: motion-lab-performance-${{ github.sha }}
-          path: performance-results/
+          path: |
+            performance-results/
+            performance/lighthouse.json
           if-no-files-found: warn
           retention-days: 14
