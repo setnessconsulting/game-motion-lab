@@ -1,0 +1,14 @@
+# Pin LF for text so checkouts are byte-stable across platforms (portfolio hygiene AIPORT-416).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.ogg binary
+*.wav binary

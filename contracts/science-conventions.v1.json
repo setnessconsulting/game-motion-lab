@@ -1,0 +1,217 @@
+{
+  "contractId": "motion-lab.science-conventions",
+  "version": "1.0.0",
+  "status": "frozen",
+  "jiraAuthority": "GAME-382",
+  "frozenBy": "GAME-383",
+  "sourceDocument": "docs/SCIENCE_MODEL.md",
+  "model": {
+    "kind": "deterministic-analytical-point-mass",
+    "dimensions": 1,
+    "referenceFrame": "inertial-laboratory-rest",
+    "integration": "closed-form-analytic",
+    "piecewiseSegmentsAllowed": true,
+    "physicsEngineAuthority": false,
+    "numericalIntegratorAuthority": false,
+    "rendererAuthority": false
+  },
+  "coordinateConvention": {
+    "positiveDirection": "rightward",
+    "positiveDirectionDescription": "direction of increasing track coordinate; visually to the right",
+    "originDescription": "start gate",
+    "defaultInitialPositionMetres": 0,
+    "defaultInitialVelocityMetresPerSecond": 0,
+    "signRule": "a has the same sign as Fnet because m > 0",
+    "signErrorAlwaysFails": true
+  },
+  "quantities": [
+    {
+      "id": "mass",
+      "symbol": "m",
+      "siUnit": "kg",
+      "displayUnit": "kg",
+      "displayDecimals": 2,
+      "toleranceFloor": 0.01,
+      "mustBePositive": true
+    },
+    {
+      "id": "force",
+      "symbol": "F",
+      "siUnit": "N",
+      "displayUnit": "N",
+      "displayDecimals": 1,
+      "toleranceFloor": 0.1,
+      "mustBePositive": false
+    },
+    {
+      "id": "netForce",
+      "symbol": "Fnet",
+      "siUnit": "N",
+      "displayUnit": "N",
+      "displayDecimals": 1,
+      "toleranceFloor": 0.1,
+      "mustBePositive": false
+    },
+    {
+      "id": "position",
+      "symbol": "x",
+      "siUnit": "m",
+      "displayUnit": "m",
+      "displayDecimals": 2,
+      "toleranceFloor": 0.05,
+      "mustBePositive": false
+    },
+    {
+      "id": "time",
+      "symbol": "t",
+      "siUnit": "s",
+      "displayUnit": "s",
+      "displayDecimals": 2,
+      "toleranceFloor": 0.05,
+      "mustBePositive": false
+    },
+    {
+      "id": "velocity",
+      "symbol": "v",
+      "siUnit": "m/s",
+      "displayUnit": "m/s",
+      "displayDecimals": 2,
+      "toleranceFloor": 0.05,
+      "mustBePositive": false
+    },
+    {
+      "id": "acceleration",
+      "symbol": "a",
+      "siUnit": "m/s^2",
+      "displayUnit": "m/s\u00b2",
+      "displayDecimals": 2,
+      "toleranceFloor": 0.05,
+      "mustBePositive": false
+    }
+  ],
+  "derivedUnitIdentities": [
+    "1 N = 1 kg*m/s^2"
+  ],
+  "equations": [
+    {
+      "id": "net-force-composition",
+      "expression": "Fnet = sum(F_i)",
+      "description": "signed sum of collinear forces along the track axis",
+      "requires": ["force"]
+    },
+    {
+      "id": "newton-second-law",
+      "expression": "a = Fnet / m",
+      "description": "constant net force over the segment; requires m > 0",
+      "requires": ["netForce", "mass"]
+    },
+    {
+      "id": "velocity-time",
+      "expression": "v(t) = v0 + a*t",
+      "description": "valid on a constant-acceleration segment",
+      "requires": ["velocity", "acceleration", "time"]
+    },
+    {
+      "id": "position-time",
+      "expression": "x(t) = x0 + v0*t + 0.5*a*t^2",
+      "description": "valid on a constant-acceleration segment",
+      "requires": ["position", "velocity", "acceleration", "time"]
+    },
+    {
+      "id": "torricelli",
+      "expression": "v(t)^2 = v0^2 + 2*a*(x(t) - x0)",
+      "description": "internal consistency check only; never the primary evaluator",
+      "requires": ["velocity", "acceleration", "position"]
+    }
+  ],
+  "balancedForces": {
+    "condition": "Fnet = 0",
+    "acceleration": 0,
+    "velocity": "v(t) = v0",
+    "position": "x(t) = x0 + v0*t",
+    "restAtRest": true,
+    "notSynonymousWithStopped": true
+  },
+  "assessedRelationships": [
+    {
+      "id": "force-scaling",
+      "statement": "at fixed mass, acceleration is proportional to net force",
+      "controlledVariable": "mass"
+    },
+    {
+      "id": "mass-scaling",
+      "statement": "at fixed net force, acceleration is inversely proportional to mass",
+      "controlledVariable": "netForce"
+    }
+  ],
+  "resistancePolicy": {
+    "implicitResistanceAllowed": false,
+    "requiresExplicitScenarioDeclaration": true,
+    "declaredModel": "constant-magnitude-force-opposing-declared-motion-direction",
+    "appliesOnlyWhenMagnitudeGreaterThanZero": true,
+    "cannotReverseWithinSegment": true,
+    "reversalHandling": {
+      "reversalTimeExpression": "t_reverse = -v0 / a (a != 0)",
+      "windowCrossingReversalRequiresSegmentation": true,
+      "silentExtrapolationAllowed": false
+    },
+    "unsupportedModelBehaviour": "fail-closed-typed-error",
+    "outOfScope": [
+      "velocity-proportional-drag",
+      "quadratic-drag",
+      "static-to-kinetic-transition",
+      "zero-velocity-reversal-discontinuity",
+      "position-dependent-resistance",
+      "time-dependent-resistance"
+    ]
+  },
+  "determinism": {
+    "sameInputsProduceBitIdenticalOutputs": true,
+    "randomnessInAuthoritativeMotion": false,
+    "seededPrngAllowedAtContentLayerOnly": true,
+    "seededPrngFamily": "mulberry32",
+    "fixedSimulationTickExists": false,
+    "rendererFrameRateAffectsScience": false,
+    "samplingApi": "stateAt(t)",
+    "rejectsNegativeTime": true,
+    "rejectsNonFinite": true,
+    "rejectsNonPositiveMass": true
+  },
+  "displayRounding": {
+    "authoritativeValuesAreRounded": false,
+    "displayOnly": true,
+    "algorithm": "sign(value) * floor(abs(value) * 10^dp + 0.5) / 10^dp",
+    "algorithmName": "round-half-away-from-zero",
+    "localeDependent": false,
+    "displayValueFeedsBackIntoState": false,
+    "contentBoundaryGuardTolerance": 1e-09,
+    "roundTripSafetyRule": "toleranceFloor >= 2 * (10^-displayDecimals / 2)"
+  },
+  "answerTolerance": {
+    "relativeDefault": 0.02,
+    "relativeAllowedBand": [0.01, 0.05],
+    "absoluteSource": "quantity toleranceFloor",
+    "absoluteAuthorable": false,
+    "comparisonRule": "pass <=> abs(answer - truth) <= max(relative * abs(truth), absolute[quantity])",
+    "categoricalComparison": "exact-identifier-equality",
+    "fuzzyMatchingAllowed": false,
+    "signErrorAlwaysFails": true,
+    "mustBeRecordedInScenarioProvenance": true
+  },
+  "valueRanges": {
+    "massKg": [1.0, 4.0],
+    "appliedForceN": [1, 12],
+    "resistiveForceN": [0, 3],
+    "observedTimeWindowSeconds": [0, 6],
+    "positionAlongTrackMetres": [-2, 12],
+    "trackLengthIsPresentationOnly": true,
+    "emergentAccelerationMetresPerSecondSquared": [0.25, 12],
+    "initialVelocityMetresPerSecond": [-2, 2],
+    "bandsAreMutuallyConsistent": true
+  },
+  "invalidInputPolicy": {
+    "behaviour": "reject-with-typed-error",
+    "clampingAllowed": false,
+    "nanOrInfinityPropagationAllowed": false
+  }
+}

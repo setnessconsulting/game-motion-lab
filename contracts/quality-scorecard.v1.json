@@ -1,0 +1,235 @@
+{
+  "contractId": "motion-lab.quality-scorecard",
+  "version": "1.0.0",
+  "status": "frozen",
+  "jiraAuthority": "GAME-382",
+  "frozenBy": "GAME-383",
+  "sourceDocument": "docs/QUALITY_SCORECARD.md",
+  "scale": [
+    "meets",
+    "below",
+    "not-assessed"
+  ],
+  "rules": [
+    "a row is never scored on adjectives alone; each names the artifact or measurement that decides it",
+    "not-assessed is never counted as a pass and requires a recorded reason",
+    "evidence bound to a different candidate identity does not satisfy a row",
+    "comparator rows are scored only on the dimensions that comparator informs",
+    "motion lab is never globally scored against any comparator, and never against kerbal-space-program"
+  ],
+  "rows": [
+    {
+      "id": "Q-01",
+      "dimension": "Scientific clarity",
+      "comparators": ["phet-forces-and-motion-basics"],
+      "meets": "every displayed quantity has a unit, every asserted relationship matches docs/SCIENCE_MODEL.md, and a science reviewer finds no high-severity defect",
+      "below": "any displayed value or claim contradicts the frozen model, or a high-severity science finding is open",
+      "evidence": "ML-03/ML-04 golden fixtures plus a science review record",
+      "gates": ["ML-11", "ML-13", "ML-16"]
+    },
+    {
+      "id": "Q-02",
+      "dimension": "Measurement clarity",
+      "comparators": ["phet-forces-and-motion-basics", "algodoo"],
+      "meets": "each instrument names its quantity and unit, and its displayed value equals the authoritative value formatted by the frozen rounding rule",
+      "below": "an instrument shows an unlabelled, unitless, or ambiguously sourced value",
+      "evidence": "instrument-to-fixture test (ML-07) plus screenshot review",
+      "gates": ["ML-11", "ML-14"]
+    },
+    {
+      "id": "Q-03",
+      "dimension": "Visual force representation",
+      "comparators": ["phet-forces-and-motion-basics"],
+      "meets": "force arrows encode direction redundantly (arrowhead, text label and sign) and their magnitudes are consistent with authoritative net force",
+      "below": "direction or magnitude is conveyed by colour alone, or a visual force disagrees with authoritative net force",
+      "evidence": "ML-06 render test plus accessibility review",
+      "gates": ["ML-11"]
+    },
+    {
+      "id": "Q-04",
+      "dimension": "Inspectability of authoritative state",
+      "comparators": ["phet-forces-and-motion-basics"],
+      "meets": "the learner can read position, velocity, acceleration, net force and elapsed time as text at any time during a trial",
+      "below": "any of those values is obtainable only from canvas geometry",
+      "evidence": "semantic DOM inspection plus the keyboard journey",
+      "gates": ["ML-11", "ML-14"]
+    },
+    {
+      "id": "Q-05",
+      "dimension": "Evidence dependence",
+      "comparators": [],
+      "meets": "a scripted click-everything strategy with no controlled trials fails every assessed mission, and a correct claim with no cited evidence is not accepted",
+      "below": "any assessed mission can be completed without producing and citing controlled evidence",
+      "evidence": "ML-10 state-machine tests plus the ML-13 guess-strategy test",
+      "gates": ["ML-11", "ML-13"]
+    },
+    {
+      "id": "Q-06",
+      "dimension": "Graph interpretation required",
+      "comparators": [],
+      "meets": "at least one production scenario cannot be solved without reading a position-time or velocity-time graph as evidence",
+      "below": "every mission is solvable with numeric instruments alone",
+      "evidence": "scenario provenance graph flags plus the ML-11 journey test",
+      "gates": ["ML-11", "ML-13"]
+    },
+    {
+      "id": "Q-07",
+      "dimension": "Experimentation / trial design",
+      "comparators": ["algodoo"],
+      "meets": "the learner chooses which variable to change at Supported level and above, and the domain records the trial as a controlled comparison",
+      "below": "the game fixes every variable in every assessed comparison, or an uncontrolled trial counts as evidence",
+      "evidence": "ML-04 control-variable tests plus ML-13 scenario flags",
+      "gates": ["ML-11", "ML-13"]
+    },
+    {
+      "id": "Q-08",
+      "dimension": "Visual cause-and-effect",
+      "comparators": ["algodoo"],
+      "meets": "changing net force or mass produces an immediately visible change in motion consistent with the authoritative trace",
+      "below": "the visible motion contradicts or lags the authoritative trace",
+      "evidence": "ML-06 render-versus-trace comparison",
+      "gates": ["ML-11"]
+    },
+    {
+      "id": "Q-09",
+      "dimension": "Graph usability and honesty",
+      "comparators": ["algodoo"],
+      "meets": "graphs use authoritative data, labelled axes and units, deterministic scales and an explicit origin, and provide a table equivalent",
+      "below": "a graph uses pixel geometry, unlabelled units, smoothed data, or a truncated axis that changes the interpretation",
+      "evidence": "ML-09 graph fixtures plus accessibility review",
+      "gates": ["ML-11", "ML-14"]
+    },
+    {
+      "id": "Q-10",
+      "dimension": "Rapid trial iteration",
+      "comparators": ["algodoo", "poly-bridge-3"],
+      "meets": "running and recording a second trial is reachable in a small bounded number of actions and no animation dwell blocks the next trial",
+      "below": "a trial cannot be repeated without leaving the mission or waiting on presentation timing",
+      "evidence": "interaction-count test plus state-transition latency evidence",
+      "gates": ["ML-11"]
+    },
+    {
+      "id": "Q-11",
+      "dimension": "Revision / recovery cycle",
+      "comparators": ["poly-bridge-3"],
+      "meets": "retry is unlimited or clearly bounded, non-punitive, and creates a new trial identity without rewriting prior evidence",
+      "below": "retry loses evidence, punishes the learner, or silently overwrites trial history",
+      "evidence": "ML-04/ML-10 recovery tests",
+      "gates": ["ML-11"]
+    },
+    {
+      "id": "Q-12",
+      "dimension": "Game feel / immediate feedback",
+      "comparators": ["poly-bridge-3"],
+      "meets": "a committed action produces visible feedback within the recorded state-transition latency budget, excluding intentional dwell",
+      "below": "an action produces no feedback, or feedback is delayed beyond the recorded budget",
+      "evidence": "ML-14 latency evidence",
+      "gates": ["ML-11", "ML-12"]
+    },
+    {
+      "id": "Q-13",
+      "dimension": "Clarity of simulation outcome",
+      "comparators": ["poly-bridge-3"],
+      "meets": "after a run the learner can state what happened and why from the displayed evidence without external help",
+      "below": "the outcome is ambiguous or requires guessing which evidence matters",
+      "evidence": "target-age playtest record (ML-16) plus debrief review",
+      "gates": ["ML-11", "ML-16"]
+    },
+    {
+      "id": "Q-14",
+      "dimension": "Presentation quality",
+      "comparators": ["poly-bridge-3"],
+      "meets": "production art is original, consistent and crisp at the tested viewports, with no placeholder art in released screens",
+      "below": "placeholder or inconsistent art ships, or art breaks at a tested viewport",
+      "evidence": "asset provenance plus screenshot review",
+      "gates": ["ML-12", "ML-16"]
+    },
+    {
+      "id": "Q-15",
+      "dimension": "Mission clarity (first use)",
+      "comparators": [],
+      "meets": "a first-time learner identifies the mission objective without external instruction",
+      "below": "a first-time learner cannot state the objective from the brief and first screen",
+      "evidence": "target-age playtest record (ML-16)",
+      "gates": ["ML-11", "ML-16"]
+    },
+    {
+      "id": "Q-16",
+      "dimension": "Deterministic authority separation",
+      "comparators": [],
+      "meets": "architecture tests fail on any forbidden edge (science/domain importing React, Phaser, DOM, storage or network) and no authoritative value derives from renderer state",
+      "below": "a forbidden import exists, or a scientific value is derivable from pixels, sprites, collisions or animation",
+      "evidence": "architecture-boundary tests plus import lint",
+      "gates": ["ML-02", "ML-11", "ML-14"]
+    },
+    {
+      "id": "Q-17",
+      "dimension": "Determinism and replay",
+      "comparators": [],
+      "meets": "the same seed and configuration produce bit-identical authoritative evidence across runs and across renderer frame rates",
+      "below": "evidence differs between runs or between frame rates",
+      "evidence": "golden/property tests plus a replay test",
+      "gates": ["ML-03", "ML-14"]
+    },
+    {
+      "id": "Q-18",
+      "dimension": "Accessibility / input parity",
+      "comparators": [],
+      "meets": "the keyboard, screen-reader, reduced-motion, zoom and non-colour journeys each complete a representative mission and obtain all required evidence, with no open serious or critical automated violation",
+      "below": "any required journey cannot complete, or evidence is canvas-only, or a serious/critical violation is open",
+      "evidence": "ML-14 automated lane plus the ML-16 manual record",
+      "gates": ["ML-11", "ML-14", "ML-16"]
+    },
+    {
+      "id": "Q-19",
+      "dimension": "Performance / responsiveness",
+      "comparators": [],
+      "meets": "every ML-02 baseline metric is measured against the pinned baseline, material regressions are remediated or explicitly waived, and no new long task or memory trend is introduced",
+      "below": "a material regression is unaddressed, or a metric is claimed without measurement",
+      "evidence": "ML-14 evidence manifest",
+      "gates": ["ML-14"]
+    },
+    {
+      "id": "Q-20",
+      "dimension": "Privacy integrity",
+      "comparators": [],
+      "meets": "qualified flows show no unintended learner-data transmission and no prohibited runtime dependency, and no telemetry, LLM or account path exists",
+      "below": "any learner-data transmission, tracker, analytics SDK or account path exists",
+      "evidence": "network assertion plus dependency review",
+      "gates": ["ML-02", "ML-14"]
+    },
+    {
+      "id": "Q-21",
+      "dimension": "Originality / IP separation",
+      "comparators": [],
+      "meets": "no comparator art, audio, name, character, text or layout ships; asset provenance is complete; the IP review finds no unresolved issue",
+      "below": "any comparator-derived content ships, or an asset has unknown provenance",
+      "evidence": "asset provenance manifest plus the ML-16 IP review",
+      "gates": ["ML-12", "ML-16"]
+    },
+    {
+      "id": "Q-22",
+      "dimension": "Content completeness",
+      "comparators": [],
+      "meets": "all four mission families are playable end-to-end with provenance manifests for every scenario and no unreviewed scenario in a production build",
+      "below": "a required family is missing, or a shipped scenario lacks provenance or review",
+      "evidence": "content validator plus the ML-13 inventory",
+      "gates": ["ML-13"]
+    },
+    {
+      "id": "Q-23",
+      "dimension": "Content originality of science copy",
+      "comparators": [],
+      "meets": "debrief and mission copy are original and reviewed for a grades 6-8 reading level",
+      "below": "copy is copied, or its reading level is not reviewed",
+      "evidence": "reading-level review plus provenance",
+      "gates": ["ML-13"]
+    }
+  ],
+  "gateSummary": [
+    { "gate": "ML-11", "rowsMustNotBeBelow": ["Q-01", "Q-02", "Q-03", "Q-04", "Q-05", "Q-07", "Q-08", "Q-10", "Q-11", "Q-13", "Q-15", "Q-16", "Q-18"] },
+    { "gate": "ML-13", "rowsMustNotBeBelow": ["Q-05", "Q-06", "Q-07", "Q-22", "Q-23"] },
+    { "gate": "ML-14", "rowsMustNotBeBelow": ["Q-02", "Q-04", "Q-09", "Q-16", "Q-17", "Q-19", "Q-20"] },
+    { "gate": "ML-16", "rowsMustNotBeBelow": "all", "noUnresolvedNotAssessedOnReleaseRelevantRows": true }
+  ]
+}
