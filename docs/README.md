@@ -13,8 +13,9 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 2. Read [`CURRICULUM.md`](CURRICULUM.md) for the standards boundary.
 3. Read [`SCIENCE_MODEL.md`](SCIENCE_MODEL.md) before writing any physics.
 4. Read [`EXPERIMENT_MODEL.md`](EXPERIMENT_MODEL.md) before writing any trial, measurement, or evidence code.
-5. Read [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`adr/`](adr/) before writing any code.
-6. Read [`DECISIONS.md`](DECISIONS.md) before proposing a change to any of the above.
+5. Read [`CONTENT_SET.md`](CONTENT_SET.md) before authoring or changing any scenario.
+6. Read [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`adr/`](adr/) before writing any code.
+7. Read [`DECISIONS.md`](DECISIONS.md) before proposing a change to any of the above.
 
 ## Contract documents
 
@@ -26,6 +27,7 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 | [`EXPERIMENT_MODEL.md`](EXPERIMENT_MODEL.md) | experiment/evidence/replay contract: controlled variables, derived measurements, immutable trials, integrity digest, misconceptions | ML-05, ML-07, ML-08, ML-10, ML-13 |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) + [`adr/`](adr/) | authority flow, package boundaries, technology baseline | ML-02, ML-06, ML-08, ML-09 |
 | [`MISSIONS.md`](MISSIONS.md) | four canonical mission families, difficulty progression | ML-05, ML-11, ML-13 |
+| [`CONTENT_SET.md`](CONTENT_SET.md) | the ten canonical v1 scenarios, their provenance and golden traces, the content validator, and the recorded diagnosis limitation | ML-07, ML-10, ML-11, ML-13, ML-15 |
 | [`COMPARATORS.md`](COMPARATORS.md) | scored comparator registry, dimension mapping, IP boundary | ML-16 |
 | [`QUALITY_SCORECARD.md`](QUALITY_SCORECARD.md) | measurable quality rows with Meets/Below evidence | ML-11, ML-13, ML-14, ML-16 |
 | [`ACCESSIBILITY.md`](ACCESSIBILITY.md) | assistive pathway contract and evidence rules | ML-02, ML-06, ML-07, ML-08, ML-09, ML-11, ML-14, ML-16 |

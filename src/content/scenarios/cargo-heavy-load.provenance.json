@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "targetStandard": "NGSS MS-PS2-2",
+    "units": {
+      "mass": "kg",
+      "force": "N",
+      "netForce": "N",
+      "position": "m",
+      "time": "s",
+      "velocity": "m/s",
+      "acceleration": "m/s^2"
+    },
+    "answerTolerance": {
+      "relative": 0.02,
+      "absoluteSource": "science-conventions.v1.json:quantity.toleranceFloor"
+    },
+    "reviewStatus": "unreviewed",
+    "reviewer": null,
+    "answerKeyBounded": true,
+    "referenceBasis": null,
+    "variantOf": null,
+    "reviewDate": null,
+    "seed": 4100,
+    "scenarioId": "cargo-heavy-load",
+    "familyId": "cargo-load-test",
+    "title": "The load that never got there",
+    "scienceConcepts": [
+      "mass",
+      "acceleration",
+      "position",
+      "inverse-proportional-reasoning",
+      "evidence-from-multiple-trials"
+    ],
+    "independentVariable": "the cargo mass",
+    "dependentVariable": "how far the cart travels in the run",
+    "controlledVariables": [
+      "applied force",
+      "starting speed",
+      "observation span",
+      "resistive force"
+    ],
+    "initialConditions": {
+      "positionMetres": 0,
+      "velocityMetresPerSecond": 0,
+      "appliedForcesNewtons": [
+        6
+      ],
+      "resistiveForceNewtons": null,
+      "observationWindowSeconds": 2,
+      "cartMassKilograms": 1.5
+    },
+    "expectedRelationship": {
+      "statement": "Doubling the load halves the speed-up, so the heavier cart runs out of time.",
+      "governingEquations": [
+        "newton-second-law",
+        "position-time"
+      ]
+    },
+    "acceptedEvidence": [
+      "Two runs that differ only in cargo mass.",
+      "The times each cart passed 3.00 m and 6.00 m.",
+      "A note that the heavier cart never reached 6.00 m."
+    ],
+    "misconceptions": [
+      {
+        "id": "heavier-cart-accelerates-faster",
+        "statement": "A heavier cart should speed up faster.",
+        "remediation": "The 3.00 kg cart never reached the 6.00 m mark. The lighter cart passed it with time to spare."
+      },
+      {
+        "id": "mass-and-force-changed-together",
+        "statement": "Changing mass and force together still gives a fair test.",
+        "remediation": "The thruster stayed at 6 N in both runs, so the loads are the only thing that changed."
+      }
+    ],
+    "debriefExplanation": "The lighter cart passed 6.00 m before the run ended. The heavier cart never got there. Both used the same push, so the heavier load had a smaller speed-up. A curved path line that bends more slowly points to a smaller speed-up.",
+    "expectedTraces": [
+      "src/content/golden/cargo-heavy-load.trace.json#cargo-heavy-load",
+      "tests/fixtures/science/golden/mass-scaling.json#mass-scaling"
+    ],
+    "difficultyLevel": "evidence-challenge",
+    "graphRequirement": {
+      "level": "optional",
+      "graphs": [
+        "position-time"
+      ]
+    }
+  },
+  "design": {
+    "investigation": {
+      "investigationId": "ml-05-cartMassKilograms",
+      "independentVariableId": "cartMassKilograms",
+      "dependentVariableIds": [
+        "cartMassKilograms"
+      ],
+      "controlledVariableIds": [
+        "appliedForceNewtons",
+        "initialVelocityMetresPerSecond",
+        "observationWindowSeconds"
+      ],
+      "declaredVariables": [
+        {
+          "id": "cartMassKilograms",
+          "quantity": "mass",
+          "role": "independent",
+          "bounds": [
+            1,
+            4
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Cart mass"
+        },
+        {
+          "id": "appliedForceNewtons",
+          "quantity": "force",
+          "role": "controlled",
+          "bounds": [
+            -12,
+            12
+          ],
+          "step": 1,
+          "learnerAdjustable": true,
+          "label": "Applied force"
+        },
+        {
+          "id": "initialVelocityMetresPerSecond",
+          "quantity": "velocity",
+          "role": "controlled",
+          "bounds": [
+            -2,
+            2
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Starting speed"
+        },
+        {
+          "id": "observationWindowSeconds",
+          "quantity": "time",
+          "role": "controlled",
+          "bounds": [
+            1,
+            6
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Observation span"
+        }
+      ]
+    },
+    "trials": [
+      {
+        "trialKey": "mass-1-5",
+        "label": "Cart loaded to 1.50 kg",
+        "role": "baseline",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 1.5,
+          "appliedForceNewtons": 6,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          6
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          3,
+          6
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "mass-3",
+        "label": "Cart loaded to 3.00 kg",
+        "role": "comparison",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 3,
+          "appliedForceNewtons": 6,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          6
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          3,
+          6
+        ],
+        "sampleCount": 6
+      }
+    ]
+  }
+}

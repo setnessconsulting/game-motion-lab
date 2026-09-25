@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "calibration-unbalanced-swap",
+  "familyId": "calibration-run",
+  "rationale": "Pairs the at-rest balanced case with a strong imbalance, so the learner sees that balance produces no change and imbalance produces change in the direction of the larger force.",
+  "trials": [
+    {
+      "trialKey": "balanced-at-rest",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 3 N + (-3 N) = 0 N",
+        "a = 0 / 3 = 0 m/s^2",
+        "v(2 s) = 0 m/s",
+        "x(2 s) = 0 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 0,
+        "acceleration": 0,
+        "finalPositionMetres": 0,
+        "finalVelocityMetresPerSecond": 0
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 0
+        },
+        {
+          "id": "finalVelocity",
+          "value": 0
+        },
+        {
+          "id": "averageVelocity",
+          "value": 0
+        },
+        {
+          "id": "maxSpeed",
+          "value": 0
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [
+        1.5
+      ],
+      "expectedSamplesDigest": "f229e741",
+      "expectedFinalState": {
+        "positionMetres": 0,
+        "velocityMetresPerSecond": 0,
+        "accelerationMetresPerSecondSquared": 0,
+        "netForceNewtons": 0,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "unbalanced-right",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 8 N + (-2 N) = 6 N",
+        "a = 6 N / 3 kg = 2.00 m/s^2",
+        "v(2 s) = 0 + 2.00 * 2 = 4.00 m/s",
+        "x(2 s) = 0.5 * 2.00 * 2^2 = 4.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 6,
+        "acceleration": 2,
+        "finalPositionMetres": 4,
+        "finalVelocityMetresPerSecond": 4
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 4
+        },
+        {
+          "id": "finalVelocity",
+          "value": 4
+        },
+        {
+          "id": "averageVelocity",
+          "value": 2
+        },
+        {
+          "id": "maxSpeed",
+          "value": 4
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.2247448710000002,
+          "targetMetres": 1.5
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "8536b355",
+      "expectedFinalState": {
+        "positionMetres": 4,
+        "velocityMetresPerSecond": 4,
+        "accelerationMetresPerSecondSquared": 2,
+        "netForceNewtons": 6,
+        "elapsedSeconds": 2
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "balanced-at-rest",
+      "candidateTrialKey": "unbalanced-right",
+      "validity": "valid",
+      "changedVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "expectedMisconceptions": []
+}

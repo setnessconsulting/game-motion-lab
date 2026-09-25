@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import * as science from "../../src/science/index.js";
 import * as domain from "../../src/domain/index.js";
+import * as content from "../../src/content/index.js";
 import * as viewmodel from "../../src/viewmodel/index.js";
 
 /**
@@ -110,6 +113,21 @@ describe("authoritative packages evaluate and compute without a DOM", () => {
     }
     expect(typeof science.formatQuantity).toBe("function");
   });
+
+  it("validates the canonical content set with no browser globals present", () => {
+    // The content validator is the gate for the v1 scenario set. Running it
+    // here proves it never reaches for a browser to decide whether content is
+    // admissible, which is the same purity claim the science layer makes.
+    const scenarios = JSON.parse(
+      readFileSync(resolve(process.cwd(), "src/content/scenarios/thruster-force-doubling.provenance.json"), "utf8")
+    ) as unknown;
+    const schema = JSON.parse(
+      readFileSync(resolve(process.cwd(), "contracts/scenario-provenance.schema.json"), "utf8")
+    ) as unknown;
+    const violations = content.validateAgainstSchema(schema, (scenarios as { manifest: unknown }).manifest);
+    expect(violations).toStrictEqual([]);
+    expect(typeof content.validateContentSet).toBe("function");
+  });
 });
 
 describe("authoritative state is JSON-safe", () => {
@@ -138,6 +156,15 @@ describe("authoritative state is JSON-safe", () => {
     // Every domain export must be a plain value or a pure function. A class
     // whose constructor needed an element would be a boundary violation.
     for (const [name, value] of Object.entries(domain)) {
+      expect(
+        ["function", "object", "string", "number", "boolean"],
+        `${name} has unexpected type ${typeof value}`
+      ).toContain(typeof value);
+    }
+  });
+
+  it("exports no DOM-bound factory from the content layer", () => {
+    for (const [name, value] of Object.entries(content)) {
       expect(
         ["function", "object", "string", "number", "boolean"],
         `${name} has unexpected type ${typeof value}`

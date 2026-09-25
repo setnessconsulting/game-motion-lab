@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "targetStandard": "NGSS MS-PS2-2",
+    "units": {
+      "mass": "kg",
+      "force": "N",
+      "netForce": "N",
+      "position": "m",
+      "time": "s",
+      "velocity": "m/s",
+      "acceleration": "m/s^2"
+    },
+    "answerTolerance": {
+      "relative": 0.02,
+      "absoluteSource": "science-conventions.v1.json:quantity.toleranceFloor"
+    },
+    "reviewStatus": "unreviewed",
+    "reviewer": null,
+    "answerKeyBounded": true,
+    "referenceBasis": null,
+    "variantOf": null,
+    "reviewDate": null,
+    "seed": 4100,
+    "scenarioId": "calibration-unbalanced-swap",
+    "familyId": "calibration-run",
+    "title": "Which push wins",
+    "scienceConcepts": [
+      "unbalanced-force",
+      "net-force",
+      "acceleration",
+      "controlled-investigation"
+    ],
+    "independentVariable": "the pair of pushes on the cart",
+    "dependentVariable": "the speed-up the cart gains",
+    "controlledVariables": [
+      "cart mass",
+      "starting speed",
+      "observation span"
+    ],
+    "initialConditions": {
+      "positionMetres": 0,
+      "velocityMetresPerSecond": 0,
+      "appliedForcesNewtons": [
+        3,
+        -3
+      ],
+      "resistiveForceNewtons": null,
+      "observationWindowSeconds": 2,
+      "cartMassKilograms": 3
+    },
+    "expectedRelationship": {
+      "statement": "The bigger push wins, and the cart speeds up toward it.",
+      "governingEquations": [
+        "net-force-composition",
+        "newton-second-law"
+      ]
+    },
+    "acceptedEvidence": [
+      "A trial with two equal pushes.",
+      "A trial with a much bigger push one way.",
+      "The net force worked out for each run."
+    ],
+    "misconceptions": [
+      {
+        "id": "object-stores-force",
+        "statement": "The cart can hold on to force and give it back later.",
+        "remediation": "A cart has no stored force. Stop the pushes and the force is gone at once. Only the speed carries on."
+      },
+      {
+        "id": "constant-push-means-constant-speed",
+        "statement": "A steady push should make a steady speed.",
+        "remediation": "In the second run the cart kept gaining speed, because the net force never reached zero."
+      }
+    ],
+    "debriefExplanation": "In the first run the two pushes were the same size, so the net force was 0 N and the cart sat still. In the second run one push was much bigger. The net force was 6 N, so the cart picked up speed toward the bigger push. The cart did not keep any force. It only kept its speed.",
+    "expectedTraces": [
+      "src/content/golden/calibration-unbalanced-swap.trace.json#calibration-unbalanced-swap",
+      "tests/fixtures/science/golden/force-scaling.json#force-scaling"
+    ],
+    "difficultyLevel": "supported",
+    "graphRequirement": {
+      "level": "none",
+      "graphs": []
+    }
+  },
+  "design": {
+    "investigation": {
+      "investigationId": "ml-05-appliedForceNewtons",
+      "independentVariableId": "appliedForceNewtons",
+      "dependentVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledVariableIds": [
+        "cartMassKilograms",
+        "initialVelocityMetresPerSecond",
+        "observationWindowSeconds"
+      ],
+      "declaredVariables": [
+        {
+          "id": "cartMassKilograms",
+          "quantity": "mass",
+          "role": "controlled",
+          "bounds": [
+            1,
+            4
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Cart mass"
+        },
+        {
+          "id": "appliedForceNewtons",
+          "quantity": "force",
+          "role": "independent",
+          "bounds": [
+            -12,
+            12
+          ],
+          "step": 1,
+          "learnerAdjustable": true,
+          "label": "Applied force"
+        },
+        {
+          "id": "initialVelocityMetresPerSecond",
+          "quantity": "velocity",
+          "role": "controlled",
+          "bounds": [
+            -2,
+            2
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Starting speed"
+        },
+        {
+          "id": "observationWindowSeconds",
+          "quantity": "time",
+          "role": "controlled",
+          "bounds": [
+            1,
+            6
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Observation span"
+        }
+      ]
+    },
+    "trials": [
+      {
+        "trialKey": "balanced-at-rest",
+        "label": "Two equal pushes on a cart at rest",
+        "role": "baseline",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 3,
+          "appliedForceNewtons": 0,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          3,
+          -3
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          1.5
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "unbalanced-right",
+        "label": "A push of 8 N and a push of 2 N",
+        "role": "comparison",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 3,
+          "appliedForceNewtons": 6,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          8,
+          -2
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          1.5
+        ],
+        "sampleCount": 6
+      }
+    ]
+  }
+}

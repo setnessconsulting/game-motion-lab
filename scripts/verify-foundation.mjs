@@ -110,6 +110,7 @@ if (pkg) {
 const REQUIRED_DIRS = [
   "src/science",
   "src/domain",
+  "src/content",
   "src/viewmodel",
   "src/ui",
   "src/renderer",
@@ -124,12 +125,12 @@ for (const directory of REQUIRED_DIRS) {
 }
 
 // Each boundary module must expose a public entry point.
-for (const entry of ["src/science/index.ts", "src/domain/index.ts", "src/viewmodel/index.ts", "src/renderer/index.ts"]) {
+for (const entry of ["src/science/index.ts", "src/domain/index.ts", "src/content/index.ts", "src/viewmodel/index.ts", "src/renderer/index.ts"]) {
   check(`${entry} is the package entry point`, exists(entry));
 }
 
 // The pure packages must contain no JSX file (docs/ARCHITECTURE.md §3).
-for (const pure of ["src/science", "src/domain"]) {
+for (const pure of ["src/science", "src/domain", "src/content"]) {
   if (!exists(pure)) continue;
   const tsx = readdirSync(join(ROOT, pure), { withFileTypes: true, recursive: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".tsx"))

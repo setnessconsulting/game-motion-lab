@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "cargo-mass-doubling",
+  "familyId": "cargo-load-test",
+  "rationale": "The exact inverse of the thruster pair, at a force high enough that both masses land on clean accelerations within the frozen bands.",
+  "trials": [
+    {
+      "trialKey": "mass-2",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 8 N",
+        "a = 8 N / 2.0 kg = 4.00 m/s^2",
+        "v(2 s) = 4.00 * 2 = 8.00 m/s",
+        "x(2 s) = 0.5 * 4.00 * 2^2 = 8.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 8,
+        "acceleration": 4,
+        "finalPositionMetres": 8,
+        "finalVelocityMetresPerSecond": 8
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 8
+        },
+        {
+          "id": "finalVelocity",
+          "value": 8
+        },
+        {
+          "id": "averageVelocity",
+          "value": 4
+        },
+        {
+          "id": "maxSpeed",
+          "value": 8
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1,
+          "targetMetres": 2
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "dc326a58",
+      "expectedFinalState": {
+        "positionMetres": 8,
+        "velocityMetresPerSecond": 8,
+        "accelerationMetresPerSecondSquared": 4,
+        "netForceNewtons": 8,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "mass-4",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 8 N (held still)",
+        "a = 8 N / 4.0 kg = 2.00 m/s^2",
+        "v(2 s) = 2.00 * 2 = 4.00 m/s",
+        "x(2 s) = 0.5 * 2.00 * 2^2 = 4.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 8,
+        "acceleration": 2,
+        "finalPositionMetres": 4,
+        "finalVelocityMetresPerSecond": 4
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 4
+        },
+        {
+          "id": "finalVelocity",
+          "value": 4
+        },
+        {
+          "id": "averageVelocity",
+          "value": 2
+        },
+        {
+          "id": "maxSpeed",
+          "value": 4
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.414213562,
+          "targetMetres": 2
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "85ac052d",
+      "expectedFinalState": {
+        "positionMetres": 4,
+        "velocityMetresPerSecond": 4,
+        "accelerationMetresPerSecondSquared": 2,
+        "netForceNewtons": 8,
+        "elapsedSeconds": 2
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "mass-2",
+      "candidateTrialKey": "mass-4",
+      "validity": "valid",
+      "changedVariableIds": [
+        "cartMassKilograms"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "expectedMisconceptions": []
+}

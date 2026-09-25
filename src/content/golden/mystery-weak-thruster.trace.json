@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "mystery-weak-thruster",
+  "familyId": "mystery-cart",
+  "rationale": "Authored data for the stuck-thruster fault, where raising the force changes nothing, which is exactly what a heavy cart could never do.",
+  "trials": [
+    {
+      "trialKey": "reference-2n",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 2 N - 0 N = 2 N",
+        "a = 2 N / 2 kg = 1 m/s^2",
+        "v(2 s) = 1 * 2 = 2 m/s",
+        "x(2 s) = 0.5 * 1 * 2^2 = 2 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 2,
+        "acceleration": 1,
+        "finalPositionMetres": 2,
+        "finalVelocityMetresPerSecond": 2
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 2
+        },
+        {
+          "id": "finalVelocity",
+          "value": 2
+        },
+        {
+          "id": "averageVelocity",
+          "value": 1
+        },
+        {
+          "id": "maxSpeed",
+          "value": 2
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.414213562,
+          "targetMetres": 1
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "b8b98a1e",
+      "expectedFinalState": {
+        "positionMetres": 2,
+        "velocityMetresPerSecond": 2,
+        "accelerationMetresPerSecondSquared": 1,
+        "netForceNewtons": 2,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "reference-3n",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 3 N - 0 N = 3 N",
+        "a = 3 N / 2 kg = 1.5 m/s^2",
+        "v(2 s) = 1.5 * 2 = 3 m/s",
+        "x(2 s) = 0.5 * 1.5 * 2^2 = 3 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 3,
+        "acceleration": 1.5,
+        "finalPositionMetres": 3,
+        "finalVelocityMetresPerSecond": 3
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 3
+        },
+        {
+          "id": "finalVelocity",
+          "value": 3
+        },
+        {
+          "id": "averageVelocity",
+          "value": 1.5
+        },
+        {
+          "id": "maxSpeed",
+          "value": 3
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.1547005380000002,
+          "targetMetres": 1
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "be207d98",
+      "expectedFinalState": {
+        "positionMetres": 3,
+        "velocityMetresPerSecond": 3,
+        "accelerationMetresPerSecondSquared": 1.5,
+        "netForceNewtons": 3,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "suspect-2n",
+      "ordinal": 2,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 2 N - 0 N = 2 N",
+        "a = 2 N / 2 kg = 1 m/s^2",
+        "v(2 s) = 1 * 2 = 2 m/s",
+        "x(2 s) = 0.5 * 1 * 2^2 = 2 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 2,
+        "acceleration": 1,
+        "finalPositionMetres": 2,
+        "finalVelocityMetresPerSecond": 2
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 2
+        },
+        {
+          "id": "finalVelocity",
+          "value": 2
+        },
+        {
+          "id": "averageVelocity",
+          "value": 1
+        },
+        {
+          "id": "maxSpeed",
+          "value": 2
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.414213562,
+          "targetMetres": 1
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "b8b98a1e",
+      "expectedFinalState": {
+        "positionMetres": 2,
+        "velocityMetresPerSecond": 2,
+        "accelerationMetresPerSecondSquared": 1,
+        "netForceNewtons": 2,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "suspect-3n",
+      "ordinal": 3,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 2 N - 0 N = 2 N",
+        "a = 2 N / 2 kg = 1 m/s^2",
+        "v(2 s) = 1 * 2 = 2 m/s",
+        "x(2 s) = 0.5 * 1 * 2^2 = 2 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 2,
+        "acceleration": 1,
+        "finalPositionMetres": 2,
+        "finalVelocityMetresPerSecond": 2
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 2
+        },
+        {
+          "id": "finalVelocity",
+          "value": 2
+        },
+        {
+          "id": "averageVelocity",
+          "value": 1
+        },
+        {
+          "id": "maxSpeed",
+          "value": 2
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.414213562,
+          "targetMetres": 1
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "b8b98a1e",
+      "expectedFinalState": {
+        "positionMetres": 2,
+        "velocityMetresPerSecond": 2,
+        "accelerationMetresPerSecondSquared": 1,
+        "netForceNewtons": 2,
+        "elapsedSeconds": 2
+      },
+      "kernelDeclaration": {
+        "observationWindowSeconds": 2,
+        "segments": [
+          {
+            "massKilograms": 2,
+            "initialPositionMetres": 0,
+            "initialVelocityMetresPerSecond": 0,
+            "appliedForcesNewtons": [
+              2
+            ],
+            "forceModel": "constant-collinear",
+            "durationSeconds": 2
+          }
+        ]
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "reference-2n",
+      "candidateTrialKey": "reference-3n",
+      "validity": "valid",
+      "changedVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledViolations": []
+    },
+    {
+      "baselineTrialKey": "suspect-2n",
+      "candidateTrialKey": "suspect-3n",
+      "validity": "valid",
+      "changedVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "diagnosis": {
+    "causeId": "weak-thruster",
+    "controlledComparisons": 2,
+    "rejectedCauseIds": [
+      "correct-calibration",
+      "incorrect-cargo-mass",
+      "unexpected-resistive-force"
+    ]
+  },
+  "expectedMisconceptions": []
+}

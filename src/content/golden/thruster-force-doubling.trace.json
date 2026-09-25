@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "thruster-force-doubling",
+  "familyId": "thruster-test",
+  "rationale": "The simplest force-proportionality pair: one variable moves, the numbers land on clean magnitudes, and the ratio is visible without arithmetic burden.",
+  "trials": [
+    {
+      "trialKey": "force-4",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 4 N",
+        "a = 4 N / 2 kg = 2.00 m/s^2",
+        "v(2 s) = 0 + 2.00 * 2 = 4.00 m/s",
+        "x(2 s) = 0.5 * 2.00 * 2^2 = 4.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 4,
+        "acceleration": 2,
+        "finalPositionMetres": 4,
+        "finalVelocityMetresPerSecond": 4
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 4
+        },
+        {
+          "id": "finalVelocity",
+          "value": 4
+        },
+        {
+          "id": "averageVelocity",
+          "value": 2
+        },
+        {
+          "id": "maxSpeed",
+          "value": 4
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.414213562,
+          "targetMetres": 2
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "7cc8785d",
+      "expectedFinalState": {
+        "positionMetres": 4,
+        "velocityMetresPerSecond": 4,
+        "accelerationMetresPerSecondSquared": 2,
+        "netForceNewtons": 4,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "force-8",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 8 N",
+        "a = 8 N / 2 kg = 4.00 m/s^2",
+        "v(2 s) = 0 + 4.00 * 2 = 8.00 m/s",
+        "x(2 s) = 0.5 * 4.00 * 2^2 = 8.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 8,
+        "acceleration": 4,
+        "finalPositionMetres": 8,
+        "finalVelocityMetresPerSecond": 8
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 8
+        },
+        {
+          "id": "finalVelocity",
+          "value": 8
+        },
+        {
+          "id": "averageVelocity",
+          "value": 4
+        },
+        {
+          "id": "maxSpeed",
+          "value": 8
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1,
+          "targetMetres": 2
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "dc326a58",
+      "expectedFinalState": {
+        "positionMetres": 8,
+        "velocityMetresPerSecond": 8,
+        "accelerationMetresPerSecondSquared": 4,
+        "netForceNewtons": 8,
+        "elapsedSeconds": 2
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "force-4",
+      "candidateTrialKey": "force-8",
+      "validity": "valid",
+      "changedVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "expectedMisconceptions": []
+}

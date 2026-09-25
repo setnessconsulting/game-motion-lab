@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "targetStandard": "NGSS MS-PS2-2",
+    "units": {
+      "mass": "kg",
+      "force": "N",
+      "netForce": "N",
+      "position": "m",
+      "time": "s",
+      "velocity": "m/s",
+      "acceleration": "m/s^2"
+    },
+    "answerTolerance": {
+      "relative": 0.02,
+      "absoluteSource": "science-conventions.v1.json:quantity.toleranceFloor"
+    },
+    "reviewStatus": "unreviewed",
+    "reviewer": null,
+    "answerKeyBounded": true,
+    "referenceBasis": null,
+    "variantOf": null,
+    "reviewDate": null,
+    "seed": 4100,
+    "scenarioId": "thruster-velocity-graph",
+    "familyId": "thruster-test",
+    "title": "Read the slope",
+    "scienceConcepts": [
+      "acceleration",
+      "velocity",
+      "proportional-reasoning",
+      "graph-interpretation"
+    ],
+    "independentVariable": "the thruster force",
+    "dependentVariable": "the slope of the speed graph",
+    "controlledVariables": [
+      "cart mass",
+      "starting speed",
+      "observation span",
+      "resistive force"
+    ],
+    "initialConditions": {
+      "positionMetres": 0,
+      "velocityMetresPerSecond": 0,
+      "appliedForcesNewtons": [
+        3
+      ],
+      "resistiveForceNewtons": null,
+      "observationWindowSeconds": 2,
+      "cartMassKilograms": 2
+    },
+    "expectedRelationship": {
+      "statement": "The slope of the speed graph is the speed-up, and it grows with force.",
+      "governingEquations": [
+        "newton-second-law",
+        "velocity-time"
+      ]
+    },
+    "acceptedEvidence": [
+      "Two speed graphs taken at different thruster forces.",
+      "A reading of how steep each line is.",
+      "The marked times at which each cart passed 1.00 m and 2.00 m."
+    ],
+    "misconceptions": [
+      {
+        "id": "force-and-acceleration-unrelated",
+        "statement": "Force and speed-up are not connected.",
+        "remediation": "The steeper line is the run with the bigger force. The two lines start at the same place because mass was the same."
+      },
+      {
+        "id": "more-force-means-bigger-speed",
+        "statement": "A bigger push means a bigger speed.",
+        "remediation": "Both carts started at 0.00 m/s. Only how fast the line climbed differed."
+      }
+    ],
+    "debriefExplanation": "The two runs started at the same speed, so the lines begin together. The line for the bigger force climbed more steeply. A steeper speed line means a bigger speed-up. Reading the slope is the same as reading the speed-up, and the marked times show it.",
+    "expectedTraces": [
+      "src/content/golden/thruster-velocity-graph.trace.json#thruster-velocity-graph",
+      "tests/fixtures/science/golden/force-scaling.json#force-scaling"
+    ],
+    "difficultyLevel": "independent",
+    "graphRequirement": {
+      "level": "required",
+      "graphs": [
+        "velocity-time"
+      ]
+    }
+  },
+  "design": {
+    "investigation": {
+      "investigationId": "ml-05-appliedForceNewtons",
+      "independentVariableId": "appliedForceNewtons",
+      "dependentVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledVariableIds": [
+        "cartMassKilograms",
+        "initialVelocityMetresPerSecond",
+        "observationWindowSeconds"
+      ],
+      "declaredVariables": [
+        {
+          "id": "cartMassKilograms",
+          "quantity": "mass",
+          "role": "controlled",
+          "bounds": [
+            1,
+            4
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Cart mass"
+        },
+        {
+          "id": "appliedForceNewtons",
+          "quantity": "force",
+          "role": "independent",
+          "bounds": [
+            -12,
+            12
+          ],
+          "step": 1,
+          "learnerAdjustable": true,
+          "label": "Applied force"
+        },
+        {
+          "id": "initialVelocityMetresPerSecond",
+          "quantity": "velocity",
+          "role": "controlled",
+          "bounds": [
+            -2,
+            2
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Starting speed"
+        },
+        {
+          "id": "observationWindowSeconds",
+          "quantity": "time",
+          "role": "controlled",
+          "bounds": [
+            1,
+            6
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Observation span"
+        }
+      ]
+    },
+    "trials": [
+      {
+        "trialKey": "force-3",
+        "label": "Thruster set to 3 N",
+        "role": "baseline",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 3,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          3
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          1,
+          2
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "force-6",
+        "label": "Thruster set to 6 N",
+        "role": "comparison",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 6,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          6
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          1,
+          2
+        ],
+        "sampleCount": 6
+      }
+    ]
+  }
+}

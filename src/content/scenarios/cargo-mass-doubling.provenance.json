@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "targetStandard": "NGSS MS-PS2-2",
+    "units": {
+      "mass": "kg",
+      "force": "N",
+      "netForce": "N",
+      "position": "m",
+      "time": "s",
+      "velocity": "m/s",
+      "acceleration": "m/s^2"
+    },
+    "answerTolerance": {
+      "relative": 0.02,
+      "absoluteSource": "science-conventions.v1.json:quantity.toleranceFloor"
+    },
+    "reviewStatus": "unreviewed",
+    "reviewer": null,
+    "answerKeyBounded": true,
+    "referenceBasis": null,
+    "variantOf": null,
+    "reviewDate": null,
+    "seed": 4100,
+    "scenarioId": "cargo-mass-doubling",
+    "familyId": "cargo-load-test",
+    "title": "Same push, heavier load",
+    "scienceConcepts": [
+      "mass",
+      "acceleration",
+      "inverse-proportional-reasoning",
+      "controlled-investigation"
+    ],
+    "independentVariable": "the cargo mass",
+    "dependentVariable": "the speed-up of the cart",
+    "controlledVariables": [
+      "applied force",
+      "starting speed",
+      "observation span",
+      "resistive force"
+    ],
+    "initialConditions": {
+      "positionMetres": 0,
+      "velocityMetresPerSecond": 0,
+      "appliedForcesNewtons": [
+        8
+      ],
+      "resistiveForceNewtons": null,
+      "observationWindowSeconds": 2,
+      "cartMassKilograms": 2
+    },
+    "expectedRelationship": {
+      "statement": "With force held still, twice the mass gives half the speed-up.",
+      "governingEquations": [
+        "newton-second-law",
+        "position-time"
+      ]
+    },
+    "acceptedEvidence": [
+      "Two runs that differ only in cargo mass.",
+      "The speed-up in each run.",
+      "A note that the thruster force stayed at 8 N."
+    ],
+    "misconceptions": [
+      {
+        "id": "heavier-cart-accelerates-faster",
+        "statement": "A heavier cart should speed up faster.",
+        "remediation": "The heavier cart took longer to pass 2.00 m, even though the push was the same."
+      },
+      {
+        "id": "mass-and-force-changed-together",
+        "statement": "Changing mass and force together still gives a fair test.",
+        "remediation": "Here the force stayed at 8 N in both runs, so the only change was the mass."
+      }
+    ],
+    "debriefExplanation": "Both runs used the same 8 N push. The cart carrying less cargo changed speed twice as fast as the cart carrying more. When you double the mass, the speed-up is cut in half. That is a = Fnet / m at work.",
+    "expectedTraces": [
+      "src/content/golden/cargo-mass-doubling.trace.json#cargo-mass-doubling",
+      "tests/fixtures/science/golden/mass-scaling.json#mass-scaling"
+    ],
+    "difficultyLevel": "guided",
+    "graphRequirement": {
+      "level": "none",
+      "graphs": []
+    }
+  },
+  "design": {
+    "investigation": {
+      "investigationId": "ml-05-cartMassKilograms",
+      "independentVariableId": "cartMassKilograms",
+      "dependentVariableIds": [
+        "cartMassKilograms"
+      ],
+      "controlledVariableIds": [
+        "appliedForceNewtons",
+        "initialVelocityMetresPerSecond",
+        "observationWindowSeconds"
+      ],
+      "declaredVariables": [
+        {
+          "id": "cartMassKilograms",
+          "quantity": "mass",
+          "role": "independent",
+          "bounds": [
+            1,
+            4
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Cart mass"
+        },
+        {
+          "id": "appliedForceNewtons",
+          "quantity": "force",
+          "role": "controlled",
+          "bounds": [
+            -12,
+            12
+          ],
+          "step": 1,
+          "learnerAdjustable": true,
+          "label": "Applied force"
+        },
+        {
+          "id": "initialVelocityMetresPerSecond",
+          "quantity": "velocity",
+          "role": "controlled",
+          "bounds": [
+            -2,
+            2
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Starting speed"
+        },
+        {
+          "id": "observationWindowSeconds",
+          "quantity": "time",
+          "role": "controlled",
+          "bounds": [
+            1,
+            6
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Observation span"
+        }
+      ]
+    },
+    "trials": [
+      {
+        "trialKey": "mass-2",
+        "label": "Cart loaded to 2.00 kg",
+        "role": "baseline",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 8,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          8
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          2
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "mass-4",
+        "label": "Cart loaded to 4.00 kg",
+        "role": "comparison",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 4,
+          "appliedForceNewtons": 8,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          8
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          2
+        ],
+        "sampleCount": 6
+      }
+    ]
+  }
+}
