@@ -1,12 +1,12 @@
-import {
-  RESTING_CART,
-  formatQuantity,
-  roundForDisplay,
-  SI_UNITS,
-  type CartState,
-  type QuantityId,
-} from "../science/index.js";
+import { RESTING_CART, roundForDisplay, type CartState } from "../science/index.js";
 import type { MissionPhase, MissionState } from "../domain/index.js";
+import {
+  DIRECTION_CONVENTION,
+  directionWords,
+  findReading,
+  measuredReadingsFor,
+  type InstrumentReading,
+} from "./instruments.js";
 
 /**
  * The typed view model shared by React and Phaser (ADR 0002).
@@ -21,15 +21,14 @@ import type { MissionPhase, MissionState } from "../domain/index.js";
  * pixels back.
  */
 
-export interface SceneReadout {
-  readonly id: QuantityId;
-  readonly label: string;
-  /** Display string, e.g. "1.50 kg". Presentation only (ADR 0004). */
-  readonly text: string;
-  /** Display-rounded numeric value, for chart-style presentation. Presentation only. */
-  readonly displayValue: number;
-  readonly unit: string;
-}
+/**
+ * A reading as the renderer and the DOM both consume it (GAME-391 / ML-07).
+ *
+ * This is now the instrument type itself rather than a parallel shape, so there is one
+ * definition of what an instrument reading is and the animated view cannot show something the
+ * accessible readouts do not have.
+ */
+export type SceneReadout = InstrumentReading;
 
 export interface SceneSamplePoint {
   readonly atSeconds: number;
@@ -43,7 +42,7 @@ export interface SceneModel {
     readonly startMetres: number;
     readonly endMetres: number;
     /** Always stated so direction is never conveyed by colour alone. */
-    readonly positiveDirection: "rightward";
+    readonly positiveDirection: typeof DIRECTION_CONVENTION.positive;
   };
   readonly cart: {
     readonly positionMetres: number;
@@ -57,6 +56,14 @@ export interface SceneModel {
     readonly label: string;
   };
   readonly readouts: readonly SceneReadout[];
+  /**
+   * How the positive direction is written on the laboratory axis.
+   *
+   * Carried in the model rather than inlined in the renderer so the axis and the force labels
+   * cannot state the direction differently — and so the renderer keeps no runtime dependency on
+   * the view-model package, which it currently consumes as types only.
+   */
+  readonly directionAxis: string;
   readonly playback: {
     readonly samples: readonly SceneSamplePoint[];
     readonly activeIndex: number;
@@ -84,34 +91,13 @@ function trackEndMetres(samples: readonly SceneSamplePoint[]): number {
 }
 
 function describeForce(netForceNewtons: number): SceneModel["forceArrow"] {
-  const rounded = roundForDisplay("netForce", netForceNewtons);
-  if (rounded === 0) {
-    return { newtons: 0, direction: "balanced", label: "balanced (0.0 N)" };
-  }
-  const direction = rounded > 0 ? "positive" : "negative";
-  const word = rounded > 0 ? "to the right" : "to the left";
-  return {
-    newtons: rounded,
-    direction,
-    label: `${Math.abs(rounded).toFixed(1)} N ${word}`,
-  };
+  // Both the direction word and the arrow label come from the one convention (ML-07 AC5).
+  const { direction, label } = directionWords(netForceNewtons);
+  return { newtons: roundForDisplay("netForce", netForceNewtons), direction, label };
 }
 
 function readoutsFor(state: CartState): readonly SceneReadout[] {
-  const entries: ReadonlyArray<readonly [QuantityId, string, number]> = [
-    ["position", "Position", state.positionMetres],
-    ["velocity", "Velocity", state.velocityMetresPerSecond],
-    ["acceleration", "Acceleration", state.accelerationMetresPerSecondSquared],
-    ["netForce", "Net force", state.netForceNewtons],
-    ["time", "Elapsed time", state.elapsedSeconds],
-  ];
-  return entries.map(([id, label, value]) => ({
-    id,
-    label,
-    text: formatQuantity(id, value),
-    displayValue: roundForDisplay(id, value),
-    unit: SI_UNITS[id],
-  }));
+  return measuredReadingsFor(state);
 }
 
 /**
@@ -120,6 +106,11 @@ function readoutsFor(state: CartState): readonly SceneReadout[] {
  * `playbackSeconds` is a presentation clock: it selects which already-computed
  * authoritative sample is shown. It cannot change a sample, a measurement, or a result.
  */
+/** The instrument text for one reading id, or an empty string when it is absent. */
+function readingText(readings: readonly SceneReadout[], id: string): string {
+  return findReading(readings, id)?.text ?? "";
+}
+
 export function toSceneModel(
   state: MissionState,
   input: SceneViewModelInput
@@ -140,6 +131,7 @@ export function toSceneModel(
   }
 
   const activeState = latest?.samples[activeIndex]?.state ?? RESTING_CART;
+  const readouts = readoutsFor(activeState);
 
   return {
     missionId: state.missionId,
@@ -147,7 +139,7 @@ export function toSceneModel(
     track: {
       startMetres: 0,
       endMetres: trackEndMetres(samples),
-      positiveDirection: "rightward",
+      positiveDirection: DIRECTION_CONVENTION.positive,
     },
     cart: {
       positionMetres: activeState.positionMetres,
@@ -155,7 +147,8 @@ export function toSceneModel(
       netForceNewtons: activeState.netForceNewtons,
     },
     forceArrow: describeForce(activeState.netForceNewtons),
-    readouts: readoutsFor(activeState),
+    readouts,
+    directionAxis: DIRECTION_CONVENTION.axis,
     playback: {
       samples,
       activeIndex,
@@ -163,22 +156,13 @@ export function toSceneModel(
       totalSeconds,
     },
     reducedMotion: input.reducedMotion,
+    // Built from the same readings the instruments show, so an announcement cannot disagree
+    // with the numbers on screen.
     announcement:
       latest === undefined
         ? "No trial has been run yet."
-        : `Trial ${latest.index + 1}: at ${formatQuantity("time", activeState.elapsedSeconds)}, ` +
-          `position ${formatQuantity("position", activeState.positionMetres)}, ` +
-          `velocity ${formatQuantity("velocity", activeState.velocityMetresPerSecond)}.`,
-  };
-}
-
-/** Read the cart mass readout for a trial configuration (no active sample needed). */
-export function massReadout(cartMassKilograms: number): SceneReadout {
-  return {
-    id: "mass",
-    label: "Cart mass",
-    text: formatQuantity("mass", cartMassKilograms),
-    displayValue: roundForDisplay("mass", cartMassKilograms),
-    unit: SI_UNITS.mass,
+        : `Trial ${latest.index + 1}: at ${readingText(readouts, "time")}, ` +
+          `position ${readingText(readouts, "position")}, ` +
+          `velocity ${readingText(readouts, "velocity")}.`,
   };
 }

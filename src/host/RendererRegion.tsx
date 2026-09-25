@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SceneModel } from "../viewmodel/index.js";
+import { findReading, type SceneModel } from "../viewmodel/index.js";
 import {
   failureExplanationFor,
   isRendererStage,
@@ -48,6 +48,24 @@ type RendererStatus = "loading" | "ready" | "failed";
 export interface RendererRegionProps {
   readonly model: SceneModel;
   readonly onRendererFlagChange?: (failed: boolean) => void;
+}
+
+/**
+ * The canvas's accessible name (ML-07 AC3).
+ *
+ * It is built from the same instrument readings the visible readouts use, rather than from its
+ * own formatting of the same numbers, so a screen-reader user and a sighted user cannot be told
+ * different values — and a unit can never be spelled two ways.
+ */
+function canvasLabel(model: SceneModel): string {
+  const position = findReading(model.readouts, "position");
+  const velocity = findReading(model.readouts, "velocity");
+  const parts = [
+    `Laboratory view: ${model.forceArrow.label}`,
+    position ? `${position.label} ${position.text}` : undefined,
+    velocity ? `${velocity.label} ${velocity.text}` : undefined,
+  ].filter((part): part is string => part !== undefined);
+  return `${parts.join("; ")}.`;
 }
 
 export function RendererRegion({ model, onRendererFlagChange }: RendererRegionProps) {
@@ -184,7 +202,7 @@ export function RendererRegion({ model, onRendererFlagChange }: RendererRegionPr
         className="lab-region__canvas"
         data-testid="renderer-canvas"
         role="img"
-        aria-label={`Laboratory view: ${model.forceArrow.label}; position ${model.cart.positionMetres.toFixed(2)} metres; velocity ${model.cart.velocityMetresPerSecond.toFixed(2)} metres per second.`}
+        aria-label={canvasLabel(model)}
         ref={containerRef}
       />
 
