@@ -1,4 +1,8 @@
-import { RESTING_CART, sampleBootstrapTrajectory } from "../science/index.js";
+import {
+  RESTING_CART,
+  sampleTrajectory,
+  singleSegmentDeclaration,
+} from "../science/index.js";
 import {
   MISSION_PHASE_ORDER,
   type MissionPhase,
@@ -13,14 +17,11 @@ import {
  * BOOTSTRAP SKELETON — the full state machine is GAME-394 (ML-10).
  * ============================================================================
  *
- * This reducer exists so the foundation can prove the *bounded intent* boundary: the
- * presentation layers may only ask for one of these intents, and the engine decides
- * what the new authoritative state is. A renderer cannot set a position, a measurement,
- * a phase, or a score directly.
+ * This reducer proves the *bounded intent* boundary: the presentation layers may only
+ * ask for one of these intents, and the engine decides the new authoritative state.
  *
- * Only the balanced-force case (`Fnet = 0`) is sampled in this milestone; the general
- * analytical kernel is GAME-386 (ML-03) and the trial/evidence contract is GAME-388
- * (ML-04).
+ * Motion sampling uses the ML-03 analytical kernel (GAME-386). The trial/evidence
+ * contract remains GAME-388 (ML-04).
  */
 
 /** The complete, closed set of things the presentation layers may request. */
@@ -34,17 +35,17 @@ export type MissionIntent =
 /**
  * Declared bounds for the bootstrap preview.
  *
- * `appliedForceNewtons` is pinned to 0 in this milestone: unbalanced motion needs the
- * ML-03 kernel, and inventing a relationship here would be exactly the kind of
- * unreviewed science the contract forbids.
+ * Applied force is signed and spans the SCIENCE_MODEL applied-force magnitude band
+ * including 0 for balanced-force demos. Mass uses the frozen 1–4 kg band.
  */
 export const BOOTSTRAP_BOUNDS: TrialConfigBounds = {
   cartMassKilograms: [1.0, 4.0],
-  appliedForceNewtons: [0, 0],
+  appliedForceNewtons: [-12, 12],
   initialVelocityMetresPerSecond: [-2, 2],
   observationWindowSeconds: [1, 6],
 };
 
+/** Default preview remains the balanced-force foundation case (F=0, v0=1.5, t=4 → x=6). */
 export const BOOTSTRAP_CONFIG: TrialConfig = {
   cartMassKilograms: 2,
   appliedForceNewtons: 0,
@@ -95,7 +96,7 @@ function nextPhase(phase: MissionPhase): MissionPhase {
   return MISSION_PHASE_ORDER[index + 1] as MissionPhase;
 }
 
-const BOOTSTRAP_SAMPLE_COUNT = 25;
+const PREVIEW_SAMPLE_COUNT = 25;
 
 /**
  * Apply one bounded intent. Pure and deterministic: no clock, no randomness, no
@@ -122,7 +123,6 @@ export function reduceMission(state: MissionState, intent: MissionIntent): Missi
       return createInitialMissionState(state.missionId);
     }
     default: {
-      // Exhaustive: an unknown intent is a programming error, not a silent no-op.
       const never: never = intent;
       throw new Error(`Unsupported mission intent: ${JSON.stringify(never)}`);
     }
@@ -130,25 +130,24 @@ export function reduceMission(state: MissionState, intent: MissionIntent): Missi
 }
 
 /**
- * Build a preview trial record from the balanced-force placeholder.
+ * Build a preview trial record from the analytical kernel.
  *
- * The samples come from src/science/bootstrap-motion.ts (the `Fnet = 0` case only).
- * ML-03 replaces the sampler; ML-04 replaces this record shape with the real,
- * provenance-carrying immutable trial.
+ * Samples come from src/science (ML-03). ML-04 replaces this record shape with the
+ * real provenance-carrying immutable trial.
  */
 export function createPreviewTrial(
   missionId: string,
   index: number,
   config: TrialConfig
 ): TrialRecord {
-  const samples = sampleBootstrapTrajectory(
-    {
-      initialPositionMetres: 0,
-      velocityMetresPerSecond: config.initialVelocityMetresPerSecond,
-    },
-    config.observationWindowSeconds,
-    BOOTSTRAP_SAMPLE_COUNT
-  );
+  const declaration = singleSegmentDeclaration({
+    massKilograms: config.cartMassKilograms,
+    initialPositionMetres: 0,
+    initialVelocityMetresPerSecond: config.initialVelocityMetresPerSecond,
+    appliedForcesNewtons: [config.appliedForceNewtons],
+    observationWindowSeconds: config.observationWindowSeconds,
+  });
+  const samples = sampleTrajectory(declaration, PREVIEW_SAMPLE_COUNT);
   const last = samples[samples.length - 1];
   return {
     id: `${missionId}-t${index + 1}`,

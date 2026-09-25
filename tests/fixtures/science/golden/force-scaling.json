@@ -1,0 +1,68 @@
+{
+  "id": "force-scaling",
+  "title": "Force scaling at fixed mass",
+  "equations": [
+    "m = 2.0 kg (controlled)",
+    "Fnet = 4 N → a = 2 m/s²",
+    "Fnet = 8 N → a = 4 m/s² (doubled)",
+    "v(t) = a·t (v0 = 0)",
+    "x(t) = ½·a·t²"
+  ],
+  "rationale": "At fixed mass, doubling |Fnet| doubles |a| without changing its sign. The assessed relationship is direct proportionality under controlled mass.",
+  "cases": [
+    {
+      "label": "Fnet = 4 N",
+      "declaration": {
+        "massKilograms": 2,
+        "initialPositionMetres": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "appliedForcesNewtons": [4],
+        "observationWindowSeconds": 2
+      },
+      "expectedStates": [
+        {
+          "atSeconds": 1,
+          "state": {
+            "positionMetres": 1,
+            "velocityMetresPerSecond": 2,
+            "accelerationMetresPerSecondSquared": 2,
+            "netForceNewtons": 4,
+            "elapsedSeconds": 1
+          }
+        },
+        {
+          "atSeconds": 2,
+          "state": {
+            "positionMetres": 4,
+            "velocityMetresPerSecond": 4,
+            "accelerationMetresPerSecondSquared": 2,
+            "netForceNewtons": 4,
+            "elapsedSeconds": 2
+          }
+        }
+      ]
+    },
+    {
+      "label": "Fnet = 8 N (double)",
+      "declaration": {
+        "massKilograms": 2,
+        "initialPositionMetres": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "appliedForcesNewtons": [8],
+        "observationWindowSeconds": 2
+      },
+      "expectedStates": [
+        {
+          "atSeconds": 2,
+          "state": {
+            "positionMetres": 8,
+            "velocityMetresPerSecond": 8,
+            "accelerationMetresPerSecondSquared": 4,
+            "netForceNewtons": 8,
+            "elapsedSeconds": 2
+          }
+        }
+      ]
+    }
+  ]
+}

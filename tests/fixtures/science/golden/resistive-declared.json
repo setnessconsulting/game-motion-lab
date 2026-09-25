@@ -1,0 +1,47 @@
+{
+  "id": "resistive-declared",
+  "title": "Explicit constant resistive force",
+  "equations": [
+    "F_applied = 6 N",
+    "F_resistive = 2 N opposing +x (explicitly declared)",
+    "Fnet = F_applied − F_resistive = 4 N",
+    "a = 4 N / 2 kg = 2 m/s²",
+    "v0 = 2 m/s",
+    "v(t) = 2 + 2·t",
+    "x(t) = 0 + 2·t + ½·2·t²"
+  ],
+  "rationale": "Resistive force is never a silent default. When a scenario declares a constant magnitude opposing the declared motion direction, Fnet is constant and the same closed-form kinematics apply. Unsupported drag models must fail closed rather than be approximated.",
+  "declaration": {
+    "massKilograms": 2,
+    "initialPositionMetres": 0,
+    "initialVelocityMetresPerSecond": 2,
+    "appliedForcesNewtons": [6],
+    "resistive": {
+      "magnitudeNewtons": 2,
+      "opposingDirection": 1
+    },
+    "observationWindowSeconds": 2
+  },
+  "expectedStates": [
+    {
+      "atSeconds": 0,
+      "state": {
+        "positionMetres": 0,
+        "velocityMetresPerSecond": 2,
+        "accelerationMetresPerSecondSquared": 2,
+        "netForceNewtons": 4,
+        "elapsedSeconds": 0
+      }
+    },
+    {
+      "atSeconds": 2,
+      "state": {
+        "positionMetres": 8,
+        "velocityMetresPerSecond": 6,
+        "accelerationMetresPerSecondSquared": 2,
+        "netForceNewtons": 4,
+        "elapsedSeconds": 2
+      }
+    }
+  ]
+}

@@ -9,14 +9,18 @@ import {
   type MissionIntent,
   type MissionState,
 } from "../../src/domain/index.js";
-import { sampleBootstrapLinearState } from "../../src/science/index.js";
+import { singleSegmentDeclaration, stateAt } from "../../src/science/index.js";
 
-describe("balanced-force placeholder (Fnet = 0)", () => {
+describe("analytical kernel balanced-force invariants (Fnet = 0)", () => {
   it("holds velocity constant and reports zero net force and zero acceleration", () => {
-    const atTwo = sampleBootstrapLinearState(
-      { initialPositionMetres: 0, velocityMetresPerSecond: 1.5 },
-      2
-    );
+    const declaration = singleSegmentDeclaration({
+      massKilograms: 2,
+      initialPositionMetres: 0,
+      initialVelocityMetresPerSecond: 1.5,
+      appliedForcesNewtons: [0],
+      observationWindowSeconds: 4,
+    });
+    const atTwo = stateAt(declaration, 2);
     expect(atTwo.velocityMetresPerSecond).toBe(1.5);
     expect(atTwo.accelerationMetresPerSecondSquared).toBe(0);
     expect(atTwo.netForceNewtons).toBe(0);
@@ -25,30 +29,37 @@ describe("balanced-force placeholder (Fnet = 0)", () => {
   });
 
   it("moves left for a negative declared velocity, matching the +x sign convention", () => {
-    const state = sampleBootstrapLinearState(
-      { initialPositionMetres: 4, velocityMetresPerSecond: -2 },
-      1.5
-    );
+    const declaration = singleSegmentDeclaration({
+      massKilograms: 2,
+      initialPositionMetres: 4,
+      initialVelocityMetresPerSecond: -2,
+      appliedForcesNewtons: [0],
+      observationWindowSeconds: 2,
+    });
+    const state = stateAt(declaration, 1.5);
     expect(state.positionMetres).toBeCloseTo(1, 9);
   });
 
   it("is deterministic: the same declaration and time always agree", () => {
-    const declaration = { initialPositionMetres: 0.5, velocityMetresPerSecond: -0.75 };
-    const first = sampleBootstrapLinearState(declaration, 3.25);
-    const second = sampleBootstrapLinearState(declaration, 3.25);
-    expect(first).toStrictEqual(second);
+    const declaration = singleSegmentDeclaration({
+      massKilograms: 2,
+      initialPositionMetres: 0.5,
+      initialVelocityMetresPerSecond: -0.75,
+      appliedForcesNewtons: [0],
+      observationWindowSeconds: 4,
+    });
+    expect(stateAt(declaration, 3.25)).toStrictEqual(stateAt(declaration, 3.25));
   });
 
   it("rejects invalid sampling inputs instead of guessing", () => {
-    expect(() =>
-      sampleBootstrapLinearState({ initialPositionMetres: 0, velocityMetresPerSecond: 1 }, -1)
-    ).toThrow(RangeError);
-    expect(() =>
-      sampleBootstrapLinearState(
-        { initialPositionMetres: 0, velocityMetresPerSecond: Number.NaN },
-        1
-      )
-    ).toThrow(RangeError);
+    const declaration = singleSegmentDeclaration({
+      massKilograms: 2,
+      initialPositionMetres: 0,
+      initialVelocityMetresPerSecond: 1,
+      appliedForcesNewtons: [0],
+      observationWindowSeconds: 2,
+    });
+    expect(() => stateAt(declaration, -1)).toThrow();
   });
 });
 
@@ -56,7 +67,7 @@ describe("configuration bounds", () => {
   it("clamps every authored value into the declared bands", () => {
     const clamped = clampConfig({
       cartMassKilograms: 99,
-      appliedForceNewtons: -5,
+      appliedForceNewtons: -99,
       initialVelocityMetresPerSecond: -99,
       observationWindowSeconds: 0.1,
     });
@@ -78,8 +89,8 @@ describe("configuration bounds", () => {
     expect(Number.isFinite(clamped.cartMassKilograms)).toBe(true);
   });
 
-  it("pins the applied force to 0 in this milestone so no unreviewed relationship is implied", () => {
-    expect(BOOTSTRAP_BOUNDS.appliedForceNewtons).toStrictEqual([0, 0]);
+  it("allows signed applied force across the SCIENCE_MODEL magnitude band including balanced 0", () => {
+    expect(BOOTSTRAP_BOUNDS.appliedForceNewtons).toStrictEqual([-12, 12]);
   });
 });
 
@@ -116,9 +127,7 @@ describe("bounded intents", () => {
   });
 
   it("appends an immutable-by-convention trial record and moves to the run phase", () => {
-    const state = apply(createInitialMissionState(id), [
-      { kind: "begin-preview-trial" },
-    ]);
+    const state = apply(createInitialMissionState(id), [{ kind: "begin-preview-trial" }]);
     expect(state.phase).toBe("run");
     expect(state.trials).toHaveLength(1);
     expect(state.trials[0]?.id).toBe(`${id}-t1`);
@@ -184,7 +193,11 @@ describe("bounded intents", () => {
 
 describe("preview trial records", () => {
   it("starts at the origin and ends at the stated uniform-motion position", () => {
-    const config = { ...BOOTSTRAP_CONFIG, initialVelocityMetresPerSecond: 2, observationWindowSeconds: 3 };
+    const config = {
+      ...BOOTSTRAP_CONFIG,
+      initialVelocityMetresPerSecond: 2,
+      observationWindowSeconds: 3,
+    };
     const trial = createPreviewTrial("m", 0, config);
     expect(trial.samples[0]?.state.positionMetres).toBe(0);
     expect(trial.finalState.positionMetres).toBeCloseTo(6, 6);
@@ -195,5 +208,17 @@ describe("preview trial records", () => {
     const a = createPreviewTrial("m", 0, BOOTSTRAP_CONFIG);
     const b = createPreviewTrial("m", 0, BOOTSTRAP_CONFIG);
     expect(a.samples).toStrictEqual(b.samples);
+  });
+
+  it("uses mass and applied force through the analytical kernel", () => {
+    const trial = createPreviewTrial("m", 0, {
+      cartMassKilograms: 2,
+      appliedForceNewtons: 4,
+      initialVelocityMetresPerSecond: 0,
+      observationWindowSeconds: 2,
+    });
+    expect(trial.finalState.accelerationMetresPerSecondSquared).toBe(2);
+    expect(trial.finalState.velocityMetresPerSecond).toBe(4);
+    expect(trial.finalState.positionMetres).toBe(4);
   });
 });

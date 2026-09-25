@@ -91,19 +91,18 @@ than downloading a second browser. `npm run perf:lighthouse` is deliberately **n
 
 | Missing | Owner |
 | --- | --- |
-| the analytical physics kernel (`a = Fnet/m`, net force, resistance, validation) | GAME-386 (ML-03) |
 | the experiment/trial/evidence domain contract | GAME-388 (ML-04) |
-| canonical missions, provenance manifests, golden traces | GAME-389 (ML-05) |
+| canonical missions, provenance manifests, production golden traces | GAME-389 (ML-05) |
 | the production lab renderer and force visualisation | GAME-390 (ML-06) |
 | instruments, notebook, graphs | GAME-391/392/393 (ML-07/08/09) |
 | the investigation state machine, scoring, debrief | GAME-394 (ML-10) |
 | the vertical slice, production art, and the full content set | GAME-395…397 |
-| games-site hosting | GAME-385 (ML-HOST), GAME-399 (ML-15) |
+| games-site hosting qualification / promotion | GAME-399 (ML-15), ML-PROMOTE |
 
-Only the **balanced-force** case (`Fnet = 0` → constant velocity) from
-[`SCIENCE_MODEL.md`](SCIENCE_MODEL.md) §3 is implemented in this bootstrap, in
-`src/science/bootstrap-motion.ts`, which says so at the top. Nothing here is scored, and
-no graph is presented as evidence.
+**Delivered by GAME-386 (ML-03):** the deterministic analytical 1D physics kernel in
+`src/science/` (`Fnet = ΣF`, `a = Fnet/m`, closed-form `v(t)` / `x(t)`, validation,
+resistive policy, human-readable golden fixtures under `tests/fixtures/science/golden/`).
+Nothing here is scored yet, and no graph is presented as assessed evidence.
 
 ## Games-site host contract
 

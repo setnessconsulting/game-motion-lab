@@ -20,11 +20,14 @@ describe("the test environment really has no DOM", () => {
 });
 
 describe("authoritative packages evaluate and compute without a DOM", () => {
-  it("samples the balanced-force case with no browser globals present", () => {
-    const state = science.sampleBootstrapLinearState(
-      { initialPositionMetres: 0, velocityMetresPerSecond: 1 },
-      2
-    );
+  it("samples the analytical kernel with no browser globals present", () => {
+    const declaration = science.singleSegmentDeclaration({
+      massKilograms: 2,
+      initialVelocityMetresPerSecond: 1,
+      appliedForcesNewtons: [0],
+      observationWindowSeconds: 2,
+    });
+    const state = science.stateAt(declaration, 2);
     expect(state.positionMetres).toBe(2);
     expect(state.netForceNewtons).toBe(0);
   });

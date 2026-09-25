@@ -29,7 +29,7 @@ test.describe("bootstrap", () => {
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Forces and motion");
     await expect(page.getByTestId("foundation-notice")).toBeVisible();
-    await expect(page.getByText("balanced forces", { exact: false })).toBeVisible();
+    await expect(page.getByText("analytical", { exact: false })).toBeVisible();
 
     // The instruments are present before any trial exists.
     await expect(page.getByTestId("readouts")).toBeVisible();

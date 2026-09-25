@@ -1,26 +1,25 @@
 /**
- * The foundation notice.
+ * Foundation notice for the ML-03 kernel preview.
  *
- * ML-02 delivers the repository/application foundation, not a mission. This panel says
- * exactly what is implemented and what is not, so nothing in the running app can be
- * mistaken for a finished mission or for the physics kernel.
+ * States honestly what the analytical kernel provides and what later milestones own
+ * (missions, scoring, graphs as evidence).
  */
 export function FoundationNotice() {
   return (
     <section className="notice" aria-labelledby="foundation-notice-heading" data-testid="foundation-notice">
-      <h2 id="foundation-notice-heading">Foundation preview</h2>
+      <h2 id="foundation-notice-heading">Physics kernel preview</h2>
       <p>
-        This build is the <strong>application foundation</strong> for Motion Lab (Jira GAME-384). It
-        proves the science/presentation boundary: a pure TypeScript science and domain layer feeds a
-        typed view model, which React and Phaser both render, and the presentation layers can only
-        send back bounded intents.
+        This build includes the <strong>deterministic analytical 1D physics kernel</strong> for
+        Motion Lab (Jira GAME-386 / ML-03). Scientific truth comes from pure TypeScript:{" "}
+        <code>Fnet = ΣF</code>, <code>a = Fnet/m</code>,{" "}
+        <code>v(t) = v0 + at</code>, <code>x(t) = x0 + v0t + ½at²</code>. React and Phaser only
+        display a typed view model and send bounded intents.
       </p>
       <p>
-        Only <strong>one case</strong> from the frozen science model is implemented here:{" "}
-        <strong>balanced forces</strong>. With a net force of 0 N, the cart moves at constant
-        velocity, exactly as <code>docs/SCIENCE_MODEL.md</code> requires. Unbalanced motion — how
-        acceleration depends on net force and mass — arrives with the physics kernel (GAME-386) and
-        the missions (GAME-389). No trial here is scored, and no graph is presented as evidence.
+        You can change mass and applied force. Balanced forces (<code>Fnet = 0</code>) keep
+        constant velocity; unbalanced forces produce constant acceleration. No trial here is
+        scored yet, and no graph is presented as assessed evidence — those arrive with later
+        milestones (GAME-388 onward).
       </p>
     </section>
   );
