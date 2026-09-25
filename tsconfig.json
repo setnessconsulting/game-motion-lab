@@ -33,7 +33,8 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "playwright.phaser.config.ts",
-    "playwright.accessibility.config.ts"
+    "playwright.accessibility.config.ts",
+    "playwright.host.config.ts"
   ],
   "exclude": ["node_modules", "dist", "coverage", "test-results", "playwright-report"]
 }

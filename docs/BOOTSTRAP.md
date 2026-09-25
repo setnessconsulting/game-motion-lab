@@ -43,6 +43,11 @@ secrets and performs no deployment.
 | `npm run foundation` | ML-02 foundation invariants (stack pins, boundaries, CI) |
 | `npm run perf:baseline` | capture the exact-SHA performance baseline record |
 | `npm run perf:lighthouse` | local Lighthouse lab capture (LCP/CLS/TBT), driving the Playwright Chromium |
+| `npm run release:manifest` | write `release-manifest.json` (source SHA, lockfile, per-file hashes) into `dist/` |
+| `npm run release:check` | recompute every hash and the source SHA; fail on any drift |
+| `npm run serve:nested-host` | serve `dist/` from `/game-assets/motion-lab/<version>/`, never at the root |
+| `npm run test:host` | build, write the manifest, then the nested base-path lane |
+| `npm run test:host:run` | nested base-path lane only (no build) |
 | `npm run perf:check` | compare the current build against the pinned baseline |
 | `npm run verify` | the whole gate, in order |
 
@@ -99,6 +104,28 @@ Only the **balanced-force** case (`Fnet = 0` → constant velocity) from
 [`SCIENCE_MODEL.md`](SCIENCE_MODEL.md) §3 is implemented in this bootstrap, in
 `src/science/bootstrap-motion.ts`, which says so at the top. Nothing here is scored, and
 no graph is presented as evidence.
+
+## Games-site host contract
+
+The delivery path is established by ML-HOST (GAME-385) and implemented, not just documented:
+
+```text
+object prefix: motion-lab/<version>/
+asset prefix:  /game-assets/motion-lab/<version>/
+entry:         index.html
+```
+
+`host-identity.json` declares that identity once, and `scripts/lib/host-identity.mjs` is the only
+reader — the nested host server, the Playwright host lane, and the release manifest all use it, so a
+prefix cannot drift in one place and stay correct in another. The games-site counterpart is
+`docs/motion-lab-host-contract.md` in `setnessconsulting/games-site`.
+
+`npm run test:host` is the proof: it serves the real production build from the exact prefix and fails
+if any request escapes it or 404s. That lane has been observed failing when the base path is
+deliberately broken, which is what distinguishes a check from a decoration.
+
+Nothing is promoted. The games-site catalog entry is `coming-soon` in every environment, and there is
+deliberately no production version constant.
 
 ## Renderer failure behaviour
 

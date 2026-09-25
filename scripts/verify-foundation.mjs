@@ -209,6 +209,94 @@ if (exists("performance/lighthouse.json")) {
       lighthouseRecord.hostingAssumption.length > 0
   );
 }
+// ---------------------------------------------------------------------------
+// GAME-385 / ML-HOST: the games-site host contract. These checks keep the delivery path an
+// inspectable artifact rather than a paragraph in a document.
+const hostIdentity = exists("host-identity.json") ? readJson("host-identity.json") : null;
+check("the host identity is declared once", hostIdentity !== null);
+check(
+  "the host identity names the games-site slug",
+  hostIdentity?.gameSlug === "motion-lab",
+  hostIdentity?.gameSlug ?? "missing"
+);
+check(
+  "the host identity names the entry document",
+  hostIdentity?.entryFile === "index.html",
+  hostIdentity?.entryFile ?? "missing"
+);
+check(
+  "the host identity names the games-site asset prefix base",
+  hostIdentity?.assetPrefixBase === "/game-assets",
+  hostIdentity?.assetPrefixBase ?? "missing"
+);
+check(
+  "the host identity carries a release qualifier, so the version is immutable rather than a bare package version",
+  typeof hostIdentity?.releaseQualifier === "string" && hostIdentity.releaseQualifier.length > 0
+);
+check(
+  "one module owns the host identity so the scripts cannot disagree",
+  exists("scripts/lib/host-identity.mjs")
+);
+check(
+  "the nested host server exists and refuses the domain root",
+  exists("scripts/nested-host-server.mjs") &&
+    /only beneath \$\{PREFIX\}\/|assumed domain-root deployment/.test(
+      readFileSync(join(ROOT, "scripts/nested-host-server.mjs"), "utf8")
+    )
+);
+check(
+  "a release manifest script exists",
+  exists("scripts/create-release-manifest.mjs")
+);
+check(
+  "the release manifest records source identity, not just a version",
+  ["sourceSha", "dependencyLockIdentity", "releaseVersion", "entryFile", "files"].every((field) =>
+    readFileSync(join(ROOT, "scripts/create-release-manifest.mjs"), "utf8").includes(field)
+  )
+);
+check(
+  "the release manifest is verifiable against drift",
+  readFileSync(join(ROOT, "scripts/create-release-manifest.mjs"), "utf8").includes("--check")
+);
+for (const script of ["serve:nested-host", "release:manifest", "release:check", "test:host", "test:host:run"]) {
+  check(
+    `the npm script "${script}" is wired`,
+    typeof pkg?.scripts?.[script] === "string",
+    pkg?.scripts?.[script] ?? "missing"
+  );
+}
+check(
+  "the aggregate gate runs the host lane and the release identity check",
+  typeof pkg?.scripts?.verify === "string" &&
+    ["release:check", "test:host:run"].every((script) => pkg.scripts.verify.includes(script))
+);
+check(
+  "the host lane exists and asserts that no request escapes the version prefix",
+  exists("tests/host/nestedAssetBase.spec.ts") &&
+    /escaped the version prefix/.test(readFileSync(join(ROOT, "tests/host/nestedAssetBase.spec.ts"), "utf8"))
+);
+check(
+  "the host lane reads the prefix from the shared identity module rather than restating it",
+  exists("playwright.host.config.ts") &&
+    /host-identity\.mjs/.test(readFileSync(join(ROOT, "playwright.host.config.ts"), "utf8"))
+);
+check(
+  "release metadata is excluded from the learner payload metric",
+  exists("scripts/lib/bundle-scope.mjs") &&
+    /release-manifest\.json/.test(readFileSync(join(ROOT, "scripts/lib/bundle-scope.mjs"), "utf8")) &&
+    /bundle-scope/.test(readFileSync(join(ROOT, "scripts/check-bundle-budget.mjs"), "utf8"))
+);
+check(
+  "docs/RELEASE.md records the established asset prefix and the host lane",
+  exists("docs/RELEASE.md") &&
+    /\/game-assets\/motion-lab\/<version>\//.test(readFileSync(join(ROOT, "docs/RELEASE.md"), "utf8")) &&
+    /npm run test:host/.test(readFileSync(join(ROOT, "docs/RELEASE.md"), "utf8"))
+);
+check(
+  "docs/RELEASE.md does not claim a promotion or a rollback occurred",
+  !/\bpromoted to production\b/i.test(readFileSync(join(ROOT, "docs/RELEASE.md"), "utf8"))
+);
+
 check(
   "docs/PERFORMANCE_BASELINE.md documents the Lighthouse row",
   exists("docs/PERFORMANCE_BASELINE.md") &&
@@ -246,7 +334,9 @@ for (const file of ["README.md", "docs/BOOTSTRAP.md", "docs/PERFORMANCE_BASELINE
 }
 
 // ---------------------------------------------------------------------------
-console.log("Motion Lab foundation consistency check (GAME-384 / ML-02)\n");
+console.log(
+  "Motion Lab foundation consistency check (GAME-384 / ML-02, extended by GAME-385 / ML-HOST)\n"
+);
 if (failures.length > 0) {
   console.log(`${failures.length} check(s) FAILED:\n`);
   for (const failure of failures) {

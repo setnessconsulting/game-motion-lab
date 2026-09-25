@@ -14,6 +14,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join, relative, resolve, sep } from "node:path";
 
+import { isPayloadFile } from "./lib/bundle-scope.mjs";
+
 const ROOT = resolve(import.meta.dirname, "..");
 const DIST = join(ROOT, "dist");
 const BASELINE_FILE = join(ROOT, "performance", "baseline.json");
@@ -32,7 +34,9 @@ function currentBuckets() {
   for (const entry of readdirSync(DIST, { withFileTypes: true, recursive: true })) {
     if (!entry.isFile()) continue;
     const absolute = join(entry.parentPath ?? DIST, entry.name);
-    const kind = classify(relative(DIST, absolute).split(sep).join("/"));
+    const assetPath = relative(DIST, absolute).split(sep).join("/");
+    if (!isPayloadFile(assetPath)) continue;
+    const kind = classify(assetPath);
     buckets[kind] += gzipSync(readFileSync(absolute), { level: 9 }).length;
   }
   return buckets;
