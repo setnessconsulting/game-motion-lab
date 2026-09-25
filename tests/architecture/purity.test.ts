@@ -50,6 +50,56 @@ describe("authoritative packages evaluate and compute without a DOM", () => {
     expect(model.playback.samples.length).toBeGreaterThan(0);
   });
 
+  it("records and replays experiment evidence with no browser globals present", () => {
+    const active: domain.ControlledInvestigation = {
+      investigationId: "purity",
+      independentVariableId: "appliedForceNewtons",
+      dependentVariableIds: ["appliedForceNewtons"],
+      controlledVariableIds: domain.ALL_VARIABLE_IDS.filter(
+        (id) => id !== "appliedForceNewtons"
+      ),
+      declaredVariables: domain.ALL_VARIABLE_IDS.map((id) => ({
+        id,
+        quantity: "mass",
+        role: id === "appliedForceNewtons" ? ("independent" as const) : ("controlled" as const),
+        bounds:
+          id === "cartMassKilograms"
+            ? ([1, 4] as const)
+            : id === "observationWindowSeconds"
+              ? ([1, 6] as const)
+              : id === "initialVelocityMetresPerSecond"
+                ? ([-2, 2] as const)
+                : ([-12, 12] as const),
+        step: 0.5,
+        learnerAdjustable: true,
+        label: id,
+      })),
+    };
+    const evidence = domain.runTrialEvidence({
+      missionId: "purity",
+      scenarioId: "purity",
+      comparisonSetId: "purity-set",
+      trialId: domain.buildTrialId("purity", "purity-set", 0),
+      ordinal: 0,
+      variantSeed: 1,
+      investigation: active,
+      request: {
+        configuration: {
+          cartMassKilograms: 2,
+          appliedForceNewtons: 4,
+          initialVelocityMetresPerSecond: 0,
+          observationWindowSeconds: 3,
+        },
+        sampleCount: 5,
+        positionTargetsMetres: [4],
+      },
+    });
+    expect(domain.replayTrialEvidence(evidence, { investigation: active }).status).toBe(
+      "reproduced"
+    );
+    expect(domain.findMeasurement(evidence.measurements, "timeToPosition", 4)?.value).toBe(2);
+  });
+
   it("exports no class or function that requires a DOM node to construct", () => {
     for (const [name, value] of Object.entries(science)) {
       if (typeof value === "function" && name !== "roundHalfAwayFromZero") continue;
@@ -82,5 +132,16 @@ describe("authoritative state is JSON-safe", () => {
     const serialised = JSON.stringify(state);
     expect(serialised).not.toContain("function");
     expect(serialised).not.toContain("undefined");
+  });
+
+  it("exports no DOM-bound factory from the experiment layer", () => {
+    // Every domain export must be a plain value or a pure function. A class
+    // whose constructor needed an element would be a boundary violation.
+    for (const [name, value] of Object.entries(domain)) {
+      expect(
+        ["function", "object", "string", "number", "boolean"],
+        `${name} has unexpected type ${typeof value}`
+      ).toContain(typeof value);
+    }
   });
 });

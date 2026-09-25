@@ -1,0 +1,118 @@
+{
+  "id": "misconception-heavier-cart",
+  "kind": "misconception",
+  "title": "Misconception case — 'a heavier cart speeds up more for the same push'",
+  "equations": [
+    "Trial 0: m = 1 kg, Fnet = 2 N, so a = Fnet/m = 2/1 = 2 m/s^2",
+    "Trial 0: v(3) = 0 + 2*3 = 6 m/s, x(3) = 0.5*2*9 = 9 m",
+    "Trial 1: m = 4 kg, Fnet = 2 N, so a = Fnet/m = 2/4 = 0.5 m/s^2",
+    "Trial 1: v(3) = 0 + 0.5*3 = 1.5 m/s, x(3) = 0.5*0.5*9 = 2.25 m"
+  ],
+  "rationale": "The applied force is held at 2 N in both trials and only the mass changes, so this is a fair test of a = Fnet/m. The intuition that 'heavier things respond more strongly to a push' is contradicted: the 4 kg cart accelerated at 0.50 m/s^2 while the 1 kg cart accelerated at 2.00 m/s^2, one quarter as much. Heavier means harder to accelerate, not faster.",
+  "investigation": {
+    "investigationId": "mass-scaling",
+    "independentVariableId": "cartMassKilograms",
+    "dependentVariableIds": ["cartMassKilograms"],
+    "controlledVariableIds": [
+      "appliedForceNewtons",
+      "initialVelocityMetresPerSecond",
+      "observationWindowSeconds"
+    ],
+    "declaredVariables": [
+      {
+        "id": "cartMassKilograms",
+        "quantity": "mass",
+        "role": "independent",
+        "bounds": [1, 4],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Cart mass"
+      },
+      {
+        "id": "appliedForceNewtons",
+        "quantity": "force",
+        "role": "controlled",
+        "bounds": [-12, 12],
+        "step": 1,
+        "learnerAdjustable": true,
+        "label": "Applied force"
+      },
+      {
+        "id": "initialVelocityMetresPerSecond",
+        "quantity": "velocity",
+        "role": "controlled",
+        "bounds": [-2, 2],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Starting speed"
+      },
+      {
+        "id": "observationWindowSeconds",
+        "quantity": "time",
+        "role": "controlled",
+        "bounds": [1, 6],
+        "step": 0.5,
+        "learnerAdjustable": false,
+        "label": "Observation span"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "ordinal": 0,
+      "variantSeed": 5,
+      "sampleCount": 5,
+      "positionTargetsMetres": [],
+      "configuration": {
+        "cartMassKilograms": 1,
+        "appliedForceNewtons": 2,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 3
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 9 },
+        { "id": "finalVelocity", "value": 6 },
+        { "id": "averageVelocity", "value": 3 },
+        { "id": "maxSpeed", "value": 6 }
+      ],
+      "expectedUnreachedTargetsMetres": []
+    },
+    {
+      "ordinal": 1,
+      "variantSeed": 5,
+      "sampleCount": 5,
+      "positionTargetsMetres": [],
+      "configuration": {
+        "cartMassKilograms": 4,
+        "appliedForceNewtons": 2,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 3
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 2.25 },
+        { "id": "finalVelocity", "value": 1.5 },
+        { "id": "averageVelocity", "value": 0.75 },
+        { "id": "maxSpeed", "value": 1.5 }
+      ],
+      "expectedUnreachedTargetsMetres": []
+    }
+  ],
+  "expectedComparison": {
+    "validity": "valid",
+    "changedVariableIds": ["cartMassKilograms"],
+    "controlledViolations": [],
+    "pedagogy": null
+  },
+  "claim": {
+    "claimId": "heavier-speeds-up-more",
+    "text": "A heavier cart speeds up more when the same force pushes it.",
+    "measurementId": "finalVelocity",
+    "relation": "greater-than",
+    "attributedVariableId": "cartMassKilograms"
+  },
+  "expectedClaimEvaluation": {
+    "supported": false,
+    "reason": "contradicted-by-evidence"
+  },
+  "expectedMisconceptions": ["heavier-cart-accelerates-faster"]
+}

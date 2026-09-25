@@ -125,9 +125,17 @@ TypeScript + Vite application, the real Phaser 4.2.1 renderer, the enforceably s
 science/domain/view-model/UI/renderer packages, the local verification commands and CI, and a
 pinned performance baseline.
 
-Only the **balanced-force** case (`Fnet = 0` → constant velocity) is implemented. The analytical
-physics kernel is GAME-386 (ML-03), the experiment/trial/evidence domain is GAME-388 (ML-04),
-the canonical missions are GAME-389 (ML-05), and the production renderer is GAME-390 (ML-06).
+**ML-03 (GAME-386) — analytical 1D kernel.** `src/science/` evaluates closed-form
+`Fnet = sum(F)`, `a = Fnet/m`, `v(t)`, and `x(t)` with typed fail-closed validation and
+human-readable golden traces. Its independent code/science review is still **outstanding**,
+so the issue is Blocked, not Done.
+
+**ML-04 (GAME-388) — experiment and evidence contract.** `src/domain/` adds controlled-variable
+enforcement, derived measurements, immutable provenance-carrying trial evidence, append-only
+comparison sets, claim evaluation, misconception diagnosis, and deterministic replay. See
+[`docs/EXPERIMENT_MODEL.md`](docs/EXPERIMENT_MODEL.md).
+
+The canonical missions are GAME-389 (ML-05) and the production renderer is GAME-390 (ML-06).
 No mission is scored, no graph is presented as evidence, and nothing here is a finished game.
 
 Unresolved independent review, science review, accessibility sign-off, playtest, promotion and

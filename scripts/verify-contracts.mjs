@@ -96,6 +96,7 @@ const DOC_FILES = [
   'PRODUCT.md',
   'CURRICULUM.md',
   'SCIENCE_MODEL.md',
+  'EXPERIMENT_MODEL.md',
   'ARCHITECTURE.md',
   'MISSIONS.md',
   'COMPARATORS.md',
@@ -518,6 +519,45 @@ for (const doc of [...DOC_FILES, 'README.md']) {
 check('docs/README.md states the freeze is by GAME-383', docsIndex.includes(FROZEN_BY));
 check('contracts are described as machine-readable', docsIndex.includes('contracts/'));
 check('the consistency checker is documented', rootReadme.includes('scripts/verify-contracts.mjs'));
+
+// ---------------------------------------------------------------------------
+group('experiment model guarantees');
+
+const experimentDoc = plain(exists('docs/EXPERIMENT_MODEL.md') ? readText('docs/EXPERIMENT_MODEL.md') : '');
+
+check(
+  'EXPERIMENT_MODEL states that measurements are outputs, never inputs',
+  /measurements are outputs, never inputs/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL states that the digest is an integrity invariant, not a security boundary',
+  /not a security boundary/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL records the integrity digest as unkeyed',
+  /unkeyed/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL requires an append-only comparison set',
+  /append-only/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL says reset and retry allocate a new trial identity',
+  /reset and retry allocate a new ordinal/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL keeps seeded variants out of authoritative motion',
+  /seed can never influence an authoritative result/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL records known limitations rather than claiming completeness',
+  /12\.\s*Known limitations/.test(experimentDoc) && /multi-segment continuity/i.test(experimentDoc)
+);
+check(
+  'EXPERIMENT_MODEL maps each ML-04 acceptance criterion to where it is proven',
+  /11\.\s*Acceptance criteria mapping/.test(experimentDoc) &&
+    /Same seed\/configuration produces the same trial evidence/.test(experimentDoc)
+);
 
 // ---------------------------------------------------------------------------
 group('honesty guards');
