@@ -154,7 +154,14 @@ check(
 check(
   "CI runs the same authoritative local commands",
   exists(".github/workflows/ci.yml") &&
-    ["npm run typecheck", "npm run lint", "npm run test", "npm run build", "npm run perf:check"].every(
+    [
+      "npm run typecheck",
+      "npm run lint",
+      "npm run test",
+      "npm run build",
+      "npm run perf:check",
+      "npm run test:host:run",
+    ].every(
       (command) => readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8").includes(command)
     )
 );
