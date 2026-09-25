@@ -367,6 +367,49 @@ describe("the renderer's failure policy is testable outside a browser (GAME-390 
   });
 });
 
+describe("the direction and unit conventions have one home (GAME-391 / ML-07 AC5)", () => {
+  // AC5 asks for consistent unit labels and direction conventions across the UI, the graphs and
+  // the debrief. Consistency that is only intended drifts, so it is enforced: the wording exists
+  // as a string literal in exactly one file, and the renderer writes no unit of its own.
+  const CONVENTION_FILE = "viewmodel/instruments.ts";
+  const DIRECTION_LITERAL = /["'`]to the (right|left)["'`]|["'`][^"'`]*right is positive[^"'`]*["'`]/;
+
+  it("states the direction words in exactly one source file", () => {
+    const offenders = loadSourceFiles()
+      .filter((file) => DIRECTION_LITERAL.test(file.source))
+      .map((file) => file.relativeToSrc);
+    // Prose that happens to mention "to the right" inside a longer sentence is not a duplicate
+    // convention, which is why this looks for the wording as a standalone literal.
+    expect(offenders).toStrictEqual([CONVENTION_FILE]);
+  });
+
+  it("keeps the convention module itself free of the renderer", () => {
+    const convention = loadSourceFiles().find(
+      (file) => file.relativeToSrc === CONVENTION_FILE
+    );
+    expect(convention).toBeDefined();
+    expect(convention?.source).toContain("export const DIRECTION_CONVENTION");
+    expect(convention?.specifiers.some((specifier) => specifier.includes("renderer"))).toBe(false);
+  });
+
+  it("writes no unit by hand in the laboratory scene", () => {
+    // The canvas status line takes its units from the view model's own readings. A literal
+    // here is how the animated view and the accessible DOM would start disagreeing about a value.
+    const scene = readFileSync(resolve(SRC, "renderer", "labScene.ts"), "utf8");
+    for (const unit of ["kg", "m/s", "m/s\u00b2"]) {
+      expect(scene).not.toContain(`"${unit}"`);
+    }
+    // It takes the unit off a reading instead, from the model it was handed.
+    expect(scene).toContain("model.readouts");
+    expect(scene).toMatch(/\.unit\b/);
+    // The first version of this check listed quoted unit strings and so passed a scene that
+    // wrote `${value.toFixed(1)} m` — a hand-formatted number glued to a hand-written unit,
+    // which is the regression that matters. The shape is checked instead of a word list: a
+    // number formatted here in the scene must not be followed by a unit word.
+    expect(scene).not.toMatch(/toFixed\([^)]*\)\}\s*[A-Za-z\u00b0]/);
+  });
+});
+
 describe("the detector itself works (guards against a vacuous gate)", () => {
   // A synthetic violation must be detected, otherwise a green suite would be meaningless.
   const syntheticFile: SourceFile = {

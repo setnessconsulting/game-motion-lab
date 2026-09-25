@@ -109,6 +109,7 @@ export class LabScene extends Phaser.Scene {
   private cartWheels: Phaser.GameObjects.Arc[] = [];
   private forceText?: Phaser.GameObjects.Text;
   private progressText?: Phaser.GameObjects.Text;
+  private axisText?: Phaser.GameObjects.Text;
   private positionText?: Phaser.GameObjects.Text;
 
   constructor() {
@@ -127,9 +128,11 @@ export class LabScene extends Phaser.Scene {
     ];
 
     // Direction is stated in words as well as an arrow, never by colour alone
-    // (docs/ACCESSIBILITY.md §6).
-    this.add
-      .text(LOGICAL_WIDTH - 40, 26, "\u2192 +x (right is positive)", {
+    // (docs/ACCESSIBILITY.md §6). The words come from the model's own direction convention
+    // (ML-07 AC5), so they are set in reconcile() rather than inlined here: the axis and the
+    // force labels cannot then state the direction differently.
+    this.axisText = this.add
+      .text(LOGICAL_WIDTH - 40, 26, "", {
         fontFamily: "monospace",
         fontSize: "15px",
         color: COLORS.label,
@@ -243,10 +246,17 @@ export class LabScene extends Phaser.Scene {
         geometry.playedFraction * 100
       )}%)`
     );
+    // The canvas status line is the model's own instrument text, not a second formatting of the
+    // same numbers. A learner reading the picture and a learner reading the DOM therefore cannot
+    // be shown different values, and no unit string is written by hand here.
+    const positionReading = model.readouts.find((readout) => readout.id === "position");
+    const velocityReading = model.readouts.find((readout) => readout.id === "velocity");
+    const lengthUnit = positionReading?.unit ?? "";
+    this.axisText?.setText(`\u2192 ${model.directionAxis}`);
     this.positionText?.setText(
-      `position ${model.cart.positionMetres.toFixed(2)} m  |  ` +
-        `velocity ${model.cart.velocityMetresPerSecond.toFixed(2)} m/s  |  ` +
-        `track to ${track.endMetres.toFixed(1)} m`
+      `${positionReading?.label ?? "Position"} ${positionReading?.text ?? ""}  |  ` +
+        `${velocityReading?.label ?? "Velocity"} ${velocityReading?.text ?? ""}  |  ` +
+        `track to ${track.endMetres.toFixed(1)} ${lengthUnit}`
     );
 
     const displaySize = this.scale.displaySize;

@@ -12,4 +12,27 @@ export type {
   SceneSamplePoint,
   SceneViewModelInput,
 } from "./sceneModel.js";
-export { massReadout, toSceneModel } from "./sceneModel.js";
+export { toSceneModel } from "./sceneModel.js";
+
+export type {
+  ConfiguredValues,
+  Direction,
+  InstrumentReading,
+  ReadingOrigin,
+  RulerTick,
+} from "./instruments.js";
+export {
+  DIRECTION_CONVENTION,
+  MEASUREMENT_LABELS,
+  QUANTITY_LABELS,
+  RULER_MAX_TICKS,
+  configuredReadingsFor,
+  directionWords,
+  findReading,
+  measurementReadingsFor,
+  measuredReadingsFor,
+  quantityReading,
+  rulerStepMetres,
+  rulerTicks,
+  stopwatchReading,
+} from "./instruments.js";
