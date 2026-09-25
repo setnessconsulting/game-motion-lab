@@ -12,6 +12,7 @@ import {
   resetLabSceneRuntime,
 } from "./labScene.js";
 import { publishReadback, type RendererFailureStage } from "./readback.js";
+import { RENDERER_STARTUP_BUDGET_MS, startStartupWatchdog } from "./startupWatchdog.js";
 
 /**
  * Create and destroy the single Phaser game for the lab region.
@@ -54,6 +55,11 @@ export interface CreateLabGameOptions {
    * rejected `ready` promise.
    */
   readonly onFailure?: (failure: { stage: RendererFailureStage; message: string }) => void;
+  /**
+   * Override the startup budget, in milliseconds. Present so the budget is a parameter of the
+   * factory rather than a constant buried in a timer; the host does not override it.
+   */
+  readonly startupBudgetMs?: number;
 }
 
 export class RendererUnavailableError extends Error {
@@ -65,9 +71,6 @@ export class RendererUnavailableError extends Error {
     this.stage = stage;
   }
 }
-
-/** The startup budget. A renderer that never becomes ready must not hang the host. */
-const STARTUP_BUDGET_MS = 8_000;
 
 export function createLabGame(options: CreateLabGameOptions): LabGameHandle {
   resetLabSceneRuntime();
@@ -132,18 +135,28 @@ export function createLabGame(options: CreateLabGameOptions): LabGameHandle {
     }
   });
 
-  // A renderer that never becomes ready must not hang the caller forever.
+  // A renderer that never becomes ready must not hang the caller forever. The policy lives in
+  // its own module so it can be driven by a Node test with fake timers — this is the one
+  // failure stage no browser lane can reach, and it was previously the one whose policy was
+  // also untested.
+  let cancelWatchdog: () => void = () => {};
   const readyWithTimeout = Promise.race([
     ready,
     new Promise<void>((_, reject) => {
-      setTimeout(() => {
-        if (!LAB_SCENE_RUNTIME.readback.ready && !destroyed) {
-          reportFailure("startup-timeout", "Renderer did not become ready within the startup budget.");
+      cancelWatchdog = startStartupWatchdog({
+        budgetMs: options.startupBudgetMs ?? RENDERER_STARTUP_BUDGET_MS,
+        isReady: () => LAB_SCENE_RUNTIME.readback.ready,
+        isCancelled: () => destroyed,
+        onTimeout: () => {
+          reportFailure(
+            "startup-timeout",
+            "Renderer did not become ready within the startup budget."
+          );
           reject(
             new RendererUnavailableError("Renderer startup timed out.", "startup-timeout")
           );
-        }
-      }, STARTUP_BUDGET_MS);
+        },
+      }).cancel;
     }),
   ]);
 
@@ -170,6 +183,7 @@ export function createLabGame(options: CreateLabGameOptions): LabGameHandle {
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      cancelWatchdog();
       if (typeof window !== "undefined") window.removeEventListener("error", onWindowError);
       try {
         game?.destroy(true);

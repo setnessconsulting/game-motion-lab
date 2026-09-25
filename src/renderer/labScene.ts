@@ -271,7 +271,6 @@ export class LabScene extends Phaser.Scene {
       playedFraction: geometry.playedFraction,
       viewportWidth: displaySize.width,
       viewportHeight: displaySize.height,
-      viewportScale: this.scale.zoom,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -335,6 +335,36 @@ describe("the renderer cannot be driven by frame time (GAME-390 / ML-06)", () =>
       expect(sceneSource).not.toContain(token);
     });
   }
+});
+
+describe("the renderer's failure policy is testable outside a browser (GAME-390 / ML-06)", () => {
+  // Two policies decide what a failed renderer does: when to give up on a renderer that never
+  // attaches, and which recovery to offer. Both used to live in places a Node test cannot
+  // reach (inside the Phaser factory, and inside a React component). They are separate
+  // modules now, with unit coverage, and these checks keep it that way.
+  const createSource = readFileSync(resolve(SRC, "renderer", "createLabGame.ts"), "utf8");
+  const regionSource = readFileSync(resolve(SRC, "host", "RendererRegion.tsx"), "utf8");
+  const recoverySource = readFileSync(resolve(SRC, "host", "recovery.ts"), "utf8");
+
+  it("keeps the startup budget in exactly one place", () => {
+    expect(createSource).toMatch(/from\s+["']\.\/startupWatchdog\.js["']/);
+    expect(createSource).toContain("RENDERER_STARTUP_BUDGET_MS");
+    // An inline numeric budget is how this started, and it is why the stage went untested.
+    expect(createSource).not.toMatch(/8_?000/);
+  });
+
+  it("keeps the recovery policy out of the component", () => {
+    expect(recoverySource).toContain("export function rendererRecoveryFor");
+    expect(regionSource).toContain("rendererRecoveryFor");
+    // The decision must not be re-inlined as a stage comparison in the JSX.
+    expect(regionSource).not.toMatch(/failureStage === "chunk-load"/);
+  });
+
+  it("is reachable from the unit suite, the environment with no canvas", () => {
+    for (const file of ["startupWatchdog.test.ts", "rendererRecovery.test.ts"]) {
+      expect(existsSync(resolve(process.cwd(), "tests", "unit", file))).toBe(true);
+    }
+  });
 });
 
 describe("the detector itself works (guards against a vacuous gate)", () => {
