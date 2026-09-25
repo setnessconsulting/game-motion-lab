@@ -71,6 +71,16 @@ jobs:
       - name: Real Phaser renderer lane and performance capture
         run: npm run test:phaser-render
 
+      # GAME-385 / ML-HOST: games-site serves the artifact beneath
+      # /game-assets/motion-lab/<version>/, so the base-path contract is part of the gate rather
+      # than a local courtesy. The release manifest is written first because the host lane is
+      # what publishes its identity shape.
+      - name: Release identity and nested base-path lane
+        run: |
+          npm run release:manifest
+          npm run release:check
+          npm run test:host:run
+
       # GAME-384 acceptance criterion 3 asks for a Lighthouse row in the baseline. No Lighthouse
       # score is a threshold: performance/lighthouse.json records a measurement, and the
       # enforceable numbers stay in performance/baseline.json (docs/PERFORMANCE.md section 7).
