@@ -1,0 +1,50 @@
+{
+  "id": "balanced-constant-v",
+  "title": "Balanced forces — constant velocity",
+  "equations": [
+    "Fnet = 0 N",
+    "a = Fnet/m = 0",
+    "v(t) = v0 = 1.5 m/s",
+    "x(t) = x0 + v0·t = 0 + 1.5·t"
+  ],
+  "rationale": "With balanced forces the cart neither speeds up nor slows down. A cart already moving at 1.5 m/s continues at 1.5 m/s; after 4.00 s it is at 6.00 m. Balanced force is not the same as 'not moving'.",
+  "declaration": {
+    "massKilograms": 2,
+    "initialPositionMetres": 0,
+    "initialVelocityMetresPerSecond": 1.5,
+    "appliedForcesNewtons": [0],
+    "observationWindowSeconds": 4
+  },
+  "expectedStates": [
+    {
+      "atSeconds": 0,
+      "state": {
+        "positionMetres": 0,
+        "velocityMetresPerSecond": 1.5,
+        "accelerationMetresPerSecondSquared": 0,
+        "netForceNewtons": 0,
+        "elapsedSeconds": 0
+      }
+    },
+    {
+      "atSeconds": 2,
+      "state": {
+        "positionMetres": 3,
+        "velocityMetresPerSecond": 1.5,
+        "accelerationMetresPerSecondSquared": 0,
+        "netForceNewtons": 0,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "atSeconds": 4,
+      "state": {
+        "positionMetres": 6,
+        "velocityMetresPerSecond": 1.5,
+        "accelerationMetresPerSecondSquared": 0,
+        "netForceNewtons": 0,
+        "elapsedSeconds": 4
+      }
+    }
+  ]
+}

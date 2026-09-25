@@ -1,0 +1,58 @@
+{
+  "id": "mass-scaling",
+  "title": "Mass scaling at fixed net force",
+  "equations": [
+    "Fnet = 4 N (controlled)",
+    "m = 2.0 kg → a = 2 m/s²",
+    "m = 4.0 kg → a = 1 m/s² (halved)",
+    "v(t) = a·t (v0 = 0)",
+    "x(t) = ½·a·t²"
+  ],
+  "rationale": "At fixed net force, doubling m halves |a|. The assessed relationship is inverse proportionality under controlled force.",
+  "cases": [
+    {
+      "label": "m = 2 kg",
+      "declaration": {
+        "massKilograms": 2,
+        "initialPositionMetres": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "appliedForcesNewtons": [4],
+        "observationWindowSeconds": 2
+      },
+      "expectedStates": [
+        {
+          "atSeconds": 2,
+          "state": {
+            "positionMetres": 4,
+            "velocityMetresPerSecond": 4,
+            "accelerationMetresPerSecondSquared": 2,
+            "netForceNewtons": 4,
+            "elapsedSeconds": 2
+          }
+        }
+      ]
+    },
+    {
+      "label": "m = 4 kg (double)",
+      "declaration": {
+        "massKilograms": 4,
+        "initialPositionMetres": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "appliedForcesNewtons": [4],
+        "observationWindowSeconds": 2
+      },
+      "expectedStates": [
+        {
+          "atSeconds": 2,
+          "state": {
+            "positionMetres": 2,
+            "velocityMetresPerSecond": 2,
+            "accelerationMetresPerSecondSquared": 1,
+            "netForceNewtons": 4,
+            "elapsedSeconds": 2
+          }
+        }
+      ]
+    }
+  ]
+}

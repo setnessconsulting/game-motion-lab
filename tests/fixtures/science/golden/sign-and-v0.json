@@ -1,0 +1,31 @@
+{
+  "id": "sign-and-v0",
+  "title": "Negative force and initial velocity (sign convention)",
+  "equations": [
+    "+x is rightward along the track",
+    "Fnet = −3 N → a = −3 m/s² (m = 1 kg)",
+    "v0 = −1 m/s",
+    "v(t) = −1 + (−3)·t",
+    "x(t) = 0 + (−1)·t + ½·(−3)·t²"
+  ],
+  "rationale": "A negative force and negative initial velocity both point toward decreasing x (left). Acceleration shares the sign of Fnet because m > 0. Sign errors must always fail answer comparison regardless of magnitude.",
+  "declaration": {
+    "massKilograms": 1,
+    "initialPositionMetres": 0,
+    "initialVelocityMetresPerSecond": -1,
+    "appliedForcesNewtons": [-3],
+    "observationWindowSeconds": 1
+  },
+  "expectedStates": [
+    {
+      "atSeconds": 1,
+      "state": {
+        "positionMetres": -2.5,
+        "velocityMetresPerSecond": -4,
+        "accelerationMetresPerSecondSquared": -3,
+        "netForceNewtons": -3,
+        "elapsedSeconds": 1
+      }
+    }
+  ]
+}
