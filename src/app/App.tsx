@@ -7,7 +7,7 @@ import {
 } from "../domain/index.js";
 import { toSceneModel } from "../viewmodel/index.js";
 import { RendererRegion } from "../host/RendererRegion.js";
-import { usePlayback } from "../host/usePlayback.js";
+import { nextSampleSeconds, usePlayback } from "../host/usePlayback.js";
 import { usePrefersReducedMotion } from "../host/usePrefersReducedMotion.js";
 import { ErrorBoundary } from "./ErrorBoundary.js";
 import { FoundationNotice } from "../ui/FoundationNotice.js";
@@ -31,7 +31,7 @@ export function App() {
   const latestTrial = state.trials.length > 0 ? state.trials[state.trials.length - 1] : undefined;
   const totalSeconds = latestTrial?.config.observationWindowSeconds ?? 0;
 
-  const { playback, start, stop, finish, reset } = usePlayback(totalSeconds, reducedMotion);
+  const { playback, start, stop, finish, reset, seek } = usePlayback(totalSeconds, reducedMotion);
 
   const model = useMemo(
     () =>
@@ -49,8 +49,25 @@ export function App() {
 
   const handleRun = useCallback(() => {
     dispatch({ kind: "begin-preview-trial" });
-    start();
-  }, [start]);
+    // The window is known before the trial lands, so reduced motion can resolve to the end
+    // of the run in one step rather than waiting for a duration it does not yet have.
+    start(state.draft.observationWindowSeconds);
+  }, [start, state.draft.observationWindowSeconds]);
+
+  const handleResumeFromStart = useCallback(() => {
+    start(totalSeconds);
+  }, [start, totalSeconds]);
+
+  // Presentation only: this seeks the playback clock to the next or previous *recorded*
+  // sample instant. It cannot change a sample, a measurement, or a trial record.
+  const handleStep = useCallback(
+    (direction: 1 | -1) => {
+      const samples = model.playback.samples;
+      if (samples.length === 0) return;
+      seek(nextSampleSeconds(samples, playback.seconds, direction));
+    },
+    [model.playback.samples, playback.seconds, seek]
+  );
 
   const handleReset = useCallback(() => {
     dispatch({ kind: "reset-session" });
@@ -105,12 +122,13 @@ export function App() {
 
           <InstrumentPanel
             model={model}
-            onPause={playback.running ? stop : start}
+            onPause={playback.running ? stop : handleResumeFromStart}
             onJumpToEnd={finish}
             onRestart={() => {
               reset();
-              start();
+              start(totalSeconds);
             }}
+            onStep={handleStep}
             canControl={latestTrial !== undefined}
           />
         </div>

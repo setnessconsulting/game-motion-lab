@@ -5,6 +5,12 @@ export interface InstrumentPanelProps {
   readonly onPause: () => void;
   readonly onJumpToEnd: () => void;
   readonly onRestart: () => void;
+  /**
+   * Step one recorded sample. docs/ACCESSIBILITY.md §6 requires a step equivalent
+   * alongside pause, restart and jump-to-end, and it is the affordance that keeps the
+   * recorded window readable when animation is switched off.
+   */
+  readonly onStep: (direction: 1 | -1) => void;
   readonly canControl: boolean;
 }
 
@@ -20,6 +26,7 @@ export function InstrumentPanel({
   onPause,
   onJumpToEnd,
   onRestart,
+  onStep,
   canControl,
 }: InstrumentPanelProps) {
   return (
@@ -62,6 +69,24 @@ export function InstrumentPanel({
         <button
           type="button"
           className="secondary"
+          onClick={() => onStep(-1)}
+          disabled={!canControl}
+          data-testid="step-back"
+        >
+          Step back
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => onStep(1)}
+          disabled={!canControl}
+          data-testid="step-forward"
+        >
+          Step forward
+        </button>
+        <button
+          type="button"
+          className="secondary"
           onClick={onRestart}
           disabled={!canControl}
           data-testid="restart-playback"
@@ -73,6 +98,14 @@ export function InstrumentPanel({
       <p className="panel__hint">
         Playback controls only change what is on screen. The recorded trial values never change.
       </p>
+
+      {model.reducedMotion ? (
+        <p className="panel__hint" data-testid="reduced-motion-note">
+          Reduced motion is on, so playback will not animate. Use <strong>Step back</strong> and{" "}
+          <strong>Step forward</strong> to move through the recorded window, or{" "}
+          <strong>Jump to end</strong> to see the result.
+        </p>
+      ) : null}
     </section>
   );
 }
