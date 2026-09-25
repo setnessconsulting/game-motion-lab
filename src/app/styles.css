@@ -188,9 +188,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* The canvas is sized by the renderer's own Scale Manager in FIT mode, which keeps the
+   scene's logical coordinate space fixed and independent of the screen. Styling it here
+   as well would put two sizing authorities on one element. */
 .lab-region__canvas canvas {
-  width: 100%;
-  height: auto;
   display: block;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -198,7 +199,13 @@ button:disabled {
 }
 
 .lab-region__canvas {
+  /* A real box with the scene's aspect ratio, so the fit has a height to work with and
+     the layout does not jump when the canvas mounts. */
+  width: 100%;
+  aspect-ratio: 720 / 320;
   min-height: 160px;
+  max-height: 60vh;
+  overflow: hidden;
 }
 
 .lab-region__fallback {

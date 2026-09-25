@@ -9,20 +9,37 @@ export interface PlaybackState {
  * Presentation-only playback clock.
  *
  * This clock selects which already-computed authoritative sample is displayed. It is
- * NOT authoritative timing: changing the frame rate, pausing, or jumping to the end
- * cannot change a sample, a measurement, or a trial record.
+ * NOT authoritative timing: changing the frame rate, pausing, seeking, or jumping to the
+ * end cannot change a sample, a measurement, or a trial record. `docs/EXPERIMENT_MODEL.md`
+ * owns that guarantee; this hook only decides what the learner is looking at.
  *
- * Reduced motion is expressed as a **derivation** of the clock, not as a side effect
- * inside the animation effect. When reduced motion is on, the displayed position is the
- * end of the sample window and the clock does not run at all, so the instructional result
- * is visible immediately with no animation and no animated frame is ever painted.
+ * Reduced motion (docs/ACCESSIBILITY.md §2, §6 and GAME-390 / ML-06 acceptance criterion 4)
+ * is handled in `start`, not by deriving an override on the returned value:
+ *
+ *   - `start` resolves straight to the end of the window and never sets `running`, so the
+ *     frame loop below never runs and **no intermediate animated state is ever produced**;
+ *   - `seconds` stays real state, so seeking and stepping still work. That matters, because
+ *     the accessibility contract says trajectory playback may *step* instead of animate —
+ *     a derivation that pinned the clock to the end would have removed the animation and
+ *     the manual alternative with it.
  */
 export function usePlayback(totalSeconds: number, reducedMotion: boolean) {
   const [state, setState] = useState<PlaybackState>({ seconds: 0, running: false });
 
-  const start = useCallback(() => {
-    setState({ seconds: 0, running: true });
-  }, []);
+  const start = useCallback(
+    (durationSeconds?: number) => {
+      if (reducedMotion) {
+        // Resolve to the end of the window at once. The loop is never started, so there is
+        // no frame at which an intermediate position could be painted.
+        const requested = durationSeconds ?? totalSeconds;
+        const duration = Number.isFinite(requested) ? Math.max(0, requested) : 0;
+        setState({ seconds: duration, running: false });
+        return;
+      }
+      setState({ seconds: 0, running: true });
+    },
+    [reducedMotion, totalSeconds]
+  );
 
   const stop = useCallback(() => {
     setState((previous) => ({ ...previous, running: false }));
@@ -34,6 +51,14 @@ export function usePlayback(totalSeconds: number, reducedMotion: boolean) {
 
   const reset = useCallback(() => {
     setState({ seconds: 0, running: false });
+  }, []);
+
+  /** Move the presentation clock to an absolute instant. Presentation only. */
+  const seek = useCallback((seconds: number) => {
+    setState((current) => ({
+      seconds: Number.isFinite(seconds) ? Math.max(0, seconds) : current.seconds,
+      running: false,
+    }));
   }, []);
 
   useEffect(() => {
@@ -64,10 +89,29 @@ export function usePlayback(totalSeconds: number, reducedMotion: boolean) {
     return () => cancelAnimationFrame(frame);
   }, [state.running, reducedMotion, totalSeconds]);
 
-  // Derived, never mutated: reduced motion always presents the end of the sample window.
-  const playback: PlaybackState = reducedMotion
-    ? { seconds: totalSeconds, running: false }
-    : state;
+  return { playback: state, start, stop, finish, reset, seek };
+}
 
-  return { playback, start, stop, finish, reset };
+/**
+ * Step one recorded sample from the current instant.
+ *
+ * The targets are the authoritative sample instants the view model already carries, so
+ * "step" lands exactly on a recorded point rather than on an invented fraction of the
+ * window. Presentation only: `seek` moves the clock, never a measurement.
+ */
+export function nextSampleSeconds(
+  samples: readonly { readonly atSeconds: number }[],
+  currentSeconds: number,
+  direction: 1 | -1
+): number {
+  if (samples.length === 0) return currentSeconds;
+  const epsilon = 1e-9;
+  if (direction === 1) {
+    const next = samples.find((sample) => sample.atSeconds > currentSeconds + epsilon);
+    return next?.atSeconds ?? samples[samples.length - 1]?.atSeconds ?? currentSeconds;
+  }
+  const previous = [...samples]
+    .reverse()
+    .find((sample) => sample.atSeconds < currentSeconds - epsilon);
+  return previous?.atSeconds ?? samples[0]?.atSeconds ?? currentSeconds;
 }

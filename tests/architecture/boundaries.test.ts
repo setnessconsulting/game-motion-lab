@@ -262,6 +262,81 @@ describe("no physics engine is a scientific authority anywhere", () => {
   });
 });
 
+describe("the presentation geometry is computable without a browser (GAME-390 / ML-06)", () => {
+  // ML-06 acceptance criterion 3 claims the same domain trace renders the same way
+  // regardless of refresh rate. The only way to make that checkable rather than hopeful is
+  // for the metre-to-canvas mapping to be a pure function that can run in the Node test
+  // environment. That requires this file to stay free of Phaser and of the DOM — so the
+  // requirement is enforced here, where it cannot be quietly dropped.
+  const geometrySource = readFileSync(resolve(SRC, "renderer", "labGeometry.ts"), "utf8");
+
+  it("exists and is the module the scene draws through", () => {
+    expect(geometrySource.length).toBeGreaterThan(500);
+    expect(geometrySource).toContain("export function sceneGeometry");
+  });
+
+  it("imports no Phaser, so it can be loaded where there is no canvas", () => {
+    expect(geometrySource).not.toMatch(/from\s+["']phaser["']/);
+    expect(geometrySource).not.toMatch(/import\s+Phaser/);
+  });
+
+  it("touches no browser global", () => {
+    for (const token of ["window.", "document.", "navigator.", "localStorage"]) {
+      expect(geometrySource).not.toContain(token);
+    }
+  });
+
+  it("is imported by the scene rather than reimplemented there", () => {
+    // The import list is read, not just the module specifier: a check that only asked
+    // "does the scene import from labGeometry" passed a break that dropped `sceneGeometry`
+    // from that import, which is exactly the regression this is meant to catch.
+    const sceneSource = readFileSync(resolve(SRC, "renderer", "labScene.ts"), "utf8");
+    const imported = /import\s*\{([^}]*)\}\s*from\s*["']\.\/labGeometry\.js["']/.exec(sceneSource);
+    expect(imported).not.toBeNull();
+    expect(imported?.[1] ?? "").toContain("sceneGeometry");
+  });
+
+  it("maps positions with the shared function, not with a private formula", () => {
+    // A scene that inlined its own metre-to-pixel arithmetic would satisfy every check
+    // above while drawing something the pure module never agreed to.
+    const sceneSource = readFileSync(resolve(SRC, "renderer", "labScene.ts"), "utf8");
+    expect(sceneSource).toContain("sceneGeometry(");
+    expect(sceneSource).not.toMatch(/pixelsPerMetre\s*[*/]/);
+    expect(sceneSource).not.toMatch(/\/\s*LOGICAL_WIDTH/);
+  });
+
+  it("is reachable from the unit suite, which is the environment that proves purity", () => {
+    const unitSuite = readFileSync(
+      resolve(process.cwd(), "tests", "unit", "labGeometry.test.ts"),
+      "utf8"
+    );
+    expect(unitSuite).toMatch(/from\s+["']\.\.\/\.\.\/src\/renderer\/labGeometry\.js["']/);
+  });
+});
+
+describe("the renderer cannot be driven by frame time (GAME-390 / ML-06)", () => {
+  // AC3 (refresh-rate independence) and AC4 (reduced motion removes motion) are made
+  // structural by keeping frame time out of the drawing path entirely: no frame delta, no
+  // elapsed clock, no tween. A later milestone that wants animation must change this check
+  // and the document deliberately, rather than easing past a boundary nobody was watching.
+  const rawScene = readFileSync(resolve(SRC, "renderer", "labScene.ts"), "utf8");
+  // Comments are stripped first. The doc comment in that file names the very tokens this
+  // check forbids, and a gate that trips over its own explanation is a gate nobody keeps.
+  const sceneSource = rawScene
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+
+  it("computes its geometry through the shared pure function", () => {
+    expect(sceneSource).toContain("sceneGeometry(");
+  });
+
+  for (const token of ["delta", "tweens", ".tween(", "performance.now"] ) {
+    it(`never reads ${token}`, () => {
+      expect(sceneSource).not.toContain(token);
+    });
+  }
+});
+
 describe("the detector itself works (guards against a vacuous gate)", () => {
   // A synthetic violation must be detected, otherwise a green suite would be meaningless.
   const syntheticFile: SourceFile = {

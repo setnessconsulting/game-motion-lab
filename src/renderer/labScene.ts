@@ -1,22 +1,41 @@
 import Phaser from "phaser";
 import type { SceneModel } from "../viewmodel/index.js";
-import { publishReadback, RENDERER_READBACK_KEY, type RendererReadback } from "./readback.js";
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH, sceneGeometry, type SceneGeometry } from "./labGeometry.js";
+import {
+  publishReadback,
+  RENDERER_READBACK_KEY,
+  type RendererFailureStage,
+  type RendererReadback,
+} from "./readback.js";
 
 /**
- * The Motion Lab laboratory scene.
+ * The Motion Lab laboratory scene (GAME-384 / ML-02 bootstrap; extended by GAME-390 / ML-06).
  *
  * Hard boundary (ADR 0002): this file may read the typed view model and draw. It may
- * NOT compute a scientific value, derive one from pixel geometry, or write into
- * domain state. Every metre value it draws comes straight from the view model, and the
- * only thing it publishes outward is the qualification readback.
+ * NOT compute a scientific value, derive one from pixel geometry, or write into domain
+ * state. Every metre value it draws comes straight from the view model.
  *
- * This is the ML-02 bootstrap scene. The production lab renderer is GAME-390 (ML-06).
+ * ML-06 imposes a second, narrower discipline on top of that boundary, because it is what
+ * makes two acceptance criteria structural rather than hopeful:
+ *
+ *   1. **Nothing here reads frame time.** There is no `delta`, no elapsed clock, and no
+ *      tween. Everything drawn comes from `sceneGeometry(model)`, which is a pure function
+ *      of the model. The frame loop therefore cannot advance, ease, or drift the picture —
+ *      which is AC3 (refresh-rate independence) and AC4 (reduced motion removes motion)
+ *      by construction rather than by a conditional.
+ *   2. **The drawn geometry is published** through the readback hook, so the real-render
+ *      lane can assert that the picture matched the pure function across advancing frames
+ *      and across viewport sizes.
+ *
+ * `scripts/verify-contracts.mjs` checks both: that this file computes geometry through the
+ * shared module, and that it contains no frame-time or tween reference. A later milestone
+ * that wants animation must change that check deliberately, not slip past it.
  */
 
 export const LAB_SCENE_KEY = "MotionLabLabScene";
 
-const LOGICAL_WIDTH = 720;
-const LOGICAL_HEIGHT = 320;
+/** Left inset of the playback progress rail, in logical pixels. */
+const TRACK_RAIL_MARGIN = 40;
 
 const COLORS = {
   background: 0x0e1726,
@@ -27,9 +46,18 @@ const COLORS = {
   cartDark: 0x2a7f76,
   force: 0xf2a03d,
   balanced: 0x8fa6bd,
+  progress: 0x6fd3c4,
+  progressTrack: 0x27384f,
   label: "#dbe7f5",
   labelDim: "#93a9c2",
 } as const;
+
+const EMPHASIS_LABEL: Record<SceneGeometry["emphasis"], string> = {
+  idle: "no trial recorded yet",
+  playing: "playing the recorded trial",
+  paused: "paused part-way through the recorded window",
+  settled: "at the end of the recorded window",
+};
 
 interface SceneRuntime {
   readback: RendererReadback;
@@ -44,6 +72,8 @@ function emptyReadback(): RendererReadback {
     destroyed: false,
     lastModel: null,
     failure: null,
+    failureStage: null,
+    geometry: null,
   };
 }
 
@@ -61,8 +91,9 @@ export function markSceneDestroyed(): void {
   LAB_SCENE_RUNTIME.readback.destroyed = true;
 }
 
-export function markRendererFailure(message: string): void {
+export function markRendererFailure(message: string, stage: RendererFailureStage): void {
   LAB_SCENE_RUNTIME.readback.failure = message;
+  LAB_SCENE_RUNTIME.readback.failureStage = stage;
   LAB_SCENE_RUNTIME.readback.ready = false;
   publishReadback(LAB_SCENE_RUNTIME.readback);
 }
@@ -72,18 +103,12 @@ export function reconcileLabScene(model: SceneModel): void {
   LAB_SCENE_RUNTIME.current = model;
 }
 
-function toCanvasX(positionMetres: number, trackEndMetres: number): number {
-  const margin = 40;
-  const usable = LOGICAL_WIDTH - margin * 2;
-  const clamped = Math.min(Math.max(positionMetres, 0), trackEndMetres);
-  return margin + (clamped / Math.max(trackEndMetres, 0.0001)) * usable;
-}
-
 export class LabScene extends Phaser.Scene {
   private graphics?: Phaser.GameObjects.Graphics;
   private cartBody?: Phaser.GameObjects.Rectangle;
   private cartWheels: Phaser.GameObjects.Arc[] = [];
   private forceText?: Phaser.GameObjects.Text;
+  private progressText?: Phaser.GameObjects.Text;
   private positionText?: Phaser.GameObjects.Text;
 
   constructor() {
@@ -95,15 +120,16 @@ export class LabScene extends Phaser.Scene {
 
     this.graphics = this.add.graphics();
 
-    this.cartBody = this.add.rectangle(0, 0, 74, 38, COLORS.cart).setDepth(3);
+    this.cartBody = this.add.rectangle(0, 0, 1, 1, COLORS.cart).setDepth(3);
     this.cartWheels = [
       this.add.circle(0, 0, 9, COLORS.cartDark).setDepth(2),
       this.add.circle(0, 0, 9, COLORS.cartDark).setDepth(2),
     ];
 
-    // Direction is stated in words as well as an arrow, never by colour alone.
+    // Direction is stated in words as well as an arrow, never by colour alone
+    // (docs/ACCESSIBILITY.md §6).
     this.add
-      .text(LOGICAL_WIDTH - 40, 30, "\u2192 +x (right is positive)", {
+      .text(LOGICAL_WIDTH - 40, 26, "\u2192 +x (right is positive)", {
         fontFamily: "monospace",
         fontSize: "15px",
         color: COLORS.label,
@@ -112,7 +138,7 @@ export class LabScene extends Phaser.Scene {
       .setDepth(4);
 
     this.forceText = this.add
-      .text(LOGICAL_WIDTH / 2, 62, "", {
+      .text(LOGICAL_WIDTH / 2, 58, "", {
         fontFamily: "monospace",
         fontSize: "18px",
         color: COLORS.label,
@@ -120,8 +146,17 @@ export class LabScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setDepth(4);
 
+    this.progressText = this.add
+      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 44, "", {
+        fontFamily: "monospace",
+        fontSize: "14px",
+        color: COLORS.labelDim,
+      })
+      .setOrigin(0.5, 0.5)
+      .setDepth(4);
+
     this.positionText = this.add
-      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 26, "", {
+      .text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 20, "", {
         fontFamily: "monospace",
         fontSize: "15px",
         color: COLORS.labelDim,
@@ -134,6 +169,11 @@ export class LabScene extends Phaser.Scene {
     this.reconcile();
   }
 
+  /**
+   * The frame loop. Note what it does NOT do: it reads no frame time, so it cannot ease,
+   * extrapolate, interpolate, or drift. Each frame redraws the same picture for the same
+   * model.
+   */
   override update(): void {
     if (LAB_SCENE_RUNTIME.readback.destroyed) return;
     LAB_SCENE_RUNTIME.readback.frames += 1;
@@ -146,72 +186,92 @@ export class LabScene extends Phaser.Scene {
     const graphics = this.graphics;
     if (!model || !graphics) return;
 
-    const { startMetres, endMetres } = model.track;
-    const trackY = LOGICAL_HEIGHT - 76;
-    const margin = 40;
-    const usable = LOGICAL_WIDTH - margin * 2;
+    const geometry = sceneGeometry(model);
+    const { track, cart, force } = geometry;
 
     graphics.clear();
 
-    // Track bed.
-    graphics.fillStyle(COLORS.track, 1);
-    graphics.fillRect(margin, trackY, usable, 10);
-    graphics.lineStyle(1, COLORS.trackEdge, 1);
-    graphics.strokeRect(margin, trackY, usable, 10);
-
-    // Tick marks every metre, so the track scale is legible without colour.
-    const ticks = Math.max(1, Math.floor(endMetres - startMetres));
-    for (let tick = 0; tick <= ticks; tick += 1) {
-      const x = margin + (tick / Math.max(ticks, 1)) * usable;
-      graphics.lineStyle(1, COLORS.tick, 0.7);
-      graphics.lineBetween(x, trackY + 12, x, trackY + 20);
+    // Progress rail: presentation feedback about the playback position only. It is derived
+    // from the model's active sample index and cannot move a measurement.
+    const railY = LOGICAL_HEIGHT - 60;
+    const railWidth = LOGICAL_WIDTH - TRACK_RAIL_MARGIN * 2;
+    graphics.fillStyle(COLORS.progressTrack, 1);
+    graphics.fillRect(TRACK_RAIL_MARGIN, railY, railWidth, 4);
+    if (geometry.playedFraction > 0) {
+      graphics.fillStyle(COLORS.progress, 1);
+      graphics.fillRect(TRACK_RAIL_MARGIN, railY, railWidth * geometry.playedFraction, 4);
     }
 
-    const cartX = toCanvasX(model.cart.positionMetres, endMetres);
-    const cartY = trackY - 24;
+    // Track bed.
+    graphics.fillStyle(COLORS.track, 1);
+    graphics.fillRect(track.startX, track.y, track.width, track.height);
+    graphics.lineStyle(1, COLORS.trackEdge, 1);
+    graphics.strokeRect(track.startX, track.y, track.width, track.height);
 
-    this.cartBody?.setPosition(cartX, cartY);
-    const leftWheel = this.cartWheels[0];
-    const rightWheel = this.cartWheels[1];
-    leftWheel?.setPosition(cartX - 22, cartY + 22);
-    rightWheel?.setPosition(cartX + 22, cartY + 22);
+    // Tick marks every metre, so the track scale is legible without relying on colour.
+    graphics.lineStyle(1, COLORS.tick, 0.7);
+    for (const tickX of track.tickXs) {
+      graphics.lineBetween(tickX, track.y + 12, tickX, track.y + 20);
+    }
 
-    // Force arrow: direction is encoded redundantly by arrow geometry, the sign, and
-    // the words in the label text (never colour alone).
-    const arrow = model.forceArrow;
-    const magnitude = Math.min(Math.abs(arrow.newtons), 12);
-    const length = arrow.direction === "balanced" ? 0 : 20 + magnitude * 6;
-    const colour = arrow.direction === "balanced" ? COLORS.balanced : COLORS.force;
-    if (length > 0) {
-      const sign = arrow.direction === "positive" ? 1 : -1;
-      const startX = cartX + sign * 40;
-      const endX = startX + sign * length;
+    this.cartBody?.setPosition(cart.centerX, cart.centerY);
+    this.cartBody?.setSize(cart.width, cart.height);
+    this.cartWheels[0]?.setPosition(cart.rearWheelX, cart.wheelY);
+    this.cartWheels[1]?.setPosition(cart.frontWheelX, cart.wheelY);
+
+    // Force arrow: direction is encoded three times over — arrow geometry, the sign of the
+    // displacement, and the words in the label (never colour alone).
+    if (force.fromX !== null && force.toX !== null && force.magnitude > 0) {
+      const sign = force.direction === "positive" ? 1 : -1;
+      const colour = COLORS.force;
       graphics.lineStyle(5, colour, 1);
-      graphics.lineBetween(startX, cartY, endX, cartY);
+      graphics.lineBetween(force.fromX, cart.centerY, force.toX, cart.centerY);
       graphics.fillStyle(colour, 1);
       graphics.fillTriangle(
-        endX,
-        cartY,
-        endX - sign * 14,
-        cartY - 9,
-        endX - sign * 14,
-        cartY + 9
+        force.toX,
+        cart.centerY,
+        force.toX - sign * force.headLength,
+        cart.centerY - force.headHalfHeight,
+        force.toX - sign * force.headLength,
+        cart.centerY + force.headHalfHeight
       );
     }
 
-    this.forceText?.setText(arrow.label);
+    this.forceText?.setText(model.forceArrow.label);
+    this.progressText?.setText(
+      `playback: ${EMPHASIS_LABEL[geometry.emphasis]} (${Math.round(
+        geometry.playedFraction * 100
+      )}%)`
+    );
     this.positionText?.setText(
       `position ${model.cart.positionMetres.toFixed(2)} m  |  ` +
         `velocity ${model.cart.velocityMetresPerSecond.toFixed(2)} m/s  |  ` +
-        `track to ${endMetres.toFixed(1)} m`
+        `track to ${track.endMetres.toFixed(1)} m`
     );
 
+    const displaySize = this.scale.displaySize;
     LAB_SCENE_RUNTIME.readback.lastModel = {
       activeIndex: model.playback.activeIndex,
       positionMetres: model.cart.positionMetres,
       velocityMetresPerSecond: model.cart.velocityMetresPerSecond,
-      trackEndMetres: endMetres,
+      trackEndMetres: track.endMetres,
       reducedMotion: model.reducedMotion,
+    };
+    LAB_SCENE_RUNTIME.readback.geometry = {
+      logicalWidth: geometry.logicalWidth,
+      logicalHeight: geometry.logicalHeight,
+      pixelsPerMetre: track.pixelsPerMetre,
+      cartCenterX: cart.centerX,
+      cartCenterY: cart.centerY,
+      trackStartX: track.startX,
+      trackEndX: track.endX,
+      forceFromX: force.fromX,
+      forceToX: force.toX,
+      emphasis: geometry.emphasis,
+      playedFraction: geometry.playedFraction,
+      viewportWidth: displaySize.width,
+      viewportHeight: displaySize.height,
+      viewportScale: this.scale.zoom,
     };
   }
 }
