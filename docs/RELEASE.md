@@ -13,15 +13,35 @@ path and host contract are established by ML-HOST (GAME-385) following
 Motion Lab ships as a **static web** artifact:
 
 ```text
-slug:     motion-lab
-kind:     static-web
-entry:    index.html
-prefix:   motion-lab/<version>/
+slug:          motion-lab
+kind:          static-web
+entry:         index.html
+object prefix: motion-lab/<version>/
+asset prefix:  /game-assets/motion-lab/<version>/
 ```
 
-The Vite build uses a relative base by default so the artifact can be mounted beneath the versioned
-prefix without rewriting asset URLs. Path/base compatibility is proven by ML-HOST using a bounded
-non-production placeholder.
+The Vite build uses a relative base (`base: "./"`) so the artifact can be mounted beneath the
+versioned prefix without rewriting asset URLs.
+
+**Established by ML-HOST (GAME-385).** The identity above is declared once, at `host-identity.json`,
+and read by `scripts/lib/host-identity.mjs`. The nested host server, the Playwright host lane, and the
+release manifest all read that one module, so a prefix that drifts in one place cannot disagree with
+the other. The games-site counterpart is `docs/motion-lab-host-contract.md` in that repository.
+
+Path/base compatibility is proven, not asserted:
+
+```bash
+npm run test:host   # build, write the manifest, then serve dist/ from the exact asset prefix
+```
+
+`scripts/nested-host-server.mjs` serves the real build only beneath
+`/game-assets/motion-lab/<version>/` and refuses `/`, so a root-relative asset path fails locally
+instead of failing in production. `tests/host/nestedAssetBase.spec.ts` fails if any request escapes
+the prefix, 404s, or if the served document's own references resolve outside it.
+
+That lane has been observed **failing** when the base path is deliberately broken (`base: "/"`),
+reporting `[initial document] these requests escaped the version prefix ... /assets/index-*.js,
+/assets/index-*.css`. A base-path check that has never failed is a check of nothing; this one has.
 
 ## 2. Immutable candidate identity
 
@@ -34,6 +54,28 @@ A released candidate is identified by **all** of the following, recorded togethe
 | release version | immutable version string, e.g. `2026.09.24-slice.1` |
 | aggregate build hash | hash over the built payload |
 | per-file hashes, sizes, content types | release manifest |
+
+**Manifest, implemented by ML-HOST (GAME-385).** `npm run release:manifest` writes
+`release-manifest.json` into the build output, which publishes beneath the same versioned prefix as
+the artifact, so a hosted candidate can be traced back to exact source. It records `sourceSha`,
+`sourceBranch`, `sourceTreeDirty` (and the changed paths when it is true), `dependencyLockIdentity`,
+`packageVersion`, `releaseVersion`, `entryFile`, `assetPrefix`, `objectPrefix`, and a per-file
+`sha256`/`bytes`/`contentType` list.
+
+Two properties make it identity rather than decoration:
+
+1. `npm run release:check` recomputes every file hash, the byte length, the source SHA, and the
+   resolved version, and fails on any drift. It runs inside `npm run verify`.
+2. **No timestamps and no mtimes are recorded**, so two byte-identical rebuilds produce an identical
+   manifest. A build timestamp would guarantee that they did not.
+
+The `files` list is a per-file hash and size record rather than a single aggregate hash. A single
+aggregate would prove the artifact changed without saying which file did, which is the wrong
+granularity for a promotion review.
+
+The bundle budget deliberately excludes `release-manifest.json`: release metadata is not learner
+payload, and counting it would drift the tracked payload metric for a reason unrelated to the
+learner. `scripts/lib/bundle-scope.mjs` is shared with the budget check so the two cannot disagree.
 | published prefix | `motion-lab/<version>/` |
 | games-site promotion identity | games-site commit SHA that selects the version |
 | automated qualification evidence | ML-14 record bound to the source SHA |

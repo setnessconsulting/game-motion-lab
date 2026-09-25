@@ -25,6 +25,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join, relative, resolve, sep } from "node:path";
+import { isPayloadFile, NON_PAYLOAD_FILES } from "./lib/bundle-scope.mjs";
 import { codeTreeDirty, codeTreeDirtyPaths, currentBranch, headSha } from "./lib/repo-state.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
@@ -80,7 +81,14 @@ function main() {
     process.exit(1);
   }
 
-  const files = walk(DIST).map(describe);
+  const allFiles = walk(DIST).map(describe);
+  // Release metadata is excluded: a learner does not download it, so counting it would
+  // make the tracked payload number drift for a reason unrelated to the learner.
+  // scripts/lib/bundle-scope.mjs is shared with the budget check so the two cannot disagree.
+  const files = allFiles.filter((file) => isPayloadFile(file.path));
+  const excludedFromBundle = allFiles
+    .filter((file) => !isPayloadFile(file.path))
+    .map((file) => ({ path: file.path, gzipBytes: file.gzipBytes }));
   const buckets = { initialJs: 0, gameChunk: 0, rendererChunk: 0, css: 0, html: 0, other: 0 };
   const assets = files.map((file) => {
     const kind = classify(file.path);
@@ -142,6 +150,10 @@ function main() {
     bundle: {
       bucketsGzipBytes: buckets,
       totalGzipBytes: totalGzip,
+      scopeReason:
+        "Learner payload only. Release metadata is listed in excludedFromBundle and is not downloaded by the game.",
+      excludedFromBundle,
+      excludedNames: NON_PAYLOAD_FILES,
       assets,
     },
     runtimeMetrics,

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "gameSlug": "motion-lab",
+  "entryFile": "index.html",
+  "assetPrefixBase": "/game-assets",
+  "releaseQualifier": "ml-host-evidence.1",
+  "notes": "Single source of truth for the Motion Lab host identity. The release version is `<package.json version>-<releaseQualifier>` unless MOTION_LAB_VERSION overrides it. games-site hosts the artifact beneath `<assetPrefixBase>/<gameSlug>/<version>/`; see games-site docs/motion-lab-host-contract.md. Change this file only with a reviewed decision: the version string is part of an immutable artifact identity."
+}
