@@ -12,8 +12,9 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 1. Read [`PRODUCT.md`](PRODUCT.md) for what the game is and is not.
 2. Read [`CURRICULUM.md`](CURRICULUM.md) for the standards boundary.
 3. Read [`SCIENCE_MODEL.md`](SCIENCE_MODEL.md) before writing any physics.
-4. Read [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`adr/`](adr/) before writing any code.
-5. Read [`DECISIONS.md`](DECISIONS.md) before proposing a change to any of the above.
+4. Read [`EXPERIMENT_MODEL.md`](EXPERIMENT_MODEL.md) before writing any trial, measurement, or evidence code.
+5. Read [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`adr/`](adr/) before writing any code.
+6. Read [`DECISIONS.md`](DECISIONS.md) before proposing a change to any of the above.
 
 ## Contract documents
 
@@ -22,6 +23,7 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 | [`PRODUCT.md`](PRODUCT.md) | vision, learner profile, session shape, non-goals | ML-02, ML-05, ML-11, ML-13 |
 | [`CURRICULUM.md`](CURRICULUM.md) | NGSS MS-PS2-2 mapping, v1 assessment boundary | ML-03, ML-05, ML-11 |
 | [`SCIENCE_MODEL.md`](SCIENCE_MODEL.md) | 1D analytical model, units, sign convention, resistance policy, rounding/tolerance | ML-03, ML-04, ML-07, ML-09, ML-10 |
+| [`EXPERIMENT_MODEL.md`](EXPERIMENT_MODEL.md) | experiment/evidence/replay contract: controlled variables, derived measurements, immutable trials, integrity digest, misconceptions | ML-05, ML-07, ML-08, ML-10, ML-13 |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) + [`adr/`](adr/) | authority flow, package boundaries, technology baseline | ML-02, ML-06, ML-08, ML-09 |
 | [`MISSIONS.md`](MISSIONS.md) | four canonical mission families, difficulty progression | ML-05, ML-11, ML-13 |
 | [`COMPARATORS.md`](COMPARATORS.md) | scored comparator registry, dimension mapping, IP boundary | ML-16 |

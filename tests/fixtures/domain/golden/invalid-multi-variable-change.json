@@ -1,0 +1,118 @@
+{
+  "id": "invalid-multi-variable-change",
+  "kind": "invalid",
+  "title": "Invalid comparison — mass and force both changed, so no single cause is isolated",
+  "equations": [
+    "Trial 0: Fnet = 0 N, m = 2 kg, so a = 0 m/s^2 and x(3) = 0 m",
+    "Trial 1: Fnet = 4 N, m = 3 kg, so a = Fnet/m = 4/3 m/s^2",
+    "Trial 1: v(3) = 0 + (4/3)*3 = 4 m/s",
+    "Trial 1: x(3) = 0 + 0 + 0.5*(4/3)*9 = 6 m"
+  ],
+  "rationale": "This is the classic invalid investigation. The learner raised the force from 0 N to 4 N and also swapped the 2 kg cart for a 3 kg one. The cart did travel further, so a claim built on this pair looks reasonable, but two things changed at once and the difference cannot be attributed to either one. Note that a = Fnet/m happens to give 4/3 m/s^2 here, close to the 2 m/s^2 of the valid fixture; a near-miss like this is exactly why the domain refuses to score an uncontrolled comparison instead of quietly accepting the more flattering number.",
+  "investigation": {
+    "investigationId": "force-scaling",
+    "independentVariableId": "appliedForceNewtons",
+    "dependentVariableIds": ["appliedForceNewtons"],
+    "controlledVariableIds": [
+      "cartMassKilograms",
+      "initialVelocityMetresPerSecond",
+      "observationWindowSeconds"
+    ],
+    "declaredVariables": [
+      {
+        "id": "cartMassKilograms",
+        "quantity": "mass",
+        "role": "controlled",
+        "bounds": [1, 4],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Cart mass"
+      },
+      {
+        "id": "appliedForceNewtons",
+        "quantity": "force",
+        "role": "independent",
+        "bounds": [-12, 12],
+        "step": 1,
+        "learnerAdjustable": true,
+        "label": "Applied force"
+      },
+      {
+        "id": "initialVelocityMetresPerSecond",
+        "quantity": "velocity",
+        "role": "controlled",
+        "bounds": [-2, 2],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Starting speed"
+      },
+      {
+        "id": "observationWindowSeconds",
+        "quantity": "time",
+        "role": "controlled",
+        "bounds": [1, 6],
+        "step": 0.5,
+        "learnerAdjustable": false,
+        "label": "Observation span"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "ordinal": 0,
+      "variantSeed": 3,
+      "sampleCount": 5,
+      "positionTargetsMetres": [],
+      "configuration": {
+        "cartMassKilograms": 2,
+        "appliedForceNewtons": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 3
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 0 },
+        { "id": "finalVelocity", "value": 0 },
+        { "id": "averageVelocity", "value": 0 },
+        { "id": "maxSpeed", "value": 0 }
+      ],
+      "expectedUnreachedTargetsMetres": []
+    },
+    {
+      "ordinal": 1,
+      "variantSeed": 3,
+      "sampleCount": 5,
+      "positionTargetsMetres": [],
+      "configuration": {
+        "cartMassKilograms": 3,
+        "appliedForceNewtons": 4,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 3
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 6 },
+        { "id": "finalVelocity", "value": 4 },
+        { "id": "averageVelocity", "value": 2 },
+        { "id": "maxSpeed", "value": 4 }
+      ],
+      "expectedUnreachedTargetsMetres": []
+    }
+  ],
+  "expectedComparison": {
+    "validity": "multiple-variables-changed",
+    "changedVariableIds": ["cartMassKilograms", "appliedForceNewtons"],
+    "controlledViolations": ["cartMassKilograms"],
+    "pedagogyContains": "2 variables changed at once"
+  },
+  "claim": {
+    "claimId": "more-force-travels-further-uncontrolled",
+    "text": "Because I pushed harder, the cart went further.",
+    "measurementId": "finalPosition",
+    "relation": "greater-than",
+    "attributedVariableId": "appliedForceNewtons"
+  },
+  "expectedClaimEvaluation": {
+    "supported": false,
+    "reason": "uncontrolled-comparison"
+  },
+  "expectedMisconceptions": ["uncontrolled-comparison"]
+}

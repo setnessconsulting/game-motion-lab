@@ -1,0 +1,121 @@
+{
+  "id": "valid-controlled-force-scaling",
+  "kind": "valid",
+  "title": "Valid controlled comparison — at fixed mass, more net force travels further",
+  "equations": [
+    "Trial 0: Fnet = 0 N, so a = Fnet/m = 0 m/s^2",
+    "Trial 0: v(t) = v0 = 0 m/s, x(t) = x0 + v0*t = 0 m",
+    "Trial 1: Fnet = 4 N, m = 2 kg, so a = Fnet/m = 2 m/s^2",
+    "Trial 1: v(t) = v0 + a*t = 0 + 2*t, so v(3) = 6 m/s",
+    "Trial 1: x(t) = x0 + v0*t + 0.5*a*t^2 = 0 + 0 + 0.5*2*t^2 = t^2, so x(3) = 9 m",
+    "Trial 1 reaches the 4 m marker when t^2 = 4, i.e. t = 2 s"
+  ],
+  "rationale": "Both trials hold mass, initial velocity, and the observation span fixed; only the applied force changes, so the comparison isolates the effect of force. Trial 1 ends at 9.00 m having started from rest, which is more than double the 4.00 m it would reach under 2 N. The balanced trial is included deliberately: it is the control that shows the change is caused by the force and not by elapsed time.",
+  "investigation": {
+    "investigationId": "force-scaling",
+    "independentVariableId": "appliedForceNewtons",
+    "dependentVariableIds": ["appliedForceNewtons"],
+    "controlledVariableIds": [
+      "cartMassKilograms",
+      "initialVelocityMetresPerSecond",
+      "observationWindowSeconds"
+    ],
+    "declaredVariables": [
+      {
+        "id": "cartMassKilograms",
+        "quantity": "mass",
+        "role": "controlled",
+        "bounds": [1, 4],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Cart mass"
+      },
+      {
+        "id": "appliedForceNewtons",
+        "quantity": "force",
+        "role": "independent",
+        "bounds": [-12, 12],
+        "step": 1,
+        "learnerAdjustable": true,
+        "label": "Applied force"
+      },
+      {
+        "id": "initialVelocityMetresPerSecond",
+        "quantity": "velocity",
+        "role": "controlled",
+        "bounds": [-2, 2],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Starting speed"
+      },
+      {
+        "id": "observationWindowSeconds",
+        "quantity": "time",
+        "role": "controlled",
+        "bounds": [1, 6],
+        "step": 0.5,
+        "learnerAdjustable": false,
+        "label": "Observation span"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "ordinal": 0,
+      "variantSeed": 11,
+      "sampleCount": 5,
+      "positionTargetsMetres": [4],
+      "configuration": {
+        "cartMassKilograms": 2,
+        "appliedForceNewtons": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 3
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 0 },
+        { "id": "finalVelocity", "value": 0 },
+        { "id": "averageVelocity", "value": 0 },
+        { "id": "maxSpeed", "value": 0 }
+      ],
+      "expectedUnreachedTargetsMetres": [4]
+    },
+    {
+      "ordinal": 1,
+      "variantSeed": 11,
+      "sampleCount": 5,
+      "positionTargetsMetres": [4],
+      "configuration": {
+        "cartMassKilograms": 2,
+        "appliedForceNewtons": 4,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 3
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 9 },
+        { "id": "finalVelocity", "value": 6 },
+        { "id": "averageVelocity", "value": 3 },
+        { "id": "maxSpeed", "value": 6 },
+        { "id": "timeToPosition", "targetMetres": 4, "value": 2 }
+      ],
+      "expectedUnreachedTargetsMetres": []
+    }
+  ],
+  "expectedComparison": {
+    "validity": "valid",
+    "changedVariableIds": ["appliedForceNewtons"],
+    "controlledViolations": [],
+    "pedagogy": null
+  },
+  "claim": {
+    "claimId": "more-force-travels-further",
+    "text": "If I push harder, the cart travels further.",
+    "measurementId": "finalPosition",
+    "relation": "greater-than",
+    "attributedVariableId": "appliedForceNewtons"
+  },
+  "expectedClaimEvaluation": {
+    "supported": true,
+    "reason": "supported-by-evidence"
+  },
+  "expectedMisconceptions": []
+}

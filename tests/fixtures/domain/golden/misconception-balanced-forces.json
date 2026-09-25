@@ -1,0 +1,118 @@
+{
+  "id": "misconception-balanced-forces",
+  "kind": "misconception",
+  "title": "Misconception case — 'balanced forces means the cart stays still'",
+  "equations": [
+    "Both trials: Fnet = 0 N, so a = Fnet/m = 0 m/s^2",
+    "Trial 0: v(t) = v0 = 1.5 m/s, so x(4) = 0 + 1.5*4 = 6 m",
+    "Trial 1: v(t) = v0 = 0 m/s, so x(4) = 0 m"
+  ],
+  "rationale": "Both trials have balanced forces, so this is a fair comparison in which only the starting speed changes. A learner who believes that balanced forces mean 'nothing moves' is contradicted by the pair: with Fnet = 0 N the cart that started at 1.5 m/s ends 6.00 m along the track, while the cart that started at rest never moves at all. The domain reports this as a computed signal naming both trials and the observed numbers, so the debrief can point at the learner's own data rather than assert a conclusion.",
+  "investigation": {
+    "investigationId": "balanced-versus-rest",
+    "independentVariableId": "initialVelocityMetresPerSecond",
+    "dependentVariableIds": ["initialVelocityMetresPerSecond"],
+    "controlledVariableIds": [
+      "cartMassKilograms",
+      "appliedForceNewtons",
+      "observationWindowSeconds"
+    ],
+    "declaredVariables": [
+      {
+        "id": "cartMassKilograms",
+        "quantity": "mass",
+        "role": "controlled",
+        "bounds": [1, 4],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Cart mass"
+      },
+      {
+        "id": "appliedForceNewtons",
+        "quantity": "force",
+        "role": "controlled",
+        "bounds": [-12, 12],
+        "step": 1,
+        "learnerAdjustable": true,
+        "label": "Applied force"
+      },
+      {
+        "id": "initialVelocityMetresPerSecond",
+        "quantity": "velocity",
+        "role": "independent",
+        "bounds": [-2, 2],
+        "step": 0.5,
+        "learnerAdjustable": true,
+        "label": "Starting speed"
+      },
+      {
+        "id": "observationWindowSeconds",
+        "quantity": "time",
+        "role": "controlled",
+        "bounds": [1, 6],
+        "step": 0.5,
+        "learnerAdjustable": false,
+        "label": "Observation span"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "ordinal": 0,
+      "variantSeed": 21,
+      "sampleCount": 5,
+      "positionTargetsMetres": [3],
+      "configuration": {
+        "cartMassKilograms": 2,
+        "appliedForceNewtons": 0,
+        "initialVelocityMetresPerSecond": 1.5,
+        "observationWindowSeconds": 4
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 6 },
+        { "id": "finalVelocity", "value": 1.5 },
+        { "id": "averageVelocity", "value": 1.5 },
+        { "id": "maxSpeed", "value": 1.5 },
+        { "id": "timeToPosition", "targetMetres": 3, "value": 2 }
+      ],
+      "expectedUnreachedTargetsMetres": []
+    },
+    {
+      "ordinal": 1,
+      "variantSeed": 21,
+      "sampleCount": 5,
+      "positionTargetsMetres": [3],
+      "configuration": {
+        "cartMassKilograms": 2,
+        "appliedForceNewtons": 0,
+        "initialVelocityMetresPerSecond": 0,
+        "observationWindowSeconds": 4
+      },
+      "expectedMeasurements": [
+        { "id": "finalPosition", "value": 0 },
+        { "id": "finalVelocity", "value": 0 },
+        { "id": "averageVelocity", "value": 0 },
+        { "id": "maxSpeed", "value": 0 }
+      ],
+      "expectedUnreachedTargetsMetres": [3]
+    }
+  ],
+  "expectedComparison": {
+    "validity": "valid",
+    "changedVariableIds": ["initialVelocityMetresPerSecond"],
+    "controlledViolations": [],
+    "pedagogy": null
+  },
+  "claim": {
+    "claimId": "balanced-means-stopped",
+    "text": "The forces are balanced, so the cart should not move.",
+    "measurementId": "finalPosition",
+    "relation": "equal-to",
+    "attributedVariableId": "appliedForceNewtons"
+  },
+  "expectedClaimEvaluation": {
+    "supported": false,
+    "reason": "contradicted-by-evidence"
+  },
+  "expectedMisconceptions": ["balanced-forces-imply-stopped"]
+}
