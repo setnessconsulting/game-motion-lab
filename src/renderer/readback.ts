@@ -35,10 +35,16 @@ export interface RendererGeometryReadback {
   readonly forceToX: number | null;
   readonly emphasis: string;
   readonly playedFraction: number;
-  /** The fitted viewport, so a lane can prove screen size did not reach the geometry's inputs. */
+  /**
+   * The fitted viewport, so a lane can prove screen size did not reach the geometry's inputs.
+   *
+   * The canvas's CSS size is the measure, not the scale manager's zoom: under Phaser's FIT
+   * mode `scale.zoom` stays 1 in every viewport, so an earlier `viewportScale` field reported
+   * a constant and has been removed rather than left as a field that looks meaningful. The
+   * lane compares these two values and the measured canvas box instead.
+   */
   readonly viewportWidth: number;
   readonly viewportHeight: number;
-  readonly viewportScale: number;
 }
 
 export interface RendererReadback {

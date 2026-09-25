@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SceneModel } from "../viewmodel/index.js";
-import type { RendererFailureStage } from "../renderer/index.js";
+import {
+  failureExplanationFor,
+  isRendererStage,
+  rendererRecoveryFor,
+  type HostFailureStage,
+} from "./recovery.js";
 
 /**
  * The canvas region.
@@ -39,27 +44,6 @@ import type { RendererFailureStage } from "../renderer/index.js";
  */
 
 type RendererStatus = "loading" | "ready" | "failed";
-
-/** The stages the host can distinguish: the renderer's own, plus the chunk load. */
-type HostFailureStage = RendererFailureStage | "chunk-load";
-
-const FAILURE_EXPLANATION: Record<HostFailureStage, string> = {
-  "chunk-load": "The animated view could not be downloaded.",
-  initialise: "The animated view could not start on this device.",
-  "startup-timeout": "The animated view did not start within its time budget.",
-  runtime: "The animated view stopped unexpectedly.",
-};
-
-const RENDERER_STAGES: readonly RendererFailureStage[] = [
-  "chunk-load",
-  "initialise",
-  "startup-timeout",
-  "runtime",
-];
-
-function isRendererStage(value: unknown): value is RendererFailureStage {
-  return typeof value === "string" && (RENDERER_STAGES as readonly string[]).includes(value);
-}
 
 export interface RendererRegionProps {
   readonly model: SceneModel;
@@ -208,9 +192,7 @@ export function RendererRegion({ model, onRendererFlagChange }: RendererRegionPr
         <div className="lab-region__fallback" role="status" data-testid="renderer-fallback">
           <h3>Semantic experiment view</h3>
           <p>
-            {failureStage === null
-              ? "The animated view is unavailable."
-              : FAILURE_EXPLANATION[failureStage]}{" "}
+            {failureExplanationFor(failureStage)}{" "}
             Nothing about your experiment has changed, and you can finish the investigation using
             the instruments and the trial table.
           </p>
@@ -219,7 +201,7 @@ export function RendererRegion({ model, onRendererFlagChange }: RendererRegionPr
             <code data-testid="renderer-failure-stage">{failureStage ?? "unknown"}</code> — reason:{" "}
             <code>{failureDetail || "renderer unavailable"}</code>
           </p>
-          {failureStage === "chunk-load" ? (
+          {rendererRecoveryFor(failureStage) === "reload-page" ? (
             <>
               <p className="lab-region__detail" data-testid="renderer-reload-note">
                 Loading the same file again from this page will not work — the browser remembers
