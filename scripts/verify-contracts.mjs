@@ -97,6 +97,7 @@ const DOC_FILES = [
   'CURRICULUM.md',
   'SCIENCE_MODEL.md',
   'EXPERIMENT_MODEL.md',
+  'CONTENT_SET.md',
   'ARCHITECTURE.md',
   'MISSIONS.md',
   'COMPARATORS.md',
@@ -557,6 +558,283 @@ check(
   'EXPERIMENT_MODEL maps each ML-04 acceptance criterion to where it is proven',
   /11\.\s*Acceptance criteria mapping/.test(experimentDoc) &&
     /Same seed\/configuration produces the same trial evidence/.test(experimentDoc)
+);
+
+// ---------------------------------------------------------------------------
+group('canonical content set');
+
+const contentScenarioDir = 'src/content/scenarios';
+const contentGoldenDir = 'src/content/golden';
+const contentScenarios = exists(contentScenarioDir)
+  ? relPathsIn(contentScenarioDir).filter((f) => f.endsWith('.provenance.json'))
+  : [];
+const contentGoldens = exists(contentGoldenDir)
+  ? relPathsIn(contentGoldenDir).filter((f) => f.endsWith('.trace.json'))
+  : [];
+
+check('src/content/scenarios exists as the canonical data location', exists(contentScenarioDir));
+check('src/content/golden exists as the canonical golden location', exists(contentGoldenDir));
+check('the content package exists', exists('src/content/index.ts'));
+
+const parsedScenarios = [];
+for (const file of contentScenarios) {
+  const rel = join(contentScenarioDir, file);
+  try {
+    parsedScenarios.push({ file, rel, value: readJson(rel) });
+  } catch (error) {
+    check(`${rel} is valid JSON`, false, String(error));
+  }
+}
+check(
+  'every scenario file is parseable JSON',
+  parsedScenarios.length === contentScenarios.length,
+  `${parsedScenarios.length}/${contentScenarios.length}`
+);
+check('there is at least one canonical scenario', contentScenarios.length > 0, String(contentScenarios.length));
+check(
+  'there is one golden trace per scenario',
+  contentGoldens.length === contentScenarios.length,
+  `${contentGoldens.length} goldens for ${contentScenarios.length} scenarios`
+);
+
+const scenarioIds = parsedScenarios.map((entry) => entry.value?.manifest?.scenarioId);
+check(
+  'every scenario declares a unique kebab-case scenarioId',
+  scenarioIds.every((id) => typeof id === 'string' && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) &&
+    new Set(scenarioIds).size === scenarioIds.length,
+  scenarioIds.join(',')
+);
+
+const declaredSchema = readJson('contracts/scenario-provenance.schema.json');
+const requiredManifestFields = declaredSchema.required ?? [];
+for (const entry of parsedScenarios) {
+  const manifest = entry.value?.manifest ?? {};
+  const missing = requiredManifestFields.filter((field) => !(field in manifest));
+  check(`${entry.file} carries every field the frozen provenance schema requires`, missing.length === 0, missing.join(','));
+  check(
+    `${entry.file} declares the frozen target standard`,
+    manifest.targetStandard === 'NGSS MS-PS2-2',
+    String(manifest.targetStandard)
+  );
+  check(
+    `${entry.file} sources its absolute tolerance from the frozen tolerance floors`,
+    manifest.answerTolerance?.absoluteSource === 'science-conventions.v1.json:quantity.toleranceFloor',
+    String(manifest.answerTolerance?.absoluteSource)
+  );
+  const relative = manifest.answerTolerance?.relative;
+  check(
+    `${entry.file} keeps its relative tolerance inside the authored band`,
+    typeof relative === 'number' && relative >= 0.01 && relative <= 0.05,
+    String(relative)
+  );
+  check(
+    `${entry.file} cites at least one golden trace`,
+    Array.isArray(manifest.expectedTraces) && manifest.expectedTraces.length > 0,
+    ''
+  );
+  check(
+    `${entry.file} states at least two kinds of accepted evidence`,
+    Array.isArray(manifest.acceptedEvidence) && manifest.acceptedEvidence.length >= 2,
+    String(manifest.acceptedEvidence?.length)
+  );
+  check(
+    `${entry.file} maps every misconception to authored remediation`,
+    Array.isArray(manifest.misconceptions) &&
+      manifest.misconceptions.length > 0 &&
+      manifest.misconceptions.every(
+        (entry) => typeof entry.id === 'string' && entry.statement?.length > 0 && entry.remediation?.length > 0
+      ),
+    ''
+  );
+  // The release gate's whole purpose is that an unreviewed scenario may not ship.
+  // Assert the *current* honest state rather than leaving it implicit.
+  check(
+    `${entry.file} does not claim a review that has not happened`,
+    manifest.reviewStatus === 'unreviewed' && manifest.reviewer === null,
+    `reviewStatus=${manifest.reviewStatus} reviewer=${String(manifest.reviewer)}`
+  );
+  check(
+    `${entry.file} declares that its answer needs controlled evidence`,
+    manifest.answerKeyBounded === true,
+    String(manifest.answerKeyBounded)
+  );
+}
+
+// Every expectedTraces reference must resolve to a real file carrying that id.
+for (const entry of parsedScenarios) {
+  for (const reference of entry.value?.manifest?.expectedTraces ?? []) {
+    const [file, fragment] = String(reference).split('#');
+    let resolved = false;
+    if (file && fragment && exists(file)) {
+      try {
+        const parsed = readJson(file);
+        resolved = (parsed.id ?? parsed.scenarioId) === fragment;
+      } catch {
+        resolved = false;
+      }
+    }
+    check(
+      `${entry.file} cites a trace that resolves: ${reference}`,
+      resolved,
+      ''
+    );
+  }
+}
+
+// Golden traces must carry a whole-trajectory digest per trial, or they only
+// pin endpoints and a mid-run regression would slip through.
+const goldenTraceIds = [];
+for (const file of contentGoldens) {
+  const rel = join(contentGoldenDir, file);
+  let parsed;
+  try {
+    parsed = readJson(rel);
+  } catch {
+    check(`${rel} is valid JSON`, false);
+    continue;
+  }
+  goldenTraceIds.push(parsed.scenarioId);
+  check(`${rel} declares a scenarioId`, typeof parsed.scenarioId === 'string', '');
+  check(
+    `${rel} carries a rationale a science reviewer can read`,
+    typeof parsed.rationale === 'string' && parsed.rationale.length > 40,
+    ''
+  );
+  const trials = Array.isArray(parsed.trials) ? parsed.trials : [];
+  check(`${rel} has at least one trial`, trials.length > 0, String(trials.length));
+  for (const trial of trials) {
+    check(
+      `${rel}/${trial.trialKey} pins the whole trajectory with a digest`,
+      typeof trial.expectedSamplesDigest === 'string' && /^[0-9a-f]{8}$/.test(trial.expectedSamplesDigest),
+      String(trial.expectedSamplesDigest)
+    );
+    check(
+      `${rel}/${trial.trialKey} carries hand arithmetic for a reviewer to check`,
+      Array.isArray(trial.equations) &&
+        trial.equations.length >= 3 &&
+        typeof trial.handCheck?.netForceNewtons === 'number' &&
+        typeof trial.handCheck?.acceleration === 'number',
+      ''
+    );
+  }
+}
+check(
+  'golden traces cover the same scenario ids as the scenarios',
+  new Set(goldenTraceIds).size === contentScenarios.length &&
+    scenarioIds.every((id) => goldenTraceIds.includes(id)),
+  ''
+);
+
+// Every frozen family must be represented, and the mandated graph requirement
+// must actually be satisfied by an authored scenario.
+const frozenFamilies = readJson('contracts/mission-families.v1.json');
+const byFamily = new Map();
+for (const entry of parsedScenarios) {
+  const familyId = entry.value?.manifest?.familyId;
+  byFamily.set(familyId, [...(byFamily.get(familyId) ?? []), entry.value.manifest]);
+}
+for (const family of frozenFamilies.families) {
+  const members = byFamily.get(family.id) ?? [];
+  check(`frozen family ${family.id} has at least one authored scenario`, members.length > 0, String(members.length));
+  const covered = new Set(members.flatMap((m) => (m.misconceptions ?? []).map((e) => e.id)));
+  check(
+    `frozen family ${family.id} maps at least as many misconceptions as the contract names`,
+    covered.size >= family.misconceptions.length,
+    `${covered.size} ids for ${family.misconceptions.length} contract misconceptions`
+  );
+  if (family.graphRequirement.level === 'required') {
+    check(
+      `frozen family ${family.id} really has a graph-required scenario`,
+      members.some((m) => m.graphRequirement?.level === 'required'),
+      ''
+    );
+  }
+  for (const member of members) {
+    check(
+      `${member.scenarioId} only uses a difficulty level ${family.id} offers`,
+      family.difficultyLevels.includes(member.difficultyLevel),
+      String(member.difficultyLevel)
+    );
+    const familySeverity = { none: 0, optional: 1, required: 2 }[family.graphRequirement.level];
+    const scenarioSeverity = { none: 0, optional: 1, required: 2 }[member.graphRequirement?.level];
+    check(
+      `${member.scenarioId} does not exceed its family's graph requirement`,
+      scenarioSeverity <= familySeverity,
+      `${member.graphRequirement?.level} vs ${family.graphRequirement.level}`
+    );
+  }
+}
+const graphOwner = frozenFamilies.graphInterpretationRequirement.satisfiedBy;
+check(
+  `the mandated graph-interpretation requirement is satisfied by ${graphOwner}`,
+  (byFamily.get(graphOwner) ?? []).some(
+    (m) =>
+      m.graphRequirement?.level === 'required' &&
+      (m.graphRequirement?.graphs ?? []).includes('velocity-time')
+  ),
+  ''
+);
+
+// The release gate must exist AND must not yet be armed. Both halves matter:
+// the first is the rule, the second is why no build is failing today.
+const releaseGate = exists('src/content/release-gate.ts')
+  ? readText('src/content/release-gate.ts')
+  : '';
+check('the content package implements the production release gate', releaseGate.includes('assertReleaseReady'), '');
+check(
+  'the release gate is documented as deliberately not yet armed',
+  /not wired into|not yet armed|deliberately left unconnected/i.test(releaseGate),
+  ''
+);
+const packageJson = exists('package.json') ? readJson('package.json') : {};
+// Scan *every* declared script, not just `build`. Arming the gate inside, say,
+// `perf:check` would otherwise slip past a check that only looked at the two
+// obvious entry points, and the gate's whole value is that it is impossible to
+// route around by picking a different command.
+const scriptEntries = Object.entries(packageJson.scripts ?? {});
+const armingScripts = scriptEntries
+  .filter(([, command]) => typeof command === 'string' && command.includes('assertReleaseReady'))
+  .map(([name]) => name);
+check(
+  'the release gate is not invoked from any npm script, because no review has happened',
+  armingScripts.length === 0,
+  armingScripts.join(',')
+);
+check(
+  'the package still declares the authoritative local commands',
+  ['build', 'test', 'verify', 'contracts', 'foundation'].every((name) =>
+    scriptEntries.some(([script]) => script === name)
+  ),
+  ''
+);
+
+const contentDoc = plain(exists('docs/CONTENT_SET.md') ? readText('docs/CONTENT_SET.md') : '');
+check(
+  'CONTENT_SET states that measurements are backed by golden traces that reproduce',
+  /golden trace/i.test(contentDoc) && /reproduce/i.test(contentDoc)
+);
+check(
+  'CONTENT_SET records the acceptance-criteria mapping, including what is still open',
+  /11\.\s*Acceptance criteria mapping/.test(contentDoc) &&
+    /OPEN — human gate/.test(contentDoc) &&
+    /AC3/.test(contentDoc) &&
+    /AC4/.test(contentDoc)
+);
+check(
+  'CONTENT_SET states that it does not claim an independent review',
+  /does not satisfy AC3 and AC4/i.test(contentDoc) &&
+    /no independent review/i.test(contentDoc)
+);
+check(
+  'CONTENT_SET records that no single reading can never decide, with the cause sweep',
+  /8\.\s*A recorded limitation/.test(contentDoc) &&
+    /only 2 N and 3 N produce any/i.test(contentDoc) &&
+    /correct-calibration/.test(contentDoc)
+);
+check(
+  'CONTENT_SET records known limitations rather than claiming completeness',
+  /13\.\s*Known limitations/.test(contentDoc) &&
+    /resistive-cause scenario bypasses the ML-04 trial runner/i.test(contentDoc)
 );
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "cargo-heavy-load",
+  "familyId": "cargo-load-test",
+  "rationale": "The evidence-challenge version: the learner must cite the unreached marker, not just two numbers, to support the claim that the heavier cart changed speed less.",
+  "trials": [
+    {
+      "trialKey": "mass-1-5",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 6 N",
+        "a = 6 N / 1.5 kg = 4.00 m/s^2",
+        "v(2 s) = 4.00 * 2 = 8.00 m/s",
+        "x(2 s) = 0.5 * 4.00 * 2^2 = 8.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 6,
+        "acceleration": 4,
+        "finalPositionMetres": 8,
+        "finalVelocityMetresPerSecond": 8
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 8
+        },
+        {
+          "id": "finalVelocity",
+          "value": 8
+        },
+        {
+          "id": "averageVelocity",
+          "value": 4
+        },
+        {
+          "id": "maxSpeed",
+          "value": 8
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.2247448710000002,
+          "targetMetres": 3
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.732050808,
+          "targetMetres": 6
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "02f44b10",
+      "expectedFinalState": {
+        "positionMetres": 8,
+        "velocityMetresPerSecond": 8,
+        "accelerationMetresPerSecondSquared": 4,
+        "netForceNewtons": 6,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "mass-3",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 6 N (held still)",
+        "a = 6 N / 3.0 kg = 2.00 m/s^2",
+        "v(2 s) = 2.00 * 2 = 4.00 m/s",
+        "x(2 s) = 0.5 * 2.00 * 2^2 = 4.00 m",
+        "6.00 m is never reached inside a 2 s run"
+      ],
+      "handCheck": {
+        "netForceNewtons": 6,
+        "acceleration": 2,
+        "finalPositionMetres": 4,
+        "finalVelocityMetresPerSecond": 4
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 4
+        },
+        {
+          "id": "finalVelocity",
+          "value": 4
+        },
+        {
+          "id": "averageVelocity",
+          "value": 2
+        },
+        {
+          "id": "maxSpeed",
+          "value": 4
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.732050808,
+          "targetMetres": 3
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [
+        6
+      ],
+      "expectedSamplesDigest": "8536b355",
+      "expectedFinalState": {
+        "positionMetres": 4,
+        "velocityMetresPerSecond": 4,
+        "accelerationMetresPerSecondSquared": 2,
+        "netForceNewtons": 6,
+        "elapsedSeconds": 2
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "mass-1-5",
+      "candidateTrialKey": "mass-3",
+      "validity": "valid",
+      "changedVariableIds": [
+        "cartMassKilograms"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "expectedMisconceptions": []
+}

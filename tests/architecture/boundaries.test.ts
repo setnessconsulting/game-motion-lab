@@ -147,7 +147,16 @@ const files = loadSourceFiles();
 describe("source inventory", () => {
   it("found the real source tree (so the boundary checks are not vacuous)", () => {
     expect(files.length).toBeGreaterThanOrEqual(15);
-    for (const folder of ["science", "domain", "viewmodel", "ui", "renderer", "host", "app"]) {
+    for (const folder of [
+      "science",
+      "domain",
+      "content",
+      "viewmodel",
+      "ui",
+      "renderer",
+      "host",
+      "app",
+    ]) {
       expect(files.some((file) => file.folder === folder)).toBe(true);
     }
   });
@@ -231,6 +240,23 @@ describe("no physics engine is a scientific authority anywhere", () => {
     for (const file of scienceOrDomain) {
       for (const specifier of file.specifiers) {
         expect(specifier.includes("renderer")).toBe(false);
+      }
+    }
+  });
+
+  it("the shipped application cannot reach the content package or its goldens", () => {
+    // The golden traces contain the expected answer to every scenario, and the
+    // content set is data the application has no reason to import. If an app
+    // module could reach it, the anti-answer-key guarantee would depend on
+    // discipline rather than on the module graph.
+    const application = files.filter((file) =>
+      ["app", "ui", "renderer", "host", "viewmodel"].includes(file.folder)
+    );
+    expect(application.length).toBeGreaterThan(0);
+    for (const file of application) {
+      for (const specifier of file.specifiers) {
+        const folder = targetFolder(file, specifier);
+        expect(folder === "content", `${file.relativeToSrc} -> ${specifier}`).toBe(false);
       }
     }
   });

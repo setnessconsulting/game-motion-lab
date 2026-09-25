@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "thruster-velocity-graph",
+  "familyId": "thruster-test",
+  "rationale": "Carries the mandated graph-interpretation requirement: the evidence is the slope of the speed line, and the same data is available as a table so the graph is never the only path.",
+  "trials": [
+    {
+      "trialKey": "force-3",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 3 N",
+        "a = 3 N / 2 kg = 1.50 m/s^2",
+        "v(2 s) = 1.50 * 2 = 3.00 m/s",
+        "x(2 s) = 0.5 * 1.50 * 2^2 = 3.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 3,
+        "acceleration": 1.5,
+        "finalPositionMetres": 3,
+        "finalVelocityMetresPerSecond": 3
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 3
+        },
+        {
+          "id": "finalVelocity",
+          "value": 3
+        },
+        {
+          "id": "averageVelocity",
+          "value": 1.5
+        },
+        {
+          "id": "maxSpeed",
+          "value": 3
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.1547005380000002,
+          "targetMetres": 1
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.632993162,
+          "targetMetres": 2
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "be207d98",
+      "expectedFinalState": {
+        "positionMetres": 3,
+        "velocityMetresPerSecond": 3,
+        "accelerationMetresPerSecondSquared": 1.5,
+        "netForceNewtons": 3,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "force-6",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 6 N",
+        "a = 6 N / 2 kg = 3.00 m/s^2",
+        "v(2 s) = 3.00 * 2 = 6.00 m/s",
+        "x(2 s) = 0.5 * 3.00 * 2^2 = 6.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 6,
+        "acceleration": 3,
+        "finalPositionMetres": 6,
+        "finalVelocityMetresPerSecond": 6
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 6
+        },
+        {
+          "id": "finalVelocity",
+          "value": 6
+        },
+        {
+          "id": "averageVelocity",
+          "value": 3
+        },
+        {
+          "id": "maxSpeed",
+          "value": 6
+        },
+        {
+          "id": "timeToPosition",
+          "value": 0.816496581,
+          "targetMetres": 1
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1.1547005380000002,
+          "targetMetres": 2
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "6954a249",
+      "expectedFinalState": {
+        "positionMetres": 6,
+        "velocityMetresPerSecond": 6,
+        "accelerationMetresPerSecondSquared": 3,
+        "netForceNewtons": 6,
+        "elapsedSeconds": 2
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "force-3",
+      "candidateTrialKey": "force-6",
+      "validity": "valid",
+      "changedVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "expectedMisconceptions": []
+}

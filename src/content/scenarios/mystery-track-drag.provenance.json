@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "targetStandard": "NGSS MS-PS2-2",
+    "units": {
+      "mass": "kg",
+      "force": "N",
+      "netForce": "N",
+      "position": "m",
+      "time": "s",
+      "velocity": "m/s",
+      "acceleration": "m/s^2"
+    },
+    "answerTolerance": {
+      "relative": 0.02,
+      "absoluteSource": "science-conventions.v1.json:quantity.toleranceFloor"
+    },
+    "reviewStatus": "unreviewed",
+    "reviewer": null,
+    "answerKeyBounded": true,
+    "referenceBasis": null,
+    "variantOf": null,
+    "reviewDate": null,
+    "seed": 4100,
+    "scenarioId": "mystery-track-drag",
+    "familyId": "mystery-cart",
+    "title": "Something rubbing the track",
+    "scienceConcepts": [
+      "resistive-force",
+      "net-force",
+      "acceleration",
+      "controlled-investigation",
+      "graph-interpretation"
+    ],
+    "independentVariable": "the thruster force dial",
+    "dependentVariable": "which explanation fits the odd cart",
+    "controlledVariables": [
+      "cart mass setting",
+      "starting speed",
+      "observation span"
+    ],
+    "acceptedEvidence": [
+      "The odd cart run at 2 N.",
+      "The odd cart run at 3 N.",
+      "A note that the shortfall stayed the same size in both runs."
+    ],
+    "difficultyLevel": "diagnosis",
+    "graphRequirement": {
+      "level": "required",
+      "graphs": [
+        "velocity-time"
+      ]
+    },
+    "initialConditions": {
+      "positionMetres": 0,
+      "velocityMetresPerSecond": 0,
+      "appliedForcesNewtons": [
+        2
+      ],
+      "resistiveForceNewtons": null,
+      "observationWindowSeconds": 2,
+      "cartMassKilograms": 2
+    },
+    "expectedRelationship": {
+      "statement": "A steady drag holds the cart back by the same amount whatever the push.",
+      "governingEquations": [
+        "newton-second-law",
+        "velocity-time"
+      ]
+    },
+    "misconceptions": [
+      {
+        "id": "one-anomaly-is-enough",
+        "statement": "One odd run is enough to name the fault.",
+        "remediation": "Three faults slow the cart at 2 N. The 3 N run separates them."
+      },
+      {
+        "id": "unfair-comparison-isolates-a-cause",
+        "statement": "A run where two things changed still pins down one cause.",
+        "remediation": "Only the force dial moved between the paired runs, so that is the only thing tested."
+      },
+      {
+        "id": "sibling-compared-under-different-conditions",
+        "statement": "The odd cart is faulty because it is slower than a cart tested another way.",
+        "remediation": "The two carts were run at the same two force settings, so the settings are ruled out."
+      }
+    ],
+    "debriefExplanation": "The odd cart fell short of the reference cart by the same 1.00 m/s at 2 N and again at 3 N. A steady drag always takes the same bite out of the push, so the shortfall does not grow. A heavy cart would fall further behind as the force grew. A steady gap between the two speed lines is the tell.",
+    "expectedTraces": [
+      "src/content/golden/mystery-track-drag.trace.json#mystery-track-drag",
+      "tests/fixtures/science/golden/resistive-declared.json#resistive-declared"
+    ]
+  },
+  "design": {
+    "investigation": {
+      "investigationId": "ml-05-appliedForceNewtons",
+      "independentVariableId": "appliedForceNewtons",
+      "dependentVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledVariableIds": [
+        "cartMassKilograms",
+        "initialVelocityMetresPerSecond",
+        "observationWindowSeconds"
+      ],
+      "declaredVariables": [
+        {
+          "id": "cartMassKilograms",
+          "quantity": "mass",
+          "role": "controlled",
+          "bounds": [
+            1,
+            4
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Cart mass"
+        },
+        {
+          "id": "appliedForceNewtons",
+          "quantity": "force",
+          "role": "independent",
+          "bounds": [
+            -12,
+            12
+          ],
+          "step": 1,
+          "learnerAdjustable": true,
+          "label": "Applied force"
+        },
+        {
+          "id": "initialVelocityMetresPerSecond",
+          "quantity": "velocity",
+          "role": "controlled",
+          "bounds": [
+            -2,
+            2
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Starting speed"
+        },
+        {
+          "id": "observationWindowSeconds",
+          "quantity": "time",
+          "role": "controlled",
+          "bounds": [
+            1,
+            6
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Observation span"
+        }
+      ]
+    },
+    "trials": [
+      {
+        "trialKey": "reference-2n",
+        "label": "Reference cart, thruster at 2 N",
+        "role": "baseline",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 2,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          2
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "hiddenMassKilograms": null,
+        "positionTargetsMetres": [
+          1
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "reference-3n",
+        "label": "Reference cart, thruster at 3 N",
+        "role": "comparison",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 3,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          3
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "hiddenMassKilograms": null,
+        "positionTargetsMetres": [
+          1
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "suspect-2n",
+        "label": "Odd cart, thruster at 2 N",
+        "role": "baseline",
+        "subject": "suspect",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 2,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          2
+        ],
+        "resistiveForceNewtons": 1,
+        "hiddenCause": true,
+        "hiddenMassKilograms": null,
+        "positionTargetsMetres": [
+          1
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "suspect-3n",
+        "label": "Odd cart, thruster at 3 N",
+        "role": "comparison",
+        "subject": "suspect",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 3,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          3
+        ],
+        "resistiveForceNewtons": 1,
+        "hiddenCause": true,
+        "hiddenMassKilograms": null,
+        "positionTargetsMetres": [
+          1
+        ],
+        "sampleCount": 6
+      }
+    ],
+    "candidateCauses": [
+      {
+        "id": "correct-calibration",
+        "label": "Nothing is wrong",
+        "explanation": "The cart is set up the way the book says, so it speeds up as expected.",
+        "massKilograms": 2,
+        "forceOverrideNewtons": null,
+        "resistiveForceNewtons": 0
+      },
+      {
+        "id": "incorrect-cargo-mass",
+        "label": "Too much cargo",
+        "explanation": "More cargo is loaded than the label says, so the same push lifts it more slowly.",
+        "massKilograms": 3,
+        "forceOverrideNewtons": null,
+        "resistiveForceNewtons": 0
+      },
+      {
+        "id": "weak-thruster",
+        "label": "A weak thruster",
+        "explanation": "The thruster is stuck at a small push, whatever the dial is set to.",
+        "massKilograms": 2,
+        "forceOverrideNewtons": 2,
+        "resistiveForceNewtons": 0
+      },
+      {
+        "id": "unexpected-resistive-force",
+        "label": "Extra drag on the track",
+        "explanation": "Something is rubbing the track and holding the cart back a little.",
+        "massKilograms": 2,
+        "forceOverrideNewtons": null,
+        "resistiveForceNewtons": 1
+      }
+    ]
+  }
+}

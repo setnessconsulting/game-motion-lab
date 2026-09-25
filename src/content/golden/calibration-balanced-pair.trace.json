@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "calibration-balanced-pair",
+  "familyId": "calibration-run",
+  "rationale": "The control trial moves at constant velocity with zero net force, which is the only way to disprove 'balanced forces mean stopped'. The comparison changes exactly one thing: the net force.",
+  "trials": [
+    {
+      "trialKey": "balanced",
+      "ordinal": 0,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 4 N + (-4 N) = 0 N",
+        "a = Fnet / m = 0 / 2 = 0 m/s^2",
+        "v(t) = v0 = 1.00 m/s",
+        "x(2 s) = 0 + 1.00 * 2 = 2.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 0,
+        "acceleration": 0,
+        "finalPositionMetres": 2,
+        "finalVelocityMetresPerSecond": 1
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 2
+        },
+        {
+          "id": "finalVelocity",
+          "value": 1
+        },
+        {
+          "id": "averageVelocity",
+          "value": 1
+        },
+        {
+          "id": "maxSpeed",
+          "value": 1
+        },
+        {
+          "id": "timeToPosition",
+          "value": 1,
+          "targetMetres": 1
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "a34e5aa3",
+      "expectedFinalState": {
+        "positionMetres": 2,
+        "velocityMetresPerSecond": 1,
+        "accelerationMetresPerSecondSquared": 0,
+        "netForceNewtons": 0,
+        "elapsedSeconds": 2
+      }
+    },
+    {
+      "trialKey": "unbalanced",
+      "ordinal": 1,
+      "variantSeed": 4100,
+      "equations": [
+        "Fnet = 4 N + (-1 N) = 3 N",
+        "a = 3 N / 2 kg = 1.50 m/s^2",
+        "v(2 s) = 1.00 + 1.50 * 2 = 4.00 m/s",
+        "x(2 s) = 1.00 * 2 + 0.5 * 1.50 * 2^2 = 2.00 + 3.00 = 5.00 m"
+      ],
+      "handCheck": {
+        "netForceNewtons": 3,
+        "acceleration": 1.5,
+        "finalPositionMetres": 5,
+        "finalVelocityMetresPerSecond": 4
+      },
+      "expectedMeasurements": [
+        {
+          "id": "finalPosition",
+          "value": 5
+        },
+        {
+          "id": "finalVelocity",
+          "value": 4
+        },
+        {
+          "id": "averageVelocity",
+          "value": 2.5
+        },
+        {
+          "id": "maxSpeed",
+          "value": 4
+        },
+        {
+          "id": "timeToPosition",
+          "value": 0.666666667,
+          "targetMetres": 1
+        }
+      ],
+      "expectedUnreachedTargetsMetres": [],
+      "expectedSamplesDigest": "955572b2",
+      "expectedFinalState": {
+        "positionMetres": 5,
+        "velocityMetresPerSecond": 4,
+        "accelerationMetresPerSecondSquared": 1.5,
+        "netForceNewtons": 3,
+        "elapsedSeconds": 2
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "baselineTrialKey": "balanced",
+      "candidateTrialKey": "unbalanced",
+      "validity": "valid",
+      "changedVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledViolations": []
+    }
+  ],
+  "expectedMisconceptions": []
+}

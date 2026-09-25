@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "schemaVersion": 1,
+    "targetStandard": "NGSS MS-PS2-2",
+    "units": {
+      "mass": "kg",
+      "force": "N",
+      "netForce": "N",
+      "position": "m",
+      "time": "s",
+      "velocity": "m/s",
+      "acceleration": "m/s^2"
+    },
+    "answerTolerance": {
+      "relative": 0.02,
+      "absoluteSource": "science-conventions.v1.json:quantity.toleranceFloor"
+    },
+    "reviewStatus": "unreviewed",
+    "reviewer": null,
+    "answerKeyBounded": true,
+    "referenceBasis": null,
+    "variantOf": null,
+    "reviewDate": null,
+    "seed": 4100,
+    "scenarioId": "thruster-force-doubling",
+    "familyId": "thruster-test",
+    "title": "Twice the push",
+    "scienceConcepts": [
+      "acceleration",
+      "velocity",
+      "proportional-reasoning",
+      "controlled-investigation"
+    ],
+    "independentVariable": "the thruster force",
+    "dependentVariable": "the speed-up of the cart",
+    "controlledVariables": [
+      "cart mass",
+      "starting speed",
+      "observation span",
+      "resistive force"
+    ],
+    "initialConditions": {
+      "positionMetres": 0,
+      "velocityMetresPerSecond": 0,
+      "appliedForcesNewtons": [
+        4
+      ],
+      "resistiveForceNewtons": null,
+      "observationWindowSeconds": 2,
+      "cartMassKilograms": 2
+    },
+    "expectedRelationship": {
+      "statement": "With mass held still, twice the push gives twice the speed-up.",
+      "governingEquations": [
+        "newton-second-law",
+        "velocity-time"
+      ]
+    },
+    "acceptedEvidence": [
+      "Two runs that differ only in thruster force.",
+      "The speed-up in each run.",
+      "A note that the cart mass stayed the same."
+    ],
+    "misconceptions": [
+      {
+        "id": "more-force-means-bigger-speed",
+        "statement": "A bigger push means a bigger speed.",
+        "remediation": "Compare the starting speed with the ending speed. The run with more force changed speed faster."
+      },
+      {
+        "id": "longer-run-means-more-force",
+        "statement": "A run that lasts longer must have used more force.",
+        "remediation": "Both runs here used the same length. Only the force was different, and the cart still changed speed faster."
+      },
+      {
+        "id": "force-and-acceleration-unrelated",
+        "statement": "Force and speed-up are not connected.",
+        "remediation": "The cart mass was 2.00 kg in both runs. The run with 8 N changed speed twice as fast as the run with 4 N."
+      }
+    ],
+    "debriefExplanation": "The cart weighed 2.00 kg in both runs. The only thing that changed was the thruster force. With 4 N the cart picked up 2.00 m/s each second. With 8 N it picked up 4.00 m/s each second. Twice the force gave twice the speed-up. That is what a = Fnet / m says.",
+    "expectedTraces": [
+      "src/content/golden/thruster-force-doubling.trace.json#thruster-force-doubling",
+      "tests/fixtures/science/golden/force-scaling.json#force-scaling"
+    ],
+    "difficultyLevel": "guided",
+    "graphRequirement": {
+      "level": "none",
+      "graphs": []
+    }
+  },
+  "design": {
+    "investigation": {
+      "investigationId": "ml-05-appliedForceNewtons",
+      "independentVariableId": "appliedForceNewtons",
+      "dependentVariableIds": [
+        "appliedForceNewtons"
+      ],
+      "controlledVariableIds": [
+        "cartMassKilograms",
+        "initialVelocityMetresPerSecond",
+        "observationWindowSeconds"
+      ],
+      "declaredVariables": [
+        {
+          "id": "cartMassKilograms",
+          "quantity": "mass",
+          "role": "controlled",
+          "bounds": [
+            1,
+            4
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Cart mass"
+        },
+        {
+          "id": "appliedForceNewtons",
+          "quantity": "force",
+          "role": "independent",
+          "bounds": [
+            -12,
+            12
+          ],
+          "step": 1,
+          "learnerAdjustable": true,
+          "label": "Applied force"
+        },
+        {
+          "id": "initialVelocityMetresPerSecond",
+          "quantity": "velocity",
+          "role": "controlled",
+          "bounds": [
+            -2,
+            2
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Starting speed"
+        },
+        {
+          "id": "observationWindowSeconds",
+          "quantity": "time",
+          "role": "controlled",
+          "bounds": [
+            1,
+            6
+          ],
+          "step": 0.5,
+          "learnerAdjustable": true,
+          "label": "Observation span"
+        }
+      ]
+    },
+    "trials": [
+      {
+        "trialKey": "force-4",
+        "label": "Thruster set to 4 N",
+        "role": "baseline",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 4,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          4
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          2
+        ],
+        "sampleCount": 6
+      },
+      {
+        "trialKey": "force-8",
+        "label": "Thruster set to 8 N",
+        "role": "comparison",
+        "subject": "reference",
+        "configuration": {
+          "cartMassKilograms": 2,
+          "appliedForceNewtons": 8,
+          "initialVelocityMetresPerSecond": 0,
+          "observationWindowSeconds": 2
+        },
+        "appliedForcesNewtons": [
+          8
+        ],
+        "resistiveForceNewtons": null,
+        "hiddenCause": false,
+        "positionTargetsMetres": [
+          2
+        ],
+        "sampleCount": 6
+      }
+    ]
+  }
+}
