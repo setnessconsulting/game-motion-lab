@@ -1,0 +1,703 @@
+{
+  "contractId": "motion-lab.design-system",
+  "version": "1.0.0",
+  "status": "frozen",
+  "jiraAuthority": "GAME-382",
+  "frozenBy": "GAME-387",
+  "sourceDocument": "docs/DESIGN.md",
+  "satisfiesJiraIssue": "GAME-387",
+  "resolvesDelegatedDecision": "G-12",
+  "addressesOwnerGate": "O-01",
+
+  "designAuthority": {
+    "kind": "repository-native-design-specification",
+    "artifact": "this contract plus docs/DESIGN.md",
+    "figmaFileProduced": false,
+    "figmaFileUrl": null,
+    "acceptanceBranch": "GAME-387 AC1 permits a real Figma file/handoff OR an equivalent production design authority. This contract is the 'equivalent production design authority' branch.",
+    "whyNotFigma": "No Figma integration, credential, or design-tool access is available. docs/DEFINITION_OF_DONE.md section 4 lists 'a real Figma design action (ML-DESIGN)' as a stop condition, and simulating it is explicitly unacceptable. The package was built and the exact pending gate is recorded instead.",
+    "whatThisIs": "A machine-checked specification of every state GAME-387 names, bound to the identifiers the implementation actually uses, with coverage, design-rule conformance, and honesty enforced by scripts/verify-contracts.mjs.",
+    "whatThisIsNot": [
+      "not a visual design tool file, and therefore not a substitute for one",
+      "not human design review, aesthetic approval, or learner-experience sign-off",
+      "not evidence that any screen has been seen, used, or judged by a person",
+      "not an accessibility conformance claim; docs/ACCESSIBILITY.md section 4 reserves that for ML-16 human evidence",
+      "not evidence that any specified screen has been implemented"
+    ],
+    "enforcement": "scripts/verify-contracts.mjs fails if a GAME-387 required state is dropped, if a design rule loses its mechanism, if a spec/implementation divergence is undeclared, or if this file claims review that did not happen.",
+    "fidelityLimits": [
+      "No screenshot, wireframe image, or rendered mock exists. Coverage is specified, not depicted.",
+      "Typography scale, spacing rhythm, iconography, and final art direction are specified as constraints and tokens; their aesthetic quality is unjudged and belongs to ML-12.",
+      "Interaction timing budgets are proposed targets for ML-14 to measure; they are not measurements.",
+      "No screen has been reviewed by a designer, a teacher, or a learner."
+    ],
+    "pendingGates": [
+      "O-01: owner provides or approves a real Figma file, or waives it in favour of this equivalent",
+      "ML-16: human design, classroom, and accessibility review of the screens this contract specifies"
+    ]
+  },
+
+  "authorityLaw": {
+    "statement": "No visual may state a scientific value that differs from authoritative domain state.",
+    "rendererIsAuthority": false,
+    "rules": [
+      "every displayed quantity comes from the typed view model, never from pixel geometry",
+      "display rounding uses the single frozen round-half-away-from-zero rule and never feeds back into domain state",
+      "a vector length, arrow head, or screen position may encode a value only when it is a pure function of that value from the view model",
+      "a screen may never display a science value the domain did not emit, and may never interpolate between recorded samples as though they were recorded",
+      "decorative physics is permitted only when it is non-authoritative, deterministic, removable under reduced motion, and incapable of changing a science result"
+    ],
+    "verifiableBy": [
+      "tests/architecture/boundaries.test.ts",
+      "tests/unit/labGeometry.test.ts",
+      "tests/e2e/realRender.spec.ts",
+      "scripts/verify-contracts.mjs design group"
+    ]
+  },
+
+  "designRules": [
+    {
+      "id": "DR-01",
+      "rule": "visual vectors and labels must not imply science values inconsistent with authoritative domain state",
+      "enforced": true,
+      "mechanism": "Force direction is encoded three ways: arrow geometry, the sign of the displacement, and the words in the label. Force magnitude maps linearly from the authoritative net force through a pure function with no frame input. The scene never draws an interpolated position between recorded samples.",
+      "boundIdentifiers": [
+        "src/renderer/labGeometry.ts:positionToCanvasX",
+        "src/renderer/labGeometry.ts:sceneGeometry",
+        "src/viewmodel/instruments.ts:directionWords",
+        "src/viewmodel/sceneModel.ts:describeForce"
+      ]
+    },
+    {
+      "id": "DR-02",
+      "rule": "graphs require semantic and table equivalents",
+      "enforced": true,
+      "mechanism": "Every graph ships with a real table element exposing the same series and values plus a textual summary. No assessed question is answerable from graph geometry alone.",
+      "boundIdentifiers": ["contracts/design-system.v1.json:graphContract", "src/ui/TrialTable.tsx"]
+    },
+    {
+      "id": "DR-03",
+      "rule": "drag may be an enhancement only",
+      "enforced": true,
+      "mechanism": "No essential action has a drag-only path. Every drag affordance has a keyboard-reachable discrete equivalent: numeric entry, a stepper, or a range input paired with a readable value.",
+      "boundIdentifiers": ["src/ui/ExperimentControls.tsx", "docs/ACCESSIBILITY.md section 6"]
+    },
+    {
+      "id": "DR-04",
+      "rule": "essential controls remain semantic DOM controls",
+      "enforced": true,
+      "mechanism": "Essential actions are real button, input, select, fieldset, and table elements with accessible names. No clickable div and no ARIA-recreated widget carries an essential action. The Phaser canvas is role=img with a label built from the same instrument readings the DOM shows.",
+      "boundIdentifiers": ["src/app/App.tsx", "src/host/RendererRegion.tsx:canvasLabel", "src/ui/InstrumentPanel.tsx"]
+    },
+    {
+      "id": "DR-05",
+      "rule": "no comparator visual cloning",
+      "enforced": true,
+      "mechanism": "Layout, palette, iconography, copy, art, and audio are original. The palette is derived from this repository's own surface tokens. ML-16 performs the originality and IP review; it is not performed here.",
+      "boundIdentifiers": ["docs/COMPARATORS.md", "docs/PROVENANCE.md section 2"],
+      "reviewStatus": "pending-ml-16"
+    }
+  ],
+
+  "tokens": {
+    "sourceOfTruth": "src/app/styles.css",
+    "method": "Values are transcribed from the shipped custom properties. Contrast ratios are measured, not estimated: WCAG 2.x relative luminance per sRGB pair, then (lighter+0.05)/(darker+0.05).",
+    "colorScheme": "dark",
+    "color": [
+      { "token": "--surface", "value": "#0e1726", "role": "page background" },
+      { "token": "--surface-raised", "value": "#16243a", "role": "panel background" },
+      { "token": "--surface-sunken", "value": "#0a111c", "role": "input well, table head, canvas bed" },
+      { "token": "--border", "value": "#2b4569", "role": "panel and control boundary" },
+      { "token": "--ink", "value": "#e8f0fa", "role": "primary text" },
+      { "token": "--ink-muted", "value": "#a9bed8", "role": "secondary text, help text, axis labels" },
+      { "token": "--accent", "value": "#57d2c2", "role": "primary action, current step, cart body" },
+      { "token": "--accent-ink", "value": "#04231f", "role": "text on an accent fill" },
+      { "token": "--warn", "value": "#f2a03d", "role": "force vector, invalid-state cue, fallback border" },
+      { "token": "--focus", "value": "#ffd166", "role": "focus ring only; carries no meaning on its own" }
+    ],
+    "measuredContrast": [
+      { "foreground": "--ink", "background": "--surface", "ratio": 15.63, "verdict": "AAA text" },
+      { "foreground": "--ink", "background": "--surface-raised", "ratio": 13.56, "verdict": "AAA text" },
+      { "foreground": "--ink", "background": "--surface-sunken", "ratio": 16.47, "verdict": "AAA text" },
+      { "foreground": "--ink-muted", "background": "--surface", "ratio": 9.45, "verdict": "AAA text" },
+      { "foreground": "--ink-muted", "background": "--surface-raised", "ratio": 8.2, "verdict": "AAA text" },
+      { "foreground": "--ink-muted", "background": "--surface-sunken", "ratio": 9.95, "verdict": "AAA text" },
+      { "foreground": "--accent", "background": "--surface", "ratio": 9.75, "verdict": "AAA text" },
+      { "foreground": "--accent", "background": "--surface-raised", "ratio": 8.46, "verdict": "AAA text" },
+      { "foreground": "--accent-ink", "background": "--accent", "ratio": 9.01, "verdict": "AAA text on accent fill" },
+      { "foreground": "--warn", "background": "--surface-raised", "ratio": 7.33, "verdict": "AAA text" },
+      { "foreground": "--warn", "background": "--surface-sunken", "ratio": 8.89, "verdict": "AAA text" },
+      { "foreground": "--focus", "background": "--surface", "ratio": 12.46, "verdict": "focus indicator" },
+      { "foreground": "--focus", "background": "--surface-raised", "ratio": 10.81, "verdict": "focus indicator" },
+      { "foreground": "--border", "background": "--surface-raised", "ratio": 1.6, "verdict": "BELOW the 3:1 non-text threshold; recorded as open finding OF-01" },
+      { "foreground": "--ink", "background": "--border", "ratio": 8.47, "verdict": "text placed on a boundary stays readable" }
+    ],
+    "measuredNonTextContrastFailures": [
+      {
+        "id": "OF-01",
+        "foreground": "--border",
+        "background": "--surface-raised",
+        "ratio": 1.6,
+        "threshold": 3.0,
+        "consequence": "The panel and control boundary is a UI component edge and does not reach WCAG 1.4.11 non-text contrast. Recorded as open finding OF-01; it is not claimed as a pass."
+      }
+    ],
+    "focusRing": {
+      "property": "outline",
+      "width": "3px",
+      "style": "solid",
+      "color": "--focus",
+      "offset": "2px",
+      "radius": "4px",
+      "selector": ":focus-visible",
+      "rationale": "outline rather than box-shadow, so the indicator survives forced-colors mode and is not clipped by an element's own overflow."
+    },
+    "spacing": {
+      "token": "--gap",
+      "value": "1rem",
+      "rhythm": "0.25rem inside a field, 0.5rem between actions, 1rem panel padding, 1rem panel stack, 1rem section rhythm"
+    },
+    "radii": { "panel": "10px", "control": "8px", "controlInner": "6px", "focusRing": "4px", "stepChip": "999px" },
+    "typography": {
+      "familyStack": "Segoe UI, system-ui, -apple-system, sans-serif",
+      "numericFigures": "font-variant-numeric: tabular-nums is mandatory wherever changing numbers are compared side by side, so digits do not shift horizontally while a trial plays.",
+      "scale": [
+        { "role": "page title", "size": "clamp(1.4rem, 1.2rem + 1.2vw, 2rem)", "selector": ".app__header h1" },
+        { "role": "panel heading", "size": "1.05rem", "selector": ".panel h2, .notice h2, .lab-region h2" },
+        { "role": "subheading", "size": "1rem", "selector": ".app__footer h2" },
+        { "role": "control label", "size": "0.95rem", "selector": ".field label, .fieldset legend" },
+        { "role": "readout value", "size": "1rem inherited", "selector": ".readouts dd" },
+        { "role": "help and hint", "size": "0.9rem", "selector": ".panel__hint, .field__help, .app__motion-note" },
+        { "role": "table cell", "size": "0.9rem", "selector": "th, td" },
+        { "role": "step chip", "size": "0.82rem", "selector": ".phase-list li" },
+        { "role": "eyebrow", "size": "0.75rem", "selector": ".app__eyebrow" }
+      ],
+      "canvasType": {
+        "family": "monospace",
+        "rationale": "The canvas status line prints live values; a monospace face stops the readout reflowing horizontally mid-run.",
+        "sizes": { "forceLabel": "18px", "positionLine": "15px", "axisLabel": "15px", "progressLine": "14px" }
+      }
+    }
+  },
+
+  "rendererPalette": {
+    "sourceOfTruth": "src/renderer/labScene.ts COLORS",
+    "method": "Contrast measured against the scene background 0x0e1726, which is the same base as --surface.",
+    "measuredContrast": [
+      { "name": "cart", "value": "#3fb6a8", "ratio": 7.24, "verdict": "passes non-text 3:1" },
+      { "name": "cartDark", "value": "#2a7f76", "ratio": 3.76, "verdict": "passes non-text 3:1" },
+      { "name": "force", "value": "#f2a03d", "ratio": 8.44, "verdict": "passes non-text 3:1 and text" },
+      { "name": "tick", "value": "#4a678f", "ratio": 3.1, "verdict": "barely passes non-text 3:1; the ruler is the scale encoding, so this is load-bearing" },
+      { "name": "progress", "value": "#6fd3c4", "ratio": 10.08, "verdict": "passes" },
+      { "name": "label", "value": "#dbe7f5", "ratio": 14.34, "verdict": "AAA text" },
+      { "name": "labelDim", "value": "#93a9c2", "ratio": 7.44, "verdict": "AAA text" },
+      { "name": "balanced", "value": "#8fa6bd", "ratio": 7.15, "verdict": "AAA text" },
+      { "name": "trackEdge", "value": "#35507a", "ratio": 2.21, "verdict": "BELOW non-text 3:1; recorded as open finding OF-02" },
+      { "name": "track", "value": "#1f3350", "ratio": 1.41, "verdict": "bed fill only, not a meaningful boundary; the ticks and edge carry the scale" },
+      { "name": "progressTrack", "value": "#27384f", "ratio": 1.51, "verdict": "unfilled rail only; the filled portion is the encoded value" }
+    ],
+    "measuredNonTextContrastFailures": [
+      {
+        "id": "OF-02",
+        "foreground": "trackEdge",
+        "background": "background",
+        "ratio": 2.21,
+        "threshold": 3.0,
+        "consequence": "The track edge is a meaningful boundary for the scale and does not reach WCAG 1.4.11 non-text contrast. The metre ticks at 3.10:1 partially carry the scale, so this is a boundary problem rather than a scale-encoding problem. Recorded as open finding OF-02; it is not claimed as a pass."
+      }
+    ],
+    "directionEncoding": {
+      "redundantChannels": ["arrowhead orientation", "sign of the arrow displacement", "the words in the force label", "the +x axis marker drawn on the laboratory axis"],
+      "colourIsNeverSufficient": true,
+      "balancedStateRepresentation": "A balanced net force draws NO arrow at all (fromX and toX are null), not a zero-length arrow. A zero-length arrow would read as 'no data' rather than 'a real measured zero'.",
+      "balancedLabelWording": "The balanced case states the number as well as the reading: 'balanced (0.0 N)'. The number is the evidence; 'balanced' is the interpretation."
+    }
+  },
+
+  "layout": {
+    "container": { "maxWidth": "1180px", "paddingInline": "1rem", "paddingBlock": "1.5rem 3rem", "selector": ".app" },
+    "breakpoints": [
+      {
+        "id": "phone",
+        "viewport": "0-599px",
+        "columns": 1,
+        "notes": "One column, panels stacked in loop order: brief, predict, experiment setup, lab view, instruments, trial record. The lab canvas keeps its 720/320 aspect ratio and its own vertical scroll is avoided; the page scrolls instead.",
+        "targetDevices": "phones in portrait"
+      },
+      {
+        "id": "tablet",
+        "viewport": "600-1023px",
+        "columns": 1,
+        "notes": "One column at the same order, with wider measure and larger panel padding. Wider viewports are deliberately not given a second column here so the reading order of the investigation stays top-to-bottom.",
+        "targetDevices": "tablets in portrait and landscape"
+      },
+      {
+        "id": "desktop",
+        "viewport": "1024px and above",
+        "columns": 2,
+        "notes": "Two columns. Left column carries the learner-authored inputs (prediction, experiment setup). Right column carries the observation surface (lab view, instruments). The trial record spans full width beneath both, because a comparison table must never be narrowed into horizontal scrolling.",
+        "targetDevices": "laptops and desktop"
+      }
+    ],
+    "gridSpecification": {
+      "selector": ".app__grid",
+      "declaredIn": "src/app/styles.css",
+      "css": "grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem",
+      "measuredBehaviour": "Two columns appear at a viewport of 688px and above, not at 1024px. Content width must reach 2 x 320px plus one 16px gap = 656px, plus 32px of container padding.",
+      "declaredTwoColumnViewportPx": 688,
+      "divergenceFromSpecification": "The shipped rule reaches two columns at 688px while this contract specifies the desktop two-column layout from 1024px.",
+      "findingId": "OF-03",
+      "severity": "low",
+      "consequence": "Between 688px and 1023px the shipped layout shows the tablet-specified single-column arrangement as a two-column desktop layout.",
+      "owner": "GAME-390 (ML-06)",
+      "decisionRequired": "Either raise the minmax floor to 496px so two columns begin at 1024px, or amend this contract's tablet row to record a 688px transition. This is a deliberate choice for the owner and the implementing issue, not a silent drift."
+    },
+    "reflow": {
+      "requirement": "At 200% zoom and at 320px viewport width, content reflows with no loss of function and no two-dimensional scrolling for text.",
+      "prohibited": [
+        "a fixed-width text container",
+        "horizontal scrolling to read a sentence, a label, or a unit",
+        "a table that forces the page to scroll sideways to read a value",
+        "text under 0.9rem that only exists to make a layout fit"
+      ],
+      "wideDataHandling": "Wide tables scroll inside their own bounded region with a scrollable wrapper and a caption naming the columns, rather than widening the page. The wrapper is focusable so a keyboard user can scroll it, and the full data is always available in the instrument readouts regardless of scroll position."
+    },
+    "canvasBox": {
+      "selector": ".lab-region__canvas",
+      "aspectRatio": "720 / 320",
+      "minHeight": "160px",
+      "maxHeight": "60vh",
+      "sizingAuthority": "The Phaser Scale Manager owns canvas sizing in FIT mode so the scene's logical coordinate space stays fixed and independent of the screen. CSS must not add a second sizing authority on the same element.",
+      "logicalSpace": { "width": 720, "height": 320, "trackMargin": 40 },
+      "consequence": "A viewport change can never change a metre value. Pixels are presentation only and are never read back."
+    }
+  },
+
+  "stateCoverage": {
+    "note": "One entry per GAME-387 required state. implementationStatus is the honest current state: implemented means the screen exists in src/, partial means some of the specified states exist, specified means the design is frozen here and the implementing issue has not built it yet.",
+    "phaseReconciliation": "docs/PRODUCT.md section 'Session shape' names nine learner steps. src/domain/types.ts MISSION_PHASE_ORDER defines seven authoritative phases. Graph and Claim are stages inside the compare and debrief phases rather than separate authoritative phases, and this contract maps them accordingly.",
+    "areas": [
+      {
+        "area": "mission brief, question, and prediction",
+        "ticketLine": "mission brief/question/prediction",
+        "states": [
+          { "id": "brief", "phase": "brief", "authority": "scenario manifest missionId and scienceQuestion", "implementationStatus": "partial", "implementationRef": "src/app/App.tsx phase list and src/ui/FoundationNotice.tsx", "owningIssue": "GAME-389 / GAME-394", "notes": "The phase chip list exists; the authored mission brief and its science question do not. They are ML-05 content, presented by ML-10." },
+          { "id": "question", "phase": "brief", "authority": "contracts/mission-families.v1.json scienceQuestion", "implementationStatus": "specified", "implementationRef": null, "owningIssue": "GAME-389 / GAME-394", "notes": "One screen or less per docs/PRODUCT.md. Must state the question and the assessed evidence without naming the answer." },
+          { "id": "predict", "phase": "predict", "authority": "MissionState.prediction", "implementationStatus": "implemented", "implementationRef": "src/ui/PredictionForm.tsx", "owningIssue": "GAME-394", "notes": "textarea plus save, with a role=status confirmation and an explicit invitation to revise the prediction later. Revising after seeing evidence is part of the method, so the copy must never imply a prediction is final." }
+        ]
+      },
+      {
+        "area": "variable identification and experiment setup",
+        "ticketLine": "variable identification and experiment setup",
+        "states": [
+          { "id": "variable-identification", "phase": "design", "authority": "ControlledInvestigation declaredVariables, independentVariableId, dependentVariableIds, controlledVariableIds", "implementationStatus": "partial", "implementationRef": "src/domain/variables.ts", "owningIssue": "GAME-394", "notes": "The domain classifies a change as valid, unchanged, multiple-variables-changed, or controlled-variable-changed and writes learner-facing pedagogy for the invalid cases. The screen that SHOWS the learner which role each variable plays does not exist yet. ML-10 owns it; the design requirement is that the role is stated in words, never by colour alone." },
+          { "id": "experiment-setup", "phase": "design", "authority": "TrialConfig and BOOTSTRAP_BOUNDS", "implementationStatus": "implemented", "implementationRef": "src/ui/ExperimentControls.tsx", "owningIssue": "GAME-390", "notes": "Mass, applied force, and initial velocity are range inputs with paired output readouts; observation window is a number input. Help text states the relationship and the sign convention. Bounds are the declared contract bounds, and the engine clamps rather than trusting the caller." }
+        ]
+      },
+      {
+        "area": "laboratory track, cart, and force presentation",
+        "ticketLine": "laboratory track/cart/force presentation",
+        "states": [
+          { "id": "lab-scene", "phase": "run", "authority": "SceneModel via sceneGeometry", "implementationStatus": "implemented", "implementationRef": "src/renderer/labScene.ts, src/renderer/labGeometry.ts", "owningIssue": "GAME-390", "notes": "Track bed with a metre tick every whole metre, cart body and two wheels, force arrow with an arrowhead, a +x axis marker, a playback rail, and a monospace status line. Geometry is a pure function of the view model with no frame-time input." }
+        ]
+      },
+      {
+        "area": "run, pause, reset, step, and replay",
+        "ticketLine": "run/pause/reset/step/replay states where authorized",
+        "states": [
+          { "id": "run", "phase": "run", "authority": "usePlayback presentation clock over recorded samples", "implementationStatus": "implemented", "implementationRef": "src/host/usePlayback.ts, src/ui/InstrumentPanel.tsx", "owningIssue": "GAME-390", "notes": "Playing shows the recorded sample at the playback clock. The clock selects which already-computed sample is drawn and cannot change a sample, a measurement, or a result." },
+          { "id": "pause", "phase": "run", "authority": "playback.running false", "implementationStatus": "implemented", "implementationRef": "src/ui/InstrumentPanel.tsx", "owningIssue": "GAME-390", "notes": "The button toggles between Pause and Resume. Paused part-way is distinguished from settled in the scene's own status words, not by colour." },
+          { "id": "reset", "phase": "any", "authority": "reset-session intent; ML-04 allocates a new trial ordinal", "implementationStatus": "implemented", "implementationRef": "src/ui/ExperimentControls.tsx", "owningIssue": "GAME-394", "notes": "Reset is non-punitive and must never rewrite recorded history. The spec requires a confirmation whenever recorded trials exist, because a reset that silently discards evidence is a data-loss defect, not a convenience." },
+          { "id": "step", "phase": "run", "authority": "nextSampleSeconds over the recorded sample instants", "implementationStatus": "implemented", "implementationRef": "src/host/usePlayback.ts, src/ui/InstrumentPanel.tsx", "owningIssue": "GAME-391", "notes": "Step forward and step back move the presentation clock to the next or previous RECORDED sample instant. This is the affordance that keeps the window readable when animation is switched off, so it is required even when reduced motion is off." },
+          { "id": "replay", "phase": "record", "authority": "playback reset plus restart", "implementationStatus": "implemented", "implementationRef": "src/app/App.tsx", "owningIssue": "GAME-394", "notes": "Replay re-presents a recorded trial. It must not re-run the domain, must not create a new trial record, and must not alter any measured value. Deterministic replay that re-executes from provenance is a separate ML-04 facility and is a different feature." }
+        ]
+      },
+      {
+        "area": "measurement instruments and force vectors",
+        "ticketLine": "measurement instruments and force vectors",
+        "states": [
+          { "id": "instruments", "phase": "record", "authority": "measuredReadingsFor and measurementReadingsFor", "implementationStatus": "implemented", "implementationRef": "src/ui/InstrumentPanel.tsx, src/viewmodel/instruments.ts", "owningIssue": "GAME-391", "notes": "Position, velocity, acceleration, net force, and elapsed time as a description list, plus the derived ML-04 measurements. Every reading carries value, displayValue, text, unit, and origin. Configured values are marked configured and measured values measured so a learner can tell what they set from what happened." },
+          { "id": "force-vector", "phase": "run", "authority": "SceneModel.forceArrow", "implementationStatus": "implemented", "implementationRef": "src/renderer/labGeometry.ts, src/viewmodel/instruments.ts", "owningIssue": "GAME-390", "notes": "Arrow length is base plus a fixed pixel count per newton, capped at the largest force the frozen range allows. Direction is stated in words beside it. A balanced net force draws no arrow." }
+        ]
+      },
+      {
+        "area": "trial record and evidence notebook",
+        "ticketLine": "trial record/evidence notebook",
+        "states": [
+          { "id": "trial-record", "phase": "record", "authority": "TrialEvidence and its provenance", "implementationStatus": "partial", "implementationRef": "src/ui/TrialTable.tsx", "owningIssue": "GAME-392", "notes": "A real table with a caption, column headers, and row headers exists and shows configuration and final values. It does not yet show provenance, measurements, the integrity digest, or the changed-versus-controlled analysis that ML-08 owns." },
+          { "id": "evidence-notebook", "phase": "record", "authority": "ComparisonSet, append-only", "implementationStatus": "specified", "implementationRef": null, "owningIssue": "GAME-392", "notes": "The notebook is the ordered, append-only list of trials with each trial's role, its configuration, its measurements, and whether it is admissible for a claim. Design requirement: a learner must be able to see at a glance which variable changed between two entries and which were held fixed." }
+        ]
+      },
+      {
+        "area": "trial comparison",
+        "ticketLine": "trial comparison",
+        "states": [
+          { "id": "trial-comparison", "phase": "compare", "authority": "assessTrialChange and ChangeAssessment", "implementationStatus": "specified", "implementationRef": null, "owningIssue": "GAME-392", "notes": "A real comparison table over two or more trials. Each column is a trial, each row a variable, and the independent variable's cells are marked as the changed one. Invalid comparisons are labelled in words, naming the count of changed variables or the controlled variable that moved, and never by colour alone." }
+        ]
+      },
+      {
+        "area": "position-time and velocity-time graph states",
+        "ticketLine": "position-time and velocity-time graph states",
+        "states": [
+          { "id": "graph-position-time", "phase": "compare", "authority": "recorded samples only", "implementationStatus": "specified", "implementationRef": null, "owningIssue": "GAME-393", "notes": "Curvature indicates greater acceleration. Used optionally in cargo-load-test and never as the only route to the data." },
+          { "id": "graph-velocity-time", "phase": "compare", "authority": "recorded samples only", "implementationStatus": "specified", "implementationRef": null, "owningIssue": "GAME-393", "notes": "Slope is the acceleration. Required by thruster-test and mystery-cart, which is what discharges the Epic's graph-interpretation requirement. Mystery-cart requires a two-trace overlay to compare slopes." }
+        ]
+      },
+      {
+        "area": "claim, evidence, and debrief",
+        "ticketLine": "claim/evidence/debrief",
+        "states": [
+          { "id": "claim", "phase": "debrief", "authority": "Claim: text, measurementId, relation, attributedVariableId", "implementationStatus": "specified", "implementationRef": "src/domain/experiment-types.ts", "owningIssue": "GAME-394", "notes": "The learner states a claim about a named measurement, the direction of the relationship, and the variable that explains it. The design must require all three parts rather than accepting free text alone, because a claim that names no variable cannot be wrong in a way the debrief can correct." },
+          { "id": "evidence-citation", "phase": "debrief", "authority": "EvidenceSelection and ClaimEvaluation.reason", "implementationStatus": "specified", "implementationRef": "src/domain/evidence.ts", "owningIssue": "GAME-392", "notes": "Trials are cited by checkbox over the notebook. Only replayable evidence is admissible. Inadmissible citations are refused with a stated reason rather than silently dropped." },
+          { "id": "debrief", "phase": "debrief", "authority": "scenario manifest debriefExplanation and MisconceptionSignal", "implementationStatus": "specified", "implementationRef": "src/domain/diagnosis.ts", "owningIssue": "GAME-394", "notes": "Authored explanation, misconception feedback that points at the learner's own recorded numbers, and a non-punitive revision path. Never a score, a timer, or an answer key." }
+        ]
+      },
+      {
+        "area": "hints, recovery, and errors",
+        "ticketLine": "hints/recovery/errors",
+        "states": [
+          { "id": "hint", "phase": "any", "authority": "ML-10 hint framing under G-08", "implementationStatus": "specified", "implementationRef": null, "owningIssue": "GAME-394", "notes": "Hints nudge toward the method, never name the answer. Retry is unlimited or clearly bounded and non-punitive, and allocates a new trial ordinal rather than overwriting one." },
+          { "id": "recovery", "phase": "any", "authority": "rendererRecoveryFor and the reset-session intent", "implementationStatus": "implemented", "implementationRef": "src/host/recovery.ts", "owningIssue": "GAME-390", "notes": "Renderer recovery is per failure stage. A chunk-load failure offers a page reload, because the browser remembers a failed dynamic import for the life of the page; every other stage retries in place. The reload warns first that trial records are not stored, so the session starts fresh." },
+          { "id": "error", "phase": "any", "authority": "DomainValidationError codes and aria-live regions", "implementationStatus": "partial", "implementationRef": "src/app/ErrorBoundary.tsx, src/domain/errors.ts", "owningIssue": "GAME-394", "notes": "The ErrorBoundary renders role=alert. Validation errors have typed codes and learner-facing explanations. Field-level invalid states, their text, and their announcement are specified here and are not yet built." }
+        ]
+      },
+      {
+        "area": "loading and renderer-failure fallback",
+        "ticketLine": "loading/renderer-failure fallback",
+        "states": [
+          { "id": "renderer-loading", "phase": "run", "authority": "RendererRegion status loading", "implementationStatus": "implemented", "implementationRef": "src/host/RendererRegion.tsx", "owningIssue": "GAME-390", "notes": "The region states that the animated view is starting and that every number below is available as text, so a slow renderer is never read as a broken page." },
+          { "id": "renderer-fallback", "phase": "any", "authority": "RendererRegion status failed, failureExplanationFor", "implementationStatus": "implemented", "implementationRef": "src/host/RendererRegion.tsx, src/host/recovery.ts", "owningIssue": "GAME-390", "notes": "A dashed, non-colour-only panel names the failure stage, gives the reason, states that nothing about the experiment changed, and offers the correct recovery for that stage. The semantic instruments and trial table remain available throughout." }
+        ]
+      }
+    ]
+  },
+
+  "controlStates": {
+    "requiredBy": "GAME-387 required design coverage: keyboard focus, selected, disabled, error, non-color, and reduced-motion states",
+    "states": [
+      {
+        "id": "default",
+        "appliesTo": ["button", "input", "textarea", "fieldset", "panel", "table", "canvas region"],
+        "specification": "Surface-raised panels sit on surface with a 1px border and 10px radius. Primary actions are an accent fill with accent-ink text at 8px radius. Secondary actions are transparent with a border and ink text. Inputs are surface-sunken wells with a border, 6px radius, and 0.45rem padding.",
+        "implementedIn": "src/app/styles.css"
+      },
+      {
+        "id": "hover",
+        "appliesTo": ["button", "input[type=range]"],
+        "specification": "A visible fill or border change on pointer hover. Never the only affordance: hover must not be what makes a control discoverable.",
+        "implementedIn": "not implemented; specification only"
+      },
+      {
+        "id": "focus-visible",
+        "appliesTo": ["every focusable control"],
+        "specification": "A 3px solid --focus outline with a 2px offset and 4px radius, applied through :focus-visible. It must never be suppressed, and no element may set outline: none without an equally visible replacement. Because it is an outline rather than a box-shadow it is not clipped by an ancestor's overflow and it survives forced-colors mode.",
+        "implementedIn": "src/app/styles.css :focus-visible",
+        "rationale": "docs/ACCESSIBILITY.md requires a visible focus indicator at high contrast in every theme. The measured contrast of --focus against both surfaces is 12.46 and 10.81."
+      },
+      {
+        "id": "selected",
+        "appliesTo": ["current mission step", "selected comparison trial", "cited evidence trial", "selected graph series"],
+        "specification": "Selected is encoded by at least two of an accent fill, a weight increase, an explicit textual marker, and a shape change. The current mission step is the only selected state shipped today, and it combines an accent fill with bold weight and aria-current=step. Trial selection and evidence citation must additionally carry a visible textual marker such as the word selected or a named check glyph, because a control that relies on fill alone is a colour-only distinction.",
+        "implementedIn": "src/app/styles.css .phase-list li[aria-current=step]; trial and evidence selection are specified only"
+      },
+      {
+        "id": "disabled",
+        "appliesTo": ["experiment controls during a run", "playback controls before a trial exists"],
+        "specification": "opacity 0.55 with cursor not-allowed. A disabled control is also non-focusable, so every disabled control must be paired with visible help text explaining what will enable it. The playback controls are disabled until a trial exists, and the design requires the panel to say why rather than presenting inert buttons.",
+        "implementedIn": "src/app/styles.css button:disabled; disabled reasons are specified only"
+      },
+      {
+        "id": "error",
+        "appliesTo": ["configuration fields", "claim and evidence selection", "renderer fallback"],
+        "specification": "An error is stated in words, adjacent to the offending control, associated by aria-describedby, and announced through a live region. Colour is a redundant third channel only. The renderer fallback additionally uses a dashed border as well as the --warn colour. Every rejection branch in the domain already carries learner-facing copy, so no rejection is silent.",
+        "implementedIn": "src/app/ErrorBoundary.tsx and src/domain/variables.ts carry the copy; field-level error presentation is specified only"
+      },
+      {
+        "id": "non-color",
+        "appliesTo": ["every distinction in the product"],
+        "specification": "Direction, state, selection, validity, comparison series, and force magnitude each carry a redundant non-colour channel. Force direction uses an arrowhead plus words plus sign. The ruler uses labelled ticks. The current step uses weight plus fill plus aria-current. Validity uses wording. Graph series use line style plus a direct label plus a row in the table.",
+        "implementedIn": "src/renderer/labScene.ts, src/ui/InstrumentPanel.tsx, src/viewmodel/instruments.ts; graph series styling is specified only"
+      },
+      {
+        "id": "reduced-motion",
+        "appliesTo": ["playback", "every transition and animation"],
+        "specification": "Under prefers-reduced-motion: reduce, playback does not animate and resolves to the end of the recorded window in one step; the panel states that reduced motion is on and names Step forward, Step back, and Jump to end as the way through the window; all CSS animation and transition durations collapse to 0.001ms with a single iteration; smooth scrolling is disabled. Instructional meaning is unchanged: every value reachable by watching is reachable by stepping.",
+        "implementedIn": "src/app/styles.css reduced-motion block, src/host/usePrefersReducedMotion.ts, src/ui/InstrumentPanel.tsx reduced-motion note, src/renderer/labGeometry.ts emphasis settled"
+      },
+      {
+        "id": "forced-colors",
+        "appliesTo": ["all controls and indicators"],
+        "specification": "Nothing may rely on a background image or a subtle border to convey state, because forced-colors mode replaces both. System colour keywords and border-based indicators must survive.",
+        "implementedIn": "not implemented; specification only",
+        "rationale": "Named because the focus ring's outline-based choice was made for this case, so the same reasoning should reach the other indicators."
+      },
+      {
+        "id": "zoom-200",
+        "appliesTo": ["all layout"],
+        "specification": "Reflow with no loss of function and no two-dimensional scrolling for text. Layout is built on a single-column-first auto-fit grid so reflow is inherent rather than patched.",
+        "implementedIn": "src/app/styles.css .app__grid; reflow has not been manually qualified at 200% zoom"
+      }
+    ],
+    "focusOrder": {
+      "rule": "DOM order is reading order. Focus is never trapped except in a deliberate modal, which returns focus on close.",
+      "order": ["mission header", "foundation notice", "prediction", "experiment setup", "lab view region", "playback controls", "trial table", "mission step list", "advance step"]
+    },
+    "announcements": {
+      "canvasStatus": "role=img with an aria-label built from the same instrument readings the visible readouts use, so a screen-reader user and a sighted user can never be told different values.",
+      "liveRegions": ["renderer status line (polite)", "prediction saved confirmation (status)", "renderer fallback (status)", "error boundary (alert)"],
+      "rule": "No live region may report a state that differs only in wording from a visual state, and none may update more than once per recorded sample."
+    }
+  },
+
+  "graphContract": {
+    "owner": "GAME-393 (ML-09)",
+    "principles": [
+      "authoritative samples only; a graph never interpolates between samples as though the intermediate instants were recorded",
+      "deterministic domain and scale selection, so the same evidence always draws the same graph",
+      "labelled axes carrying SI units, with the unit in the axis title rather than left to convention",
+      "an explicit origin, and a truncated axis is never used when truncation would change the interpretation",
+      "a real table equivalent exposing the same series and the same values, plus a textual summary",
+      "a keyboard-reachable read-value-at-time affordance, so the graph can be interrogated without a pointer"
+    ],
+    "series": [
+      {
+        "id": "position-time",
+        "verticalAxis": "position (m)",
+        "horizontalAxis": "elapsed time (s)",
+        "slopeMeaning": "instantaneous velocity",
+        "curvatureMeaning": "greater acceleration curves more steeply",
+        "requiredBy": [],
+        "optionalFor": ["cargo-load-test"],
+        "zeroReferenceMeaning": "the x0 = 0 start gate"
+      },
+      {
+        "id": "velocity-time",
+        "verticalAxis": "velocity (m/s)",
+        "horizontalAxis": "elapsed time (s)",
+        "slopeMeaning": "acceleration",
+        "curvatureMeaning": "not meaningful in v1, where acceleration is constant within a segment",
+        "requiredBy": ["thruster-test", "mystery-cart"],
+        "optionalFor": [],
+        "zeroReferenceMeaning": "a horizontal trace at zero velocity; a rising line above zero and one below zero must be visually and verbally distinct"
+      }
+    ],
+    "seriesEncoding": {
+      "rule": "Each trial is a series. Series are distinguished by line style plus a direct label on the trace plus a row in the table, never by colour alone.",
+      "overlayRule": "Mystery Cart requires at least one variant overlaying two velocity-time traces to compare slopes. The overlay must name both trials and state which slope is larger in words."
+    },
+    "states": [
+      { "id": "empty", "specification": "States that no trial has been recorded yet and what to do, rather than drawing an empty axis that reads like a zero measurement." },
+      { "id": "single-series", "specification": "One labelled trace with axis titles and units." },
+      { "id": "multi-series-overlay", "specification": "Two or more labelled traces, each directly labelled, with a legend also available as text." },
+      { "id": "read-value-at-time", "specification": "A keyboard-reachable control that reports the value of each series at a chosen time, using the same formatter as the rest of the product." },
+      { "id": "table-equivalent", "specification": "A real table with a caption and scoped headers holding every plotted value." },
+      { "id": "textual-summary", "specification": "One sentence stating the relationship the graph shows, in words, with slope or curvature never the only access path." },
+      { "id": "insufficient-evidence", "specification": "States that the recorded trials cannot support the comparison yet and which trial is missing." }
+    ],
+    "prohibited": [
+      "a graph drawn from pixel or sprite positions",
+      "smoothed, splined, or otherwise fitted data presented as recorded",
+      "an axis without a unit",
+      "a truncated axis presented without an explicit break marker",
+      "a graph as the only route to a value required for a claim"
+    ]
+  },
+
+  "motionContract": {
+    "principle": "Instructional visualization and decorative polish are different categories with different rules. They are separated here so ML-12 polish can never quietly become load-bearing.",
+    "categories": [
+      {
+        "id": "instructional-visualization",
+        "definition": "Motion that carries scientific or procedural meaning a learner needs.",
+        "rules": [
+          "a non-motion equivalent must exist and must be reachable by keyboard",
+          "it may not be the only route to any value, relationship, or state change",
+          "it must be removable under prefers-reduced-motion with meaning preserved",
+          "it must be driven by recorded sample instants, never by frame time",
+          "it must not pace the investigation: no next step is gated on an animation finishing"
+        ],
+        "inventory": [
+          {
+            "id": "cart-travel",
+            "meaning": "position changes with time under the authoritative trace",
+            "nonMotionEquivalent": "Step forward and Step back through recorded samples, and the trial table's final values",
+            "reducedMotionBehaviour": "resolve to the end of the window in one step",
+            "currentImplementation": "the scene redraws the same picture for the same model; the presentation clock selects which recorded sample is shown"
+          },
+          {
+            "id": "force-arrow-appearance",
+            "meaning": "net force direction and magnitude",
+            "nonMotionEquivalent": "the force label in words beside the arrow, and the Net force instrument readout",
+            "reducedMotionBehaviour": "arrow drawn statically at full length; never grown or faded",
+            "currentImplementation": "the arrow is present or absent from the first frame and never animates"
+          },
+          {
+            "id": "playback-rail",
+            "meaning": "how far through the recorded window the presentation clock is",
+            "nonMotionEquivalent": "the elapsed-time instrument reading, which is the recorded sample's own time",
+            "reducedMotionBehaviour": "the rail jumps to the end",
+            "currentImplementation": "playedFraction is derived from the model's active index and cannot move a measurement"
+          },
+          {
+            "id": "trial-record-appearance",
+            "meaning": "a trial became immutable evidence",
+            "nonMotionEquivalent": "the new row in the trial table and the status announcement",
+            "reducedMotionBehaviour": "instant",
+            "currentImplementation": "not built; GAME-392 owns it"
+          }
+        ]
+      },
+      {
+        "id": "decorative-polish",
+        "definition": "Motion that adds nothing scientific and exists only for feel.",
+        "rules": [
+          "removable under prefers-reduced-motion with zero meaning loss",
+          "non-authoritative and incapable of changing a science result",
+          "deterministic where it can affect what is on screen at all",
+          "must not delay any action or gate any next step"
+        ],
+        "inventory": [
+          { "id": "panel-and-control-transitions", "currentImplementation": "collapsed to 0.001ms under reduced motion", "status": "exists as a CSS rule; no bespoke transitions authored yet" },
+          { "id": "cart-idle-motion", "status": "prohibited as specified; non-authoritative idle animation is not authorised in v1" },
+          { "id": "success-emphasis", "status": "not built; if authored it may never read as a score or a reward" }
+        ]
+      },
+      {
+        "id": "forbidden",
+        "definition": "Anything that would make the renderer an authority for a science value.",
+        "rules": [
+          "a tween, easing curve, or interpolation that positions the cart between recorded samples as though the intermediate instants were recorded",
+          "a sprite position or collision outcome used as a measurement",
+          "a frame counter or elapsed frame time used to advance, ease, or drift the picture",
+          "any animation whose completion changes domain state"
+        ],
+        "currentImplementation": "enforced: src/renderer/labScene.ts reads no frame time, uses no tween, and computes all geometry through sceneGeometry, which is a pure function of the view model",
+        "verification": "tests/unit/labGeometry.test.ts and tests/e2e/realRender.spec.ts assert the drawn geometry matches the pure function across advancing frames and viewport sizes"
+      }
+    ],
+    "timing": {
+      "status": "targets proposed here for ML-14 to measure; they are not measurements and no gate is claimed",
+      "stateChangeFeedback": "visible within 100ms of a committed action",
+      "playbackStep": "one recorded sample per activation, with no transition between steps",
+      "panelTransition": "150ms",
+      "prohibited": "any deliberate dwell that blocks the next trial; scorecard row Q-10 forbids an animation dwell gating the next trial"
+    }
+  },
+
+  "assetDirection": {
+    "owner": "GAME-396 (ML-12)",
+    "originalityPosition": "All Motion Lab art, iconography, typography choices, and audio are original work, derived from this repository's own token set and from the physics the kernel computes. No comparator art, layout, name, copy, audio, or scene composition may be reproduced (docs/COMPARATORS.md IP boundary).",
+    "paletteLock": "The palette is fixed by this contract's tokens and rendererPalette sections. ML-12 may not introduce a new hue for a scientific distinction; a new meaning requires a decision entry.",
+    "direction": [
+      "Laboratory instrumentation rather than a cartoon world: a readable apparatus, honest instrument faces, and a clear track, in the spirit of a real test bench.",
+      "Physics-driven visuals only. Cart, arrow, ruler, and trace are generated from the frozen model, so art and science cannot drift apart.",
+      "Instrument typography is monospace with tabular figures wherever numbers change during playback.",
+      "One idea per screen: the learner always knows which single thing this panel is for.",
+      "Restraint over spectacle. ML-12 polish may not add a visual that implies a science value the domain did not emit."
+    ],
+    "assetProvenance": {
+      "rule": "Every nontrivial shipped asset records assetId, path, kind, origin, author or tool, license, sourceUrl, derivedFrom, and notes, exactly as docs/PROVENANCE.md section 2 specifies.",
+      "unknownOriginMayNotShip": true,
+      "generatedAssetsRecordReproducibility": true,
+      "status": "no production asset exists; the asset manifest is not authored, and no asset may ship until it is"
+    },
+    "iconography": {
+      "specification": "Direction and state glyphs are single-weight, drawn from one grid, and always paired with a text label. An icon is never the only carrier of meaning, and an icon implying a science value must come from the model.",
+      "currentImplementation": "the force direction glyph in src/ui/InstrumentPanel.tsx is a text arrow character paired with the words in the label"
+    },
+    "reviewStatus": "direction documented here; the originality and IP review is ML-16's gate and has not occurred"
+  },
+
+  "acceptanceMapping": {
+    "issue": "GAME-387",
+    "criteria": [
+      {
+        "id": "AC1",
+        "criterion": "A real Figma file/handoff or equivalent production design authority is recorded.",
+        "status": "satisfied-by-equivalent-branch",
+        "evidence": ["contracts/design-system.v1.json", "docs/DESIGN.md", "scripts/verify-contracts.mjs design group"],
+        "honestQualifier": "No Figma file was produced and none is claimed. AC1's equivalent-production-design-authority branch is taken. O-01 remains owner-gated: the owner must still provide or approve a real Figma file, or waive it in favour of this."
+      },
+      {
+        "id": "AC2",
+        "criterion": "All ML-11 vertical-slice states are covered before ML-11 begins.",
+        "status": "satisfied-as-specification",
+        "evidence": ["contracts/design-system.v1.json:stateCoverage", "contracts/design-system.v1.json:ml11Traceability"],
+        "honestQualifier": "Every ML-11 state is specified. Specifying a state is not implementing it, and ML-11 stays blocked by GAME-394 in the Jira blocker chain regardless."
+      },
+      {
+        "id": "AC3",
+        "criterion": "Responsive and accessibility variants are explicit, not left to implementation guesswork.",
+        "status": "satisfied",
+        "evidence": ["contracts/design-system.v1.json:layout.breakpoints", "contracts/design-system.v1.json:controlStates", "docs/DESIGN.md"],
+        "honestQualifier": "Variants are explicit, including measured contrast and one declared divergence from the shipped grid. Human review of those variants has not occurred."
+      },
+      {
+        "id": "AC4",
+        "criterion": "Motion specs distinguish instructional visualization from decorative polish.",
+        "status": "satisfied",
+        "evidence": ["contracts/design-system.v1.json:motionContract"],
+        "honestQualifier": "Three categories are separated, with a non-motion equivalent named for every instructional motion and a forbidden category for anything that would make the renderer an authority."
+      },
+      {
+        "id": "AC5",
+        "criterion": "Asset/originality direction is documented.",
+        "status": "satisfied",
+        "evidence": ["contracts/design-system.v1.json:assetDirection", "docs/DESIGN.md"],
+        "honestQualifier": "Direction and the IP boundary are documented. No asset exists, no manifest is authored, and the ML-16 originality review has not occurred."
+      }
+    ]
+  },
+
+  "ml11Traceability": {
+    "note": "GAME-395's vertical slice must run mission question, prediction, controlled setup, animated real Phaser run, measurement, immutable trial record, second trial, graph, comparison, claim, evidence, and explanatory debrief. Each step maps to a state specified here and to the issue that must implement it.",
+    "steps": [
+      { "step": 1, "name": "mission question", "states": ["brief", "question"], "implemented": false, "owner": "GAME-389 / GAME-394" },
+      { "step": 2, "name": "prediction", "states": ["predict"], "implemented": true, "owner": "GAME-394" },
+      { "step": 3, "name": "controlled setup", "states": ["variable-identification", "experiment-setup"], "implemented": "partial", "owner": "GAME-394" },
+      { "step": 4, "name": "animated real Phaser run", "states": ["lab-scene", "run", "force-vector"], "implemented": true, "owner": "GAME-390" },
+      { "step": 5, "name": "measurement", "states": ["instruments"], "implemented": true, "owner": "GAME-391" },
+      { "step": 6, "name": "immutable trial record", "states": ["trial-record"], "implemented": "partial", "owner": "GAME-392" },
+      { "step": 7, "name": "second trial", "states": ["reset", "experiment-setup"], "implemented": true, "owner": "GAME-394" },
+      { "step": 8, "name": "graph", "states": ["graph-position-time", "graph-velocity-time"], "implemented": false, "owner": "GAME-393" },
+      { "step": 9, "name": "comparison", "states": ["trial-comparison", "evidence-notebook"], "implemented": false, "owner": "GAME-392" },
+      { "step": 10, "name": "claim", "states": ["claim"], "implemented": false, "owner": "GAME-394" },
+      { "step": 11, "name": "evidence", "states": ["evidence-citation"], "implemented": false, "owner": "GAME-392" },
+      { "step": 12, "name": "explanatory debrief", "states": ["debrief", "hint", "error", "recovery"], "implemented": "partial", "owner": "GAME-394" }
+    ],
+    "coverageComplete": true,
+    "implementationComplete": false,
+    "honestyStatement": "Coverage is complete; implementation is not. Six of the twelve steps are unimplemented or partial, and GAME-395 is blocked by GAME-394 in any case. This contract does not make ML-11 achievable."
+  },
+
+  "openFindings": {
+    "policy": "Recorded as open, never as passes. An unresolved finding here is not a defect in this contract; it is work the contract has identified and assigned.",
+    "findings": [
+      { "id": "OF-01", "severity": "medium", "area": "tokens", "finding": "--border on --surface-raised measures 1.60:1, below the 3:1 WCAG 1.4.11 non-text contrast for a UI component boundary.", "owner": "GAME-390 / GAME-396", "action": "Raise the boundary luminance or add a second non-colour boundary channel in ML-12 polish. Not claimed as a pass." },
+      { "id": "OF-02", "severity": "medium", "area": "renderer", "finding": "The scene track edge measures 2.21:1 against the scene background, below the 3:1 non-text contrast for a meaningful boundary.", "owner": "GAME-390 / GAME-396", "action": "Raise the track-edge contrast. The metre ticks at 3.10:1 partially carry the scale, so this is a boundary problem rather than a scale-encoding problem." },
+      { "id": "OF-03", "severity": "low", "area": "layout", "finding": "The shipped auto-fit grid reaches two columns at 688px while this contract specifies the desktop two-column layout from 1024px.", "owner": "GAME-390", "action": "Decide deliberately: raise the floor to 496px, or amend the tablet row. Recorded rather than silently reconciled." },
+      { "id": "OF-04", "severity": "low", "area": "controlStates", "finding": "Disabled playback controls give no visible reason for being disabled before a trial exists.", "owner": "GAME-391", "action": "Add the explanatory help text this contract specifies." },
+      { "id": "OF-05", "severity": "medium", "area": "designAuthority", "finding": "No visual design artifact exists. Coverage is specified rather than depicted, so composition, hierarchy, and aesthetic quality are unjudged.", "owner": "GAME-387 owner / GAME-400", "action": "The owner provides or approves a real Figma file under O-01, or waives it explicitly. Human design review is ML-16's gate." },
+      { "id": "OF-06", "severity": "low", "area": "controlStates", "finding": "The forced-colors state is specified but unimplemented, and no indicator has been qualified in forced-colors mode.", "owner": "GAME-400", "action": "Qualify in ML-16's manual accessibility review." },
+      { "id": "OF-07", "severity": "medium", "area": "designAuthority", "finding": "No independent review of this design package has been performed by a different model or a human.", "owner": "GAME-387 owner", "action": "An independent reviewer, or an explicit owner waiver, before GAME-387 is treated as closed." }
+    ]
+  },
+
+  "review": {
+    "authorModel": "space-bunny-free",
+    "independentReview": "not performed",
+    "humanDesignReview": "not performed",
+    "learnerPlaytest": "not performed",
+    "accessibilitySignOff": "not performed",
+    "scienceReview": "not performed; this contract asserts no science beyond the frozen model and records no new science finding",
+    "statement": "This package is machine-checked for coverage, internal consistency, and honesty. Machine checking cannot establish that a design is good, only that it is specified, consistent, and not claiming something untrue."
+  },
+
+  "changeLog": [
+    {
+      "date": "2026-10-01",
+      "entry": "GAME-387 initial design freeze",
+      "change": "Design authority statement, five design rules with enforcement mechanisms, tokens with measured contrast, renderer palette, responsive breakpoints, the required state inventory, control states, graph contract, motion contract, asset and originality direction, acceptance mapping, ML-11 traceability, and seven open findings."
+    }
+  ]
+}

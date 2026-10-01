@@ -15,7 +15,8 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 4. Read [`EXPERIMENT_MODEL.md`](EXPERIMENT_MODEL.md) before writing any trial, measurement, or evidence code.
 5. Read [`CONTENT_SET.md`](CONTENT_SET.md) before authoring or changing any scenario.
 6. Read [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`adr/`](adr/) before writing any code.
-7. Read [`DECISIONS.md`](DECISIONS.md) before proposing a change to any of the above.
+7. Read [`DESIGN.md`](DESIGN.md) before writing or changing any screen, control, graph, or animation.
+8. Read [`DECISIONS.md`](DECISIONS.md) before proposing a change to any of the above.
 
 ## Contract documents
 
@@ -38,6 +39,7 @@ its child stories. **Frozen by:** [GAME-383](https://setnessconsulting.atlassian
 | [`DEFINITION_OF_DONE.md`](DEFINITION_OF_DONE.md) | issue and Epic Definition of Done | all |
 | [`BOOTSTRAP.md`](BOOTSTRAP.md) | clean-clone setup, local commands, package boundaries, renderer-failure behaviour | ML-02 onward |
 | [`PERFORMANCE_BASELINE.md`](PERFORMANCE_BASELINE.md) | the captured ML-02 performance baseline and its measurement labels | ML-11, ML-14 |
+| [`DESIGN.md`](DESIGN.md) | production design authority delivered by GAME-387 (ML-DESIGN): tokens with measured contrast, renderer palette, responsive layouts, the required state inventory, control states, graph and motion contracts, asset and originality direction, and open findings | ML-06, ML-07, ML-08, ML-09, ML-10, ML-11, ML-12, ML-16 |
 
 ## Machine-readable contracts
 
