@@ -174,12 +174,26 @@ function rendererColors(ts) {
   return colors;
 }
 
-/** Repository paths named by a design-contract reference, which may list several. */
+/**
+ * Repository paths named by a design-contract reference, which may list several.
+ */
 function referencedFiles(reference) {
   return String(reference ?? '')
     .split(/[,;]/)
     .map((part) => part.trim().split(/\s+/)[0])
     .filter((token) => token.includes('/'));
+}
+
+/**
+ * CSS comments removed.
+ *
+ * Required because a check that asserts "this rule uses minmax(0, 1fr)" will happily pass on a
+ * comment that explains why minmax(0, 1fr) is used while the rule itself uses something else.
+ * That is not hypothetical: the stylesheet carrying this rule explains it in exactly those words,
+ * and the first version of the check passed a mutation that put minmax(320px, 1fr) back.
+ */
+function stripCssComments(css) {
+  return String(css ?? '').replace(/\/\*[\s\S]*?\*\//g, '');
 }
 
 const CONTRACT_FILES = [
@@ -1008,11 +1022,22 @@ const DESIGN_REQUIRED_CONTROL_STATES = [
 
 const stylesCss = exists('src/app/styles.css') ? readText('src/app/styles.css') : '';
 const sceneTs = exists('src/renderer/labScene.ts') ? readText('src/renderer/labScene.ts') : '';
+const instrumentPanelTs = exists('src/ui/InstrumentPanel.tsx') ? readText('src/ui/InstrumentPanel.tsx') : '';
 
 check('contracts/design-system.v1.json exists', exists(join('contracts', 'design-system.v1.json')));
 check('docs/DESIGN.md exists', exists(join('docs', 'DESIGN.md')));
 
 const design = parsed['design-system.v1.json'];
+
+// Every check in this group reads `design`. Without this guard a parse failure drops the group
+// from ~470 checks to a handful that all pass, so a broken contract would report a green design
+// group instead of an obvious failure. That happened while building this, which is why it is here.
+check(
+  'the design contract parsed, so the design group below is actually running',
+  Boolean(design),
+  'contracts/design-system.v1.json did not parse; the rest of this group would be skipped',
+);
+
 if (design) {
   check('design contract declares contractId', design.contractId === 'motion-lab.design-system');
   check('design contract declares a version', /^\d+\.\d+\.\d+$/.test(String(design.version)));
@@ -1237,7 +1262,7 @@ if (design) {
 
   // --- the focus ring, checked as a decision rather than a value.
   const focusRing = design.tokens?.focusRing ?? {};
-  check('the focus ring is specified as an outline rather than a box-shadow', /outline/i.test(String(focusRing.property)));
+  check('the focus ring is specified as an outline rather than a box-shadow', focusRing.property === 'outline', String(focusRing.property));
   check('the focus ring declares its width, colour, offset, and selector', ['width', 'color', 'offset', 'selector'].every((key) => Boolean(focusRing[key])), JSON.stringify(focusRing));
   check(
     'the focus ring records why it is an outline: it must survive clipping and forced-colors',
@@ -1292,43 +1317,58 @@ if (design) {
   check('desktop is two-column', desktop?.columns === 2, String(desktop?.columns));
 
   // Recompute where the shipped grid actually changes column count, so a divergence from the
-  // specification cannot be left implicit. Each precondition is asserted as its own check: a
-  // silently skipped block is how a check turns into decoration that always passes.
-  const gridRule = stylesCss.match(/\.app__grid\s*\{([\s\S]*?)\}/);
-  const gridFloor = gridRule?.[1].match(/minmax\(\s*(\d+)px/);
-  const appRule = stylesCss.match(/\.app\s*\{([\s\S]*?)\}/)?.[1];
-  const inlinePx = inlinePaddingPx(appRule);
-  check('the shipped grid column rule was found', Boolean(gridFloor), String(gridRule?.[1]));
-  check('the shipped grid gap token was found', /gap:\s*var\(--gap\)/.test(String(gridRule?.[1])), String(gridRule?.[1]));
+  // specification cannot be left implicit. Matched against comment-stripped CSS so a rule cannot
+  // satisfy a check by being described in a comment. Each precondition is its own check: a
+  // silently skipped block is how a check becomes decoration that always passes.
+  const gridRule = stripCssComments(stylesCss).match(/\.app__grid\s*\{([\s\S]*?)\}/)?.[1];
+  const desktopQuery = stripCssComments(stylesCss).match(
+    /@media\s*\(min-width:\s*(\d+)px\)\s*\{\s*\.app__grid\s*\{([\s\S]*?)\}/,
+  );
+  const inlinePx = inlinePaddingPx(stylesCss.match(/\.app\s*\{([\s\S]*?)\}/)?.[1]);
+  check('the shipped grid rule was found', Boolean(gridRule), String(gridRule));
+  check('the shipped grid gap token was found', /gap:\s*var\(--gap\)/.test(String(gridRule)), String(gridRule));
   check('the shipped --gap token is a length the checker can evaluate', lengthToPx(shippedTokens.gap) !== null, String(shippedTokens.gap));
-  check('the shipped app inline padding was found and evaluated', inlinePx !== null, String(appRule));
-  if (gridFloor && inlinePx !== null && lengthToPx(shippedTokens.gap) !== null) {
-    const computedThreshold = 2 * Number(gridFloor[1]) + lengthToPx(shippedTokens.gap) + 2 * inlinePx;
+  check('the shipped app inline padding was found and evaluated', inlinePx !== null);
+
+  // A fixed minmax floor larger than the viewport cannot shrink, so it turns into horizontal
+  // overflow on a narrow phone and at 200% zoom. That is the trap OF-03 nearly walked into,
+  // so the floor is now asserted to be zero rather than merely noted.
+  const floor = String(gridRule).match(/minmax\(\s*([\d.]+)(px|rem)/);
+  check(
+    'the base grid rule uses no fixed minmax floor that could overflow a narrow viewport',
+    !floor,
+    String(floor?.[0]),
+  );
+
+  if (desktopQuery && inlinePx !== null) {
+    const queryPx = Number(desktopQuery[1]);
+    check(
+      'the desktop two-column breakpoint matches the specified desktop layout',
+      queryPx === 1024 && /repeat\(\s*2\s*,/.test(desktopQuery[2]),
+      `query=${queryPx}px rule=${desktopQuery[2].replace(/\s+/g, " ").trim()}`,
+    );
+    check(
+      'the desktop columns can shrink below any intrinsic minimum',
+      /minmax\(\s*0\s*,/.test(desktopQuery[2]) && !/minmax\(\s*[\d.]+(px|rem)/.test(desktopQuery[2]),
+      String(desktopQuery[2]),
+    );
     check(
       'the design contract states the viewport at which the shipped grid reaches two columns',
-      design.layout?.gridSpecification?.declaredTwoColumnViewportPx === computedThreshold,
-      `declared=${design.layout?.gridSpecification?.declaredTwoColumnViewportPx} computed=${computedThreshold}`,
+      design.layout?.gridSpecification?.declaredTwoColumnViewportPx === queryPx,
+      `declared=${design.layout?.gridSpecification?.declaredTwoColumnViewportPx} shipped=${queryPx}`,
     );
-    const desktopViewport = String(desktop?.viewport ?? '');
-    check(
-      'the desktop breakpoint is specified from 1024px',
-      /1024/.test(desktopViewport),
-      desktopViewport,
-    );
-    if (computedThreshold !== 1024) {
+    // With an explicit base and an explicit query there is no emergent threshold left, so a
+    // divergence may only be declared when the query really disagrees with the contract.
+    if (queryPx !== Number(/1024/.exec(String(desktop?.viewport))?.[0] ?? 0)) {
       check(
         'a divergence between the shipped grid and the specified desktop breakpoint is declared',
         typeof design.layout?.gridSpecification?.divergenceFromSpecification === 'string' &&
           design.layout.gridSpecification.divergenceFromSpecification.length > 20,
         String(design.layout?.gridSpecification?.divergenceFromSpecification),
       );
-      check(
-        'the declared divergence names an owner and an open finding',
-        /GAME-\d+/.test(String(design.layout?.gridSpecification?.owner)) &&
-          findingIds.includes(String(design.layout?.gridSpecification?.findingId)),
-        `owner=${design.layout?.gridSpecification?.owner} finding=${design.layout?.gridSpecification?.findingId}`,
-      );
     }
+  } else {
+    check('the shipped grid declares a desktop two-column media query', false, 'no @media min-width block targets .app__grid');
   }
   check(
     'reflow rules prohibit horizontal scrolling for text',
@@ -1400,7 +1440,91 @@ if (design) {
   check('the graph contract forbids a graph drawn from pixel geometry', (graph.prohibited ?? []).some((rule) => /pixel/i.test(rule)));
   check('the graph contract forbids presenting fitted data as recorded', (graph.prohibited ?? []).some((rule) => /smoothed|fitted/i.test(rule)));
 
-  // --- motion: instructional, decorative, and forbidden must all be separated (AC4).
+// --- resolved findings. A closed defect must leave a record of what it was, or the design
+  // looks like it was never wrong. It must also never be double-counted as still open.
+  const resolved = design.resolvedFindings?.findings ?? [];
+  check('the design contract records a resolved-findings register', resolved.length > 0, String(resolved.length));
+  const resolvedIds = resolved.map((finding) => finding.id);
+  check('resolved finding ids are unique', new Set(resolvedIds).size === resolvedIds.length, resolvedIds.join(','));
+  for (const finding of resolved) {
+    check(`resolved finding ${finding.id} is not also still open`, !findingIds.includes(finding.id), finding.id);
+    check(
+      `resolved finding ${finding.id} records what the defect actually was`,
+      typeof finding.was === 'string' && finding.was.trim().length > 30,
+      finding.id,
+    );
+    check(
+      `resolved finding ${finding.id} records its current measured state`,
+      typeof finding.now === 'string' && finding.now.trim().length > 20,
+      finding.id,
+    );
+    check(
+      `resolved finding ${finding.id} explains how it was fixed`,
+      typeof finding.resolution === 'string' && finding.resolution.trim().length > 40,
+      finding.id,
+    );
+    check(`resolved finding ${finding.id} names the change that closed it`, /PR #\d+|GAME-\d+/.test(String(finding.closedBy)), String(finding.closedBy));
+    check(
+      `resolved finding ${finding.id} declares whether a human gate remains`,
+      typeof finding.manualGate === 'boolean',
+      String(finding.manualGate),
+    );
+    // A remediation that fixed the number but not the thing would be a false close, so a
+    // finding claiming a contrast fix has to state a ratio that now clears the threshold.
+    if (/\d\.\d+:1/.test(String(finding.now))) {
+      const ratios = [...String(finding.now).matchAll(/(\d+\.\d+):1/g)].map((m) => Number(m[1]));
+      check(
+        `resolved finding ${finding.id} states a ratio that now clears the 3:1 non-text threshold`,
+        ratios.length > 0 && ratios.every((ratio) => ratio >= 3),
+        String(finding.now),
+      );
+    }
+    // A fix that still needs human qualification must say so, and a fix that does not must not
+    // carry the flag. Checking stillPending only when present let a manual gate be deleted
+    // outright and the finding still read as cleanly resolved.
+    if (finding.manualGate === true) {
+      check(
+        `resolved finding ${finding.id} still names the human gate that remains`,
+        typeof finding.stillPending === 'string' &&
+          finding.stillPending.trim().length > 30 &&
+          /ML-16|not been|has not|not qualified|not observed/i.test(finding.stillPending),
+        String(finding.stillPending),
+      );
+    } else if (finding.manualGate === false) {
+      check(
+        `resolved finding ${finding.id} carries no unneeded pending gate`,
+        finding.stillPending === undefined,
+        String(finding.stillPending),
+      );
+    }
+  }
+
+  // --- a shipped forced-colors block is asserted, because "specified but unimplemented" was
+  // itself a finding (OF-06) and the fix must not be reverted silently.
+  check(
+    'the stylesheet ships a forced-colors block',
+    /@media\s*\(forced-colors:\s*active\)/.test(stylesCss),
+  );
+  check(
+    'the forced-colors block restates the focus ring against a system colour',
+    /forced-colors:[\s\S]*?focus-visible[\s\S]*?Highlight/.test(stylesCss),
+  );
+  check(
+    'the forced-colors block does not leave a disabled control relying on opacity',
+    /forced-colors:[\s\S]*?button:disabled[\s\S]*?GrayText/.test(stylesCss),
+  );
+  // The reason must be rendered under a canControl guard. Asserting only that "canControl" and
+  // the testid appear in the file was not enough: the file already contains disabled={!canControl}
+  // on every playback button, so the first version of this check passed a component whose reason
+  // element had been removed entirely.
+  check(
+    'the instrument panel renders the disabled-playback reason under a canControl guard',
+    /!canControl\s*\?\s*\(/.test(instrumentPanelTs) &&
+      /data-testid="playback-disabled-reason"/.test(instrumentPanelTs) &&
+      /Run preview/.test(instrumentPanelTs),
+  );
+
+  // --- the motion contract: instructional, decorative, and forbidden must all be separated (AC4).
   const motionCategories = (design.motionContract?.categories ?? []).map((category) => category.id);
   check(
     'motion is split into instructional visualization, decorative polish, and a forbidden category',

@@ -124,7 +124,7 @@ pair, then `(lighter + 0.05) / (darker + 0.05)`. The checker recomputes all of t
 | `--surface` | `#0e1726` | page background |
 | `--surface-raised` | `#16243a` | panel background |
 | `--surface-sunken` | `#0a111c` | input well, table head, canvas bed |
-| `--border` | `#2b4569` | panel and control boundary |
+| `--border` | `#4772ad` | panel and control boundary |
 | `--ink` | `#e8f0fa` | primary text |
 | `--ink-muted` | `#a9bed8` | secondary text, help text, axis labels |
 | `--accent` | `#57d2c2` | primary action, current step, cart body |
@@ -137,19 +137,31 @@ Every text pairing measured clears the 7:1 AAA threshold, the lowest being `--wa
 (`--ink`) ranges 13.56–16.47:1.
 
 In the renderer scene, measured against the scene background `0x0e1726`: force `8.44:1`, cart
-`7.24:1`, progress rail `10.08:1`, labels `14.34:1` and `7.44:1`, and the metre ticks `3.10:1` —
-which matters because the ticks are what carries the scale, so that one is load-bearing.
+`7.24:1`, progress rail `10.08:1`, labels `14.34:1` and `7.44:1`, track edge `3.19:1`, and the metre
+ticks `4.25:1` — which matters because the ticks are what carries the scale, so that one is
+load-bearing and is kept above the edge rather than merely above the threshold.
 
-**Two real non-text contrast failures are recorded as open findings, not as passes:**
+### 4.2 Two contrast defects, found by measurement and since fixed
 
-- **OF-01** — `--border` on `--surface-raised` measures **1.60:1**, below the 3:1 WCAG 1.4.11
-  requirement for a UI component boundary. Owner: GAME-390 / GAME-396.
-- **OF-02** — the scene's track edge measures **2.21:1** against the scene background. Owner:
-  GAME-390 / GAME-396. The metre ticks at 3.10:1 partially carry the scale, so this is a boundary
-  problem rather than a scale-encoding problem, but it is still a failure.
+Both were real, both were found because the checker recomputes the ratios instead of trusting this
+document, and both are recorded in `resolvedFindings` rather than deleted:
 
-A design gate that reported these as passing would be worse than useless. They are measured, named,
-and assigned.
+- **OF-01 (was)** — `--border` on `--surface-raised` measured **1.60:1**, below the 3:1 WCAG 1.4.11
+  threshold for a UI component boundary. **(now)** `--border` is `#4772ad` at **3.17:1**.
+- **OF-02 (was)** — the scene track edge measured **2.21:1** against the scene background.
+  **(now)** `0x45689f` at **3.19:1**, with the tick raised to `4.25:1` so the ruler stays the
+  brightest scale cue.
+
+Both fixes are **uniform channel scalings** (×1.65 and ×1.30) so hue and relative saturation are
+unchanged. A free search for any passing colour returned saturated blues like `#204cff`, which clear
+the ratio and would have wrecked the palette's muted character — a passing contrast number is not
+the same as a good fix.
+
+The cost is recorded rather than hidden: `--ink` on `--border` falls from `8.47:1` to `4.27:1`.
+Nothing places text on the boundary, and the pairing is kept in the measured table with that verdict
+so the trade is visible to the next reader.
+
+A design gate that reported those as passing would be worse than useless.
 
 ### 4.2 The focus ring
 
@@ -207,21 +219,30 @@ The deliberate choice is that **tablet stays single-column**. Wider viewports ar
 column so the reading order of the investigation stays top-to-bottom, and the trial record always
 spans full width because a comparison table must never be narrowed into horizontal scrolling.
 
-### 5.2 A declared divergence, not silent drift
+### 5.2 The shipped grid now matches this specification (OF-03, closed)
 
-The shipped rule in `.app__grid` is `repeat(auto-fit, minmax(320px, 1fr))` with a 1rem gap. Two
-columns therefore appear when content reaches `2 × 320 + 16 = 656px`, which — plus 32px of container
-padding — is a **688px** viewport. This specification says two columns begin at **1024px**.
+This was a divergence and is now **fixed in the shipped CSS rather than in this contract**, because
+the contract was already right. The rule used to be `repeat(auto-fit, minmax(320px, 1fr))`, which
+reached two columns at **688px** — an arithmetic accident of a 320px floor plus a 16px gap plus 32px
+of padding, never a designed breakpoint.
 
-Between 688px and 1023px the shipped layout shows the tablet-specified single-column arrangement as a
-desktop two-column layout. This is recorded as **OF-03** with two honest resolutions, and it is the
-owner's and GAME-390's call, not something to quietly reconcile:
+The tempting fix was to raise the floor to 488px, which produces exactly 1024px. That is the wrong
+fix: **a fixed `minmax` floor larger than the viewport cannot shrink**, so a 320px phone — and 200%
+zoom in a narrow window — would overflow horizontally and break the reflow contract.
 
-1. raise the `minmax` floor to `496px` so two columns begin at 1024px, or
-2. amend the tablet row in the contract to record a 688px transition.
+What ships instead states the intent and cannot overflow:
 
-The checker recomputes that 688px threshold from the shipped CSS on every run, so this divergence
-cannot be deleted without the gate failing.
+```css
+.app__grid { grid-template-columns: 1fr; }
+
+@media (min-width: 1024px) {
+  .app__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+```
+
+`minmax(0, 1fr)` rather than `minmax(<length>, 1fr)`, so the columns can shrink below any intrinsic
+minimum instead of overflowing it. The checker asserts all three properties: the base rule carries no
+fixed floor, the media query is at 1024px, and the query uses a zero minimum.
 
 ### 5.3 The canvas box
 
@@ -423,11 +444,11 @@ Every state GAME-387 names is explicit rather than left to implementation guessw
 | **hover** | visible fill or border change. **Never the only affordance** — hover must not be what makes a control discoverable | no |
 | **focus-visible** | 3px solid `--focus` outline, 2px offset, 4px radius, never suppressed | yes |
 | **selected** | encoded by at least two of accent fill, weight increase, explicit textual marker, shape change. Trial and evidence selection must **additionally** carry a visible textual marker, because a control relying on fill alone is a colour-only distinction | partially — the current mission step only |
-| **disabled** | `opacity: 0.55`, `cursor: not-allowed`. A disabled control is also **non-focusable**, so every one must be paired with visible help text explaining what will enable it | styling yes, the reason no (**OF-04**) |
+| **disabled** | `opacity: 0.55`, `cursor: not-allowed`. A disabled control is also **non-focusable**, so every one must be paired with visible help text explaining what will enable it | **yes** — styling, and the reason now ships as static text in `src/ui/InstrumentPanel.tsx` (**OF-04**) |
 | **error** | stated in words, adjacent to the control, associated by `aria-describedby`, announced through a live region. Colour is a redundant third channel only. The fallback also uses a **dashed** border as well as `--warn` | copy yes, field-level presentation no |
 | **non-color** | direction uses arrowhead + words + sign; the ruler uses labelled ticks; the current step uses weight + fill + `aria-current`; validity uses wording; series use line style + label + table row | largely yes |
 | **reduced-motion** | playback does not animate and resolves to the end of the window in one step; the panel says reduced motion is on and names Step forward / Step back / Jump to end; CSS animation and transition durations collapse to 0.001ms at one iteration; smooth scrolling disabled. **Every value reachable by watching is reachable by stepping** | yes |
-| **forced-colors** | nothing may rely on a background image or a subtle border to convey state | no (**OF-06**) |
+| **forced-colors** | nothing may rely on a background image or a subtle border to convey state | CSS **yes** (**OF-06**) — not yet observed in a real forced-colors browser |
 | **zoom-200** | reflow with no loss of function and no two-dimensional scrolling for text | not manually qualified |
 
 ### Focus order
@@ -570,17 +591,29 @@ guards against everywhere else.
 ## 13. Open findings
 
 Recorded as **open, never as passes**. These are not defects in this contract; they are work the
-contract identified and assigned.
+contract identified and assigned. **Both remaining ones cannot be discharged by an automated agent.**
 
 | ID | Severity | Finding | Owner |
 | --- | --- | --- | --- |
-| OF-01 | medium | `--border` on `--surface-raised` is 1.60:1, below the 3:1 non-text requirement for a UI component boundary | GAME-390 / GAME-396 |
-| OF-02 | medium | Scene track edge is 2.21:1 against the scene background, below 3:1 for a meaningful boundary | GAME-390 / GAME-396 |
-| OF-03 | low | Shipped grid reaches two columns at 688px; this contract specifies 1024px | GAME-390 |
-| OF-04 | low | Disabled playback controls give no visible reason for being disabled | GAME-391 |
-| OF-05 | medium | No visual design artifact exists — coverage is specified, not depicted | GAME-387 owner / GAME-400 |
-| OF-06 | low | forced-colors specified but unimplemented; no indicator qualified in that mode | GAME-400 |
-| OF-07 | medium | No independent review of this package by a different model or a human | GAME-387 owner |
+| OF-05 | medium | No visual design artifact exists — coverage is specified, not depicted, so composition, hierarchy, and aesthetic quality are unjudged | GAME-387 owner / GAME-400 |
+| OF-07 | medium | No independent review of this package by a different model or a human. The package was merged to `main` at owner instruction, **which is not a review** | GAME-387 owner |
+
+### Resolved
+
+Closed by the GAME-387 remediation. Kept so the record shows what the defect actually was, rather
+than leaving no trace of something that was once real. **A resolved finding is never evidence that
+it never existed**, and none of these counts as a quality claim.
+
+| ID | Was | Now | Closed by |
+| --- | --- | --- | --- |
+| OF-01 | `--border` on `--surface-raised` at 1.60:1, below the 3:1 non-text threshold | `#4772ad` at 3.17:1 | PR #11 |
+| OF-02 | scene track edge at 2.21:1 | `0x45689f` at 3.19:1, tick raised to 4.25:1 to keep the ruler the brightest scale cue | PR #11 |
+| OF-03 | shipped grid reached two columns at 688px, not the specified 1024px | explicit single-column base plus a 1024px min-width query, using `minmax(0, 1fr)` | PR #11 |
+| OF-04 | disabled playback controls gave no reason | the panel states the reason in always-present text and names **Run preview** | PR #11 |
+| OF-06 | forced-colors specified but unimplemented | a `forced-colors: active` block re-expresses every indicator as a system colour or border | PR #11 |
+
+**OF-06 is implemented, not qualified.** No indicator has been observed in a real forced-colors
+browser; that manual gate is ML-16's and has not happened.
 
 ---
 

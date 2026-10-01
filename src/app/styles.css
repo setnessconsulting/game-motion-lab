@@ -13,7 +13,7 @@
   --surface: #0e1726;
   --surface-raised: #16243a;
   --surface-sunken: #0a111c;
-  --border: #2b4569;
+  --border: #4772ad;
   --ink: #e8f0fa;
   --ink-muted: #a9bed8;
   --accent: #57d2c2;
@@ -74,11 +74,27 @@ body {
   max-width: 68ch;
 }
 
+/* Single column by default, two columns only from the desktop breakpoint.
+   GAME-387 OF-03: this was `repeat(auto-fit, minmax(320px, 1fr))`, which reached two columns
+   at 688px rather than the specified 1024px. The threshold was accidental, not designed.
+
+   Raising the minmax floor to 488px would have hit 1024px exactly but is the wrong fix: a
+   fixed floor larger than the viewport cannot shrink, so a 320px phone (and 200% zoom on a
+   narrow window) would overflow horizontally and fail the reflow contract. An explicit
+   single-column base plus a min-width query states the intent and cannot overflow. */
 .app__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--gap);
   margin-block: var(--gap);
+}
+
+@media (min-width: 1024px) {
+  .app__grid {
+    /* minmax(0, 1fr) rather than minmax(<length>, 1fr) so the columns can shrink below any
+       track's intrinsic minimum instead of overflowing it. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .app__column {
@@ -329,5 +345,61 @@ thead th {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* GAME-387 OF-06: forced-colors (high-contrast) mode.
+   The product already carries every distinction redundantly, so nothing here has to invent a
+   cue. What it must do is stop the browser's own substitutions from deleting them: in this mode
+   background colours and box-shadows are replaced, so a state expressed only by a fill or a
+   shadow disappears. Every indicator below is therefore re-expressed as a system colour or a
+   border, which forced-colors mode preserves. */
+@media (forced-colors: active) {
+  :root {
+    --border: CanvasText;
+    --focus: Highlight;
+  }
+
+  /* The focus ring already uses outline, which survives this mode, but restate it against the
+     system highlight colour so it follows the user's chosen palette. */
+  :focus-visible {
+    outline: 3px solid Highlight;
+  }
+
+  /* Panels, controls, and tables would otherwise lose their boundaries entirely. */
+  .panel,
+  .notice,
+  .lab-region,
+  .fieldset,
+  input[type="range"],
+  input[type="number"],
+  textarea,
+  button,
+  button.secondary,
+  th,
+  td {
+    border: 1px solid CanvasText;
+  }
+
+  /* The current mission step is signalled by fill plus weight plus aria-current. The fill is
+     replaced here, so give the chip a border to carry it as well. */
+  .phase-list li[aria-current="step"] {
+    border: 2px solid CanvasText;
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  /* A disabled control is signalled by reduced opacity, which this mode overrides. Keep the
+     native disabled affordance, and make sure the paired help text still explains the state. */
+  button:disabled {
+    opacity: 1;
+    border: 1px solid GrayText;
+    color: GrayText;
+  }
+
+  /* The fallback's dashed border is a non-colour cue and must stay visible. */
+  .lab-region__fallback {
+    border: 2px dashed CanvasText;
   }
 }
