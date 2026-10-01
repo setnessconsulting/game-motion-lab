@@ -12,10 +12,12 @@ re-reading prose, and so a Jira issue, a document, and a test cannot silently di
 | [`quality-scorecard.v1.json`](quality-scorecard.v1.json) | [`../docs/QUALITY_SCORECARD.md`](../docs/QUALITY_SCORECARD.md) |
 | [`scenario-provenance.schema.json`](scenario-provenance.schema.json) | [`../docs/PROVENANCE.md`](../docs/PROVENANCE.md) |
 | [`decisions.v1.json`](decisions.v1.json) | [`../docs/DECISIONS.md`](../docs/DECISIONS.md) |
+| [`design-system.v1.json`](design-system.v1.json) | [`../docs/DESIGN.md`](../docs/DESIGN.md) — production design authority (GAME-387 / ML-DESIGN) |
 
 ## Rules
 
-1. Every contract names its Jira authority (`GAME-382`) and the issue that froze it (`GAME-383`).
+1. Every contract names its Jira authority (`GAME-382`) and the issue that froze it. The ML-01
+   contracts name `GAME-383`; `design-system.v1.json` names `GAME-387`, which delivered it.
 2. The prose document and the machine-readable contract must agree. A disagreement is a defect, and
    the consistency checker reports it.
 3. `scenario-provenance.schema.json` is a **JSON Schema (Draft 2020-12)**. It is the schema that

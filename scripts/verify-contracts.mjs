@@ -83,6 +83,105 @@ function plain(text) {
     .trim();
 }
 
+/**
+ * Colour maths, so a declared contrast ratio is checked against the colour that actually
+ * ships rather than trusted.
+ *
+ * A design contract that quotes contrast numbers is only useful if those numbers were
+ * measured. Recomputing them here from `src/app/styles.css` and `src/renderer/labScene.ts`
+ * means editing a hex value without updating the contract fails the gate, and means a ratio
+ * could not be quietly improved (or quietly worsened) in prose.
+ */
+function hexToChannels(hex) {
+  const value = String(hex).trim().replace(/^(#|0x)/i, '');
+  return [0, 2, 4].map((index) => parseInt(value.slice(index, index + 2), 16));
+}
+
+/** WCAG 2.x relative luminance of an sRGB hex colour. */
+function relativeLuminance(hex) {
+  const channels = hexToChannels(hex).map((raw) => {
+    const srgb = raw / 255;
+    return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+/** WCAG 2.x contrast ratio between two hex colours. */
+function contrastRatio(a, b) {
+  const lighter = Math.max(relativeLuminance(a), relativeLuminance(b));
+  const darker = Math.min(relativeLuminance(a), relativeLuminance(b));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** The custom properties declared in a stylesheet's `:root` block, as raw values. */
+function cssCustomProperties(css) {
+  const rootBlock = css.match(/:root\s*\{([\s\S]*?)\}/);
+  const properties = {};
+  if (!rootBlock) return properties;
+  for (const declaration of rootBlock[1].split(/[;\n]/)) {
+    const match = declaration.match(/--([a-z0-9-]+)\s*:\s*([^;]+?)\s*$/);
+    if (match) properties[match[1]] = match[2].trim().toLowerCase();
+  }
+  return properties;
+}
+
+/** A `#rrggbb` custom property, or null when the property is not a colour. */
+function cssHex(properties, name) {
+  const value = properties[name];
+  return value && /^#[0-9a-f]{6}$/.test(value) ? value : null;
+}
+
+/** A CSS length in pixels. `rem` assumes the 16px root the frozen stylesheet already sets. */
+function lengthToPx(value) {
+  if (typeof value !== 'string') return null;
+  const rem = value.match(/^([\d.]+)rem$/);
+  if (rem) return Number(rem[1]) * 16;
+  const px = value.match(/^([\d.]+)px$/);
+  return px ? Number(px[1]) : null;
+}
+
+/**
+ * The horizontal padding, in pixels, from a rule body's `padding` shorthand.
+ *
+ * Parsed by applying the CSS shorthand rules rather than by regex. A regex is how the first
+ * version of this silently read `padding: 1.5rem 1rem 3rem` as 1rem/3rem and computed the
+ * grid threshold wrong by 64px, which would have made the whole divergence check compare a
+ * number against itself.
+ */
+function inlinePaddingPx(ruleBody) {
+  const declaration = String(ruleBody ?? '').match(/(^|;)\s*padding:\s*([^;]+)/);
+  if (!declaration) return null;
+  const parts = declaration[2].trim().split(/\s+/).filter(Boolean);
+  const horizontal = parts.length === 1 ? parts[0] : parts.length === 4 ? parts[1] : parts[1];
+  return lengthToPx(horizontal);
+}
+
+/**
+ * The `0xrrggbb` and `"#rrggbb"` entries of the renderer's `COLORS` constant.
+ *
+ * Both spellings occur in `labScene.ts`: Phaser tint values are numeric, while the text colour
+ * strings are already hex. Matching only one form would silently skip half the palette and let
+ * a contrast claim about the text colours go unchecked.
+ */
+function rendererColors(ts) {
+  const block = ts.match(/const COLORS = \{([\s\S]*?)\} as const;/);
+  const colors = {};
+  if (!block) return colors;
+  for (const line of block[1].split('\n')) {
+    const match = line.match(/^\s*([A-Za-z][A-Za-z0-9]*):\s*(?:0x([0-9a-fA-F]{6})|"(#[0-9a-fA-F]{6})")\s*,/);
+    if (match) colors[match[1]] = `#${(match[2] ?? match[3].slice(1)).toLowerCase()}`;
+  }
+  return colors;
+}
+
+/** Repository paths named by a design-contract reference, which may list several. */
+function referencedFiles(reference) {
+  return String(reference ?? '')
+    .split(/[,;]/)
+    .map((part) => part.trim().split(/\s+/)[0])
+    .filter((token) => token.includes('/'));
+}
+
 const CONTRACT_FILES = [
   'science-conventions.v1.json',
   'mission-families.v1.json',
@@ -90,6 +189,10 @@ const CONTRACT_FILES = [
   'quality-scorecard.v1.json',
   'scenario-provenance.schema.json',
   'decisions.v1.json',
+  // Parsed here so the design group can check it, but deliberately NOT in ENVELOPED below:
+  // ML-DESIGN is frozen by GAME-387, not GAME-383, and the ML-01 envelope rules must not be
+  // loosened to accommodate it. Its envelope is checked against its own freezing issue instead.
+  'design-system.v1.json',
 ];
 
 const DOC_FILES = [
@@ -111,6 +214,7 @@ const DOC_FILES = [
   'DECISIONS.md',
   'BOOTSTRAP.md',
   'PERFORMANCE_BASELINE.md',
+  'DESIGN.md',
 ];
 
 const JIRA_AUTHORITY = 'GAME-382';
@@ -836,6 +940,595 @@ check(
   /13\.\s*Known limitations/.test(contentDoc) &&
     /resistive-cause scenario bypasses the ML-04 trial runner/i.test(contentDoc)
 );
+
+// ---------------------------------------------------------------------------
+group('design authority (GAME-387 / ML-DESIGN)');
+
+/**
+ * GAME-387 asks for design artifacts covering thirteen named areas. The list below is the
+ * ticket's own wording, kept verbatim, so coverage is checked against the requirement rather
+ * than against whatever the contract happened to enumerate. A state cannot be quietly dropped:
+ * the expected identifier set is exact.
+ */
+const DESIGN_REQUIRED_COVERAGE = [
+  'mission brief/question/prediction',
+  'variable identification and experiment setup',
+  'laboratory track/cart/force presentation',
+  'run/pause/reset/step/replay states where authorized',
+  'measurement instruments and force vectors',
+  'trial record/evidence notebook',
+  'trial comparison',
+  'position-time and velocity-time graph states',
+  'claim/evidence/debrief',
+  'hints/recovery/errors',
+  'loading/renderer-failure fallback',
+];
+
+const DESIGN_REQUIRED_STATES = [
+  'brief',
+  'question',
+  'predict',
+  'variable-identification',
+  'experiment-setup',
+  'lab-scene',
+  'run',
+  'pause',
+  'reset',
+  'step',
+  'replay',
+  'instruments',
+  'force-vector',
+  'trial-record',
+  'evidence-notebook',
+  'trial-comparison',
+  'graph-position-time',
+  'graph-velocity-time',
+  'claim',
+  'evidence-citation',
+  'debrief',
+  'hint',
+  'recovery',
+  'error',
+  'renderer-loading',
+  'renderer-fallback',
+];
+
+const DESIGN_REQUIRED_CONTROL_STATES = [
+  'default',
+  'hover',
+  'focus-visible',
+  'selected',
+  'disabled',
+  'error',
+  'non-color',
+  'reduced-motion',
+  'forced-colors',
+  'zoom-200',
+];
+
+const stylesCss = exists('src/app/styles.css') ? readText('src/app/styles.css') : '';
+const sceneTs = exists('src/renderer/labScene.ts') ? readText('src/renderer/labScene.ts') : '';
+
+check('contracts/design-system.v1.json exists', exists(join('contracts', 'design-system.v1.json')));
+check('docs/DESIGN.md exists', exists(join('docs', 'DESIGN.md')));
+
+const design = parsed['design-system.v1.json'];
+if (design) {
+  check('design contract declares contractId', design.contractId === 'motion-lab.design-system');
+  check('design contract declares a version', /^\d+\.\d+\.\d+$/.test(String(design.version)));
+  check('design contract is frozen', design.status === 'frozen');
+  check('design contract names GAME-382', design.jiraAuthority === JIRA_AUTHORITY);
+  check('design contract names GAME-387 as the issue that froze it', design.frozenBy === 'GAME-387');
+  check(
+    'design contract points at an existing source document',
+    typeof design.sourceDocument === 'string' && exists(design.sourceDocument),
+    String(design.sourceDocument),
+  );
+  check('design contract claims to resolve delegated decision G-12', design.resolvesDelegatedDecision === 'G-12');
+  check('design contract claims to address owner gate O-01', design.addressesOwnerGate === 'O-01');
+
+  // --- the AC1 branch, stated honestly rather than implied.
+  const authority = design.designAuthority ?? {};
+  check('the design authority states that no Figma file was produced', authority.figmaFileProduced === false);
+  check('the design authority carries no Figma URL', authority.figmaFileUrl === null);
+  check('the design authority names the equivalent-authority branch it is satisfying', /equivalent production design authority/i.test(String(authority.acceptanceBranch)));
+  check(
+    'the design authority explains why no Figma action was performed',
+    typeof authority.whyNotFigma === 'string' && /DEFINITION_OF_DONE/.test(authority.whyNotFigma) && /stop condition/i.test(authority.whyNotFigma),
+  );
+  check(
+    'the design authority says what it is not',
+    Array.isArray(authority.whatThisIsNot) && authority.whatThisIsNot.length >= 4,
+  );
+  check(
+    'the design authority records its fidelity limits',
+    Array.isArray(authority.fidelityLimits) && authority.fidelityLimits.length >= 3,
+  );
+  check(
+    'the design authority records the pending owner gate rather than closing it',
+    Array.isArray(authority.pendingGates) && authority.pendingGates.some((gate) => /O-01/.test(gate)),
+  );
+
+  // --- the law the design inherits.
+  check('the design denies renderer authority', design.authorityLaw?.rendererIsAuthority === false);
+
+  // --- DR-01..DR-05, each with a real enforcement mechanism.
+  const designRules = design.designRules ?? [];
+  check('five design rules are declared', designRules.length === 5, `found ${designRules.length}`);
+  check(
+    'design rule ids match DR-01..DR-05',
+    sameSet(designRules.map((rule) => rule.id), rangeIds('DR-', 5, 2)),
+    designRules.map((rule) => rule.id).join(','),
+  );
+  for (const rule of designRules) {
+    check(`design rule "${rule.id}" is marked enforced`, rule.enforced === true);
+    check(
+      `design rule "${rule.id}" names its enforcement mechanism`,
+      typeof rule.mechanism === 'string' && rule.mechanism.trim().length > 30,
+      rule.id,
+    );
+    check(
+      `design rule "${rule.id}" binds to at least one file that exists`,
+      (rule.boundIdentifiers ?? []).some((id) => exists(String(id).split(':')[0])),
+      JSON.stringify(rule.boundIdentifiers),
+    );
+  }
+
+  // --- coverage: the ticket's thirteen named areas.
+  const coverage = design.stateCoverage?.areas ?? [];
+  const declaredLines = coverage.map((area) => area.ticketLine);
+  for (const line of DESIGN_REQUIRED_COVERAGE) {
+    check(`design coverage declares "${line}"`, declaredLines.includes(line), declaredLines.join(' | '));
+  }
+  check(
+    'design coverage declares no area beyond the ticket\'s eleven screen areas',
+    sameSet(declaredLines, DESIGN_REQUIRED_COVERAGE),
+    declaredLines.filter((line) => !DESIGN_REQUIRED_COVERAGE.includes(line)).join(' | '),
+  );
+
+  const designStates = coverage.flatMap((area) => (area.states ?? []).map((state) => state));
+  const designStateIds = designStates.map((state) => state.id);
+  check(
+    'every GAME-387 required state is specified',
+    sameSet(designStateIds, DESIGN_REQUIRED_STATES),
+    `missing: ${DESIGN_REQUIRED_STATES.filter((id) => !designStateIds.includes(id)).join(',')} / extra: ${designStateIds.filter((id) => !DESIGN_REQUIRED_STATES.includes(id)).join(',')}`,
+  );
+  check(
+    'design state ids are unique',
+    new Set(designStateIds).size === designStateIds.length,
+    designStateIds.join(','),
+  );
+  for (const state of designStates) {
+    check(
+      `design state "${state.id}" uses a kebab-case id`,
+      /^[a-z0-9]+(-[a-z0-9]+)*$/.test(state.id),
+      state.id,
+    );
+    check(`design state "${state.id}" names its authoritative source`, typeof state.authority === 'string' && state.authority.trim().length > 0, state.id);
+    check(
+      `design state "${state.id}" declares an honest implementation status`,
+      ['implemented', 'partial', 'specified'].includes(state.implementationStatus),
+      `${state.id}=${state.implementationStatus}`,
+    );
+    check(`design state "${state.id}" names its owning issue`, /GAME-\d+/.test(String(state.owningIssue)), state.id);
+    // A state that claims to be implemented must point at code that exists. Without this,
+    // "implemented" would be an unfalsifiable claim and the field would decay into decoration.
+    if (state.implementationStatus === 'implemented') {
+      const files = referencedFiles(state.implementationRef);
+      check(
+        `implemented design state "${state.id}" points at a file that exists`,
+        files.length > 0 && files.some((file) => exists(file)),
+        String(state.implementationRef),
+      );
+    }
+    if (state.implementationStatus === 'partial') {
+      const files = referencedFiles(state.implementationRef);
+      check(
+        `partial design state "${state.id}" still points at what exists today`,
+        files.length > 0 && files.some((file) => exists(file)),
+        String(state.implementationRef),
+      );
+    }
+    // A `specified` state has no screen yet. It may cite the domain or contract authority it will
+    // be built from, but it may not cite a presentation file: that would imply the screen exists.
+    if (state.implementationStatus === 'specified') {
+      const presentationFiles = referencedFiles(state.implementationRef).filter((file) =>
+        /^src\/(ui|app|host|renderer)\//.test(file),
+      );
+      check(
+        `specified design state "${state.id}" cites no presentation file as if it were built`,
+        presentationFiles.length === 0,
+        presentationFiles.join(','),
+      );
+    }
+  }
+}
+
+if (design) {
+  // --- colour tokens: transcribed from the stylesheet, and their contrast measured here.
+  const shippedTokens = cssCustomProperties(stylesCss);
+  const hexTokens = Object.fromEntries(
+    Object.keys(shippedTokens).map((name) => [name, cssHex(shippedTokens, name)]),
+  );
+  const declaredTokens = design.tokens?.color ?? [];
+  check('design tokens were read from a stylesheet', Object.keys(shippedTokens).length > 0, Object.keys(shippedTokens).join(','));
+  for (const token of declaredTokens) {
+    const name = String(token.token).replace(/^--/, '');
+    check(
+      `design token "${token.token}" matches the value shipped in styles.css`,
+      hexTokens[name] === String(token.value).toLowerCase(),
+      `contract=${token.value} shipped=${hexTokens[name] ?? 'missing-or-not-a-colour'}`,
+    );
+  }
+  const tokenByName = Object.fromEntries(
+    declaredTokens.map((token) => [String(token.token).replace(/^--/, ''), String(token.value).toLowerCase()]),
+  );
+  const measuredContrast = design.tokens?.measuredContrast ?? [];
+  check('the design contract measures token contrast rather than asserting it', measuredContrast.length > 0);
+  // Every pairing that can carry meaning must appear in the measured table. A failure recorded
+  // only in the failures list would sit outside the data a reader actually looks at, and the
+  // "below 3:1 must be declared" rule below would never see it.
+  const measuredPairs = new Set(measuredContrast.map((pair) => `${pair.foreground}|${pair.background}`));
+  for (const failure of design.tokens?.measuredNonTextContrastFailures ?? []) {
+    check(
+      `token contrast failure "${failure.id}" also appears in the measured contrast table`,
+      measuredPairs.has(`${failure.foreground}|${failure.background}`),
+      `${failure.foreground}|${failure.background}`,
+    );
+  }
+  for (const pair of measuredContrast) {
+    const fg = tokenByName[String(pair.foreground).replace(/^--/, '')];
+    const bg = tokenByName[String(pair.background).replace(/^--/, '')];
+    if (!fg || !bg) {
+      check(`contrast pair "${pair.foreground} on ${pair.background}" names real tokens`, false, `${fg ?? '?'} / ${bg ?? '?'}`);
+      continue;
+    }
+    const computed = contrastRatio(fg, bg);
+    check(
+      `declared contrast for "${pair.foreground} on ${pair.background}" is correct`,
+      typeof pair.ratio === 'number' && Math.abs(computed - pair.ratio) <= 0.02,
+      `declared=${pair.ratio} computed=${computed.toFixed(2)}`,
+    );
+    // Any pairing below 3:1 is a non-text contrast failure unless the contract declares it as
+    // one. This is the check that stops a low-contrast pair being quietly filed as a pass.
+    if (computed < 3) {
+      const declared = (design.tokens?.measuredNonTextContrastFailures ?? []).some(
+        (failure) => tokenByName[String(failure.foreground).replace(/^--/, '')] === fg,
+      );
+      check(
+        `"${pair.foreground} on ${pair.background}" is below 3:1 and is declared as a failure`,
+        declared,
+        `computed=${computed.toFixed(2)}`,
+      );
+    }
+  }
+
+  // --- renderer palette, measured against the scene background that actually ships.
+  const shippedScene = rendererColors(sceneTs);
+  const sceneBackground = shippedScene.background;
+  check('the renderer palette was read from labScene.ts', Object.keys(shippedScene).length > 0, Object.keys(shippedScene).join(','));
+  const palette = design.rendererPalette?.measuredContrast ?? [];
+  check('the renderer palette declares measured contrast', palette.length > 0);
+  for (const entry of palette) {
+    const hex = shippedScene[entry.name];
+    check(
+      `renderer colour "${entry.name}" matches the value shipped in labScene.ts`,
+      hex === String(entry.value).toLowerCase(),
+      `contract=${entry.value} shipped=${hex ?? 'missing'}`,
+    );
+    if (!hex || !sceneBackground) continue;
+    const computed = contrastRatio(hex, sceneBackground);
+    check(
+      `declared renderer contrast for "${entry.name}" is correct`,
+      typeof entry.ratio === 'number' && Math.abs(computed - entry.ratio) <= 0.02,
+      `declared=${entry.ratio} computed=${computed.toFixed(2)}`,
+    );
+    if (computed < 3 && !/bed fill|rail only/i.test(String(entry.verdict))) {
+      const declared = (design.rendererPalette?.measuredNonTextContrastFailures ?? []).some(
+        (failure) => failure.foreground === entry.name,
+      );
+      check(
+        `renderer colour "${entry.name}" is below 3:1 and is declared as a failure`,
+        declared,
+        `computed=${computed.toFixed(2)} verdict=${entry.verdict}`,
+      );
+    }
+  }
+
+  // --- the focus ring, checked as a decision rather than a value.
+  const focusRing = design.tokens?.focusRing ?? {};
+  check('the focus ring is specified as an outline rather than a box-shadow', /outline/i.test(String(focusRing.property)));
+  check('the focus ring declares its width, colour, offset, and selector', ['width', 'color', 'offset', 'selector'].every((key) => Boolean(focusRing[key])), JSON.stringify(focusRing));
+  check(
+    'the focus ring records why it is an outline: it must survive clipping and forced-colors',
+    /outline[^.]*box-shadow/i.test(String(focusRing.rationale)) &&
+      /clip/i.test(String(focusRing.rationale)) &&
+      /forced-colors/i.test(String(focusRing.rationale)),
+    String(focusRing.rationale),
+  );
+  check(
+    'the focus ring contrast is measured against both surfaces it appears on',
+    measuredContrast.some((pair) => pair.foreground === '--focus' && pair.background === '--surface') &&
+      measuredContrast.some((pair) => pair.foreground === '--focus' && pair.background === '--surface-raised'),
+  );
+
+  // --- every declared contrast failure must exist as a recorded open finding, so a measured
+  // defect cannot live only in a data file.
+  const findings = design.openFindings?.findings ?? [];
+  const findingIds = findings.map((finding) => finding.id);
+  check('the design contract records open findings', findings.length > 0, String(findings.length));
+  check('open finding ids are unique', new Set(findingIds).size === findingIds.length, findingIds.join(','));
+  for (const failure of [
+    ...(design.tokens?.measuredNonTextContrastFailures ?? []),
+    ...(design.rendererPalette?.measuredNonTextContrastFailures ?? []),
+  ]) {
+    const finding = findings.find((entry) => entry.id === failure.id);
+    check(`contrast failure ${failure.id} is recorded as an open finding`, Boolean(finding), failure.id);
+    if (finding) {
+      check(`finding ${failure.id} names an owner`, /GAME-\d+/.test(String(finding.owner)), String(finding.owner));
+      check(`finding ${failure.id} states an action`, typeof finding.action === 'string' && finding.action.trim().length > 20);
+      check(
+        `finding ${failure.id} does not claim the contrast passes`,
+        !/passes/i.test(String(finding.finding)) || /not claimed as a pass/i.test(String(finding.action) + String(finding.finding)),
+      );
+    }
+  }
+
+  // --- responsive layout: the three named viewports, and any divergence must be declared.
+  const breakpoints = design.layout?.breakpoints ?? [];
+  check(
+    'design names exactly the three phone/tablet/desktop layouts',
+    sameSet(breakpoints.map((entry) => entry.id), ['phone', 'tablet', 'desktop']),
+    breakpoints.map((entry) => entry.id).join(','),
+  );
+  for (const breakpoint of breakpoints) {
+    check(`breakpoint "${breakpoint.id}" declares a viewport range`, /px/.test(String(breakpoint.viewport)), breakpoint.viewport);
+    check(`breakpoint "${breakpoint.id}" declares its column count`, typeof breakpoint.columns === 'number');
+    check(`breakpoint "${breakpoint.id}" states its reading order or notes`, typeof breakpoint.notes === 'string' && breakpoint.notes.length > 40);
+  }
+  const phone = breakpoints.find((entry) => entry.id === 'phone');
+  const desktop = breakpoints.find((entry) => entry.id === 'desktop');
+  check('phone is single-column', phone?.columns === 1, String(phone?.columns));
+  check('desktop is two-column', desktop?.columns === 2, String(desktop?.columns));
+
+  // Recompute where the shipped grid actually changes column count, so a divergence from the
+  // specification cannot be left implicit. Each precondition is asserted as its own check: a
+  // silently skipped block is how a check turns into decoration that always passes.
+  const gridRule = stylesCss.match(/\.app__grid\s*\{([\s\S]*?)\}/);
+  const gridFloor = gridRule?.[1].match(/minmax\(\s*(\d+)px/);
+  const appRule = stylesCss.match(/\.app\s*\{([\s\S]*?)\}/)?.[1];
+  const inlinePx = inlinePaddingPx(appRule);
+  check('the shipped grid column rule was found', Boolean(gridFloor), String(gridRule?.[1]));
+  check('the shipped grid gap token was found', /gap:\s*var\(--gap\)/.test(String(gridRule?.[1])), String(gridRule?.[1]));
+  check('the shipped --gap token is a length the checker can evaluate', lengthToPx(shippedTokens.gap) !== null, String(shippedTokens.gap));
+  check('the shipped app inline padding was found and evaluated', inlinePx !== null, String(appRule));
+  if (gridFloor && inlinePx !== null && lengthToPx(shippedTokens.gap) !== null) {
+    const computedThreshold = 2 * Number(gridFloor[1]) + lengthToPx(shippedTokens.gap) + 2 * inlinePx;
+    check(
+      'the design contract states the viewport at which the shipped grid reaches two columns',
+      design.layout?.gridSpecification?.declaredTwoColumnViewportPx === computedThreshold,
+      `declared=${design.layout?.gridSpecification?.declaredTwoColumnViewportPx} computed=${computedThreshold}`,
+    );
+    const desktopViewport = String(desktop?.viewport ?? '');
+    check(
+      'the desktop breakpoint is specified from 1024px',
+      /1024/.test(desktopViewport),
+      desktopViewport,
+    );
+    if (computedThreshold !== 1024) {
+      check(
+        'a divergence between the shipped grid and the specified desktop breakpoint is declared',
+        typeof design.layout?.gridSpecification?.divergenceFromSpecification === 'string' &&
+          design.layout.gridSpecification.divergenceFromSpecification.length > 20,
+        String(design.layout?.gridSpecification?.divergenceFromSpecification),
+      );
+      check(
+        'the declared divergence names an owner and an open finding',
+        /GAME-\d+/.test(String(design.layout?.gridSpecification?.owner)) &&
+          findingIds.includes(String(design.layout?.gridSpecification?.findingId)),
+        `owner=${design.layout?.gridSpecification?.owner} finding=${design.layout?.gridSpecification?.findingId}`,
+      );
+    }
+  }
+  check(
+    'reflow rules prohibit horizontal scrolling for text',
+    Array.isArray(design.layout?.reflow?.prohibited) && design.layout.reflow.prohibited.length >= 3,
+  );
+
+  // --- control states: the six GAME-387 names, plus the variants a real review needs.
+  const controlStates = design.controlStates?.states ?? [];
+  const controlIds = controlStates.map((state) => state.id);
+  check(
+    'every required control state is specified',
+    DESIGN_REQUIRED_CONTROL_STATES.every((id) => controlIds.includes(id)),
+    DESIGN_REQUIRED_CONTROL_STATES.filter((id) => !controlIds.includes(id)).join(','),
+  );
+  for (const state of controlStates) {
+    check(`control state "${state.id}" has a specification`, typeof state.specification === 'string' && state.specification.trim().length > 30, state.id);
+    check(
+      `control state "${state.id}" states honestly whether it is implemented`,
+      typeof state.implementedIn === 'string' && /src\/|not implemented|partial/.test(state.implementedIn),
+      `${state.id}=${state.implementedIn}`,
+    );
+  }
+  const focusState = controlStates.find((state) => state.id === 'focus-visible');
+  check(
+    'the focus state specifies a visible, unsuppressible indicator',
+    focusState && /outline/.test(focusState.specification) && /never be suppressed/i.test(focusState.specification),
+  );
+  const reducedState = controlStates.find((state) => state.id === 'reduced-motion');
+  check(
+    'the reduced-motion state preserves instructional meaning',
+    reducedState && /meaning is unchanged|meaning preserved/i.test(reducedState.specification + String(reducedState.rationale)),
+  );
+  check(
+    'focus order is stated and follows reading order',
+    Array.isArray(design.controlStates?.focusOrder?.order) && design.controlStates.focusOrder.order.length >= 5 &&
+      /DOM order is reading order/.test(String(design.controlStates.focusOrder.rule)),
+  );
+
+  // --- graph contract, cross-checked against the frozen mission families.
+  const graph = design.graphContract ?? {};
+  const series = graph.series ?? [];
+  check('both the position-time and velocity-time graph states are specified', sameSet(series.map((entry) => entry.id), ['position-time', 'velocity-time']), series.map((entry) => entry.id).join(','));
+  const frozenFamilies = parsed['mission-families.v1.json'];
+  for (const entry of series) {
+    check(`graph "${entry.id}" labels its vertical axis with a unit`, /\(.+\)/.test(String(entry.verticalAxis)), String(entry.verticalAxis));
+    check(`graph "${entry.id}" labels its horizontal axis with a unit`, /\(.+\)/.test(String(entry.horizontalAxis)), String(entry.horizontalAxis));
+    check(`graph "${entry.id}" states what its slope means`, typeof entry.slopeMeaning === 'string' && entry.slopeMeaning.length > 0);
+    // The graph contract must agree with the frozen requirement, or the Epic's mandated
+    // graph-interpretation requirement would be satisfied by one document and voided by another.
+    for (const familyId of entry.requiredBy ?? []) {
+      const family = frozenFamilies?.families?.find((candidate) => candidate.id === familyId);
+      check(
+        `graph "${entry.id}" is required by frozen family "${familyId}", which really requires it`,
+        Boolean(family) && (family.graphRequirement?.graphs ?? []).includes(entry.id),
+        JSON.stringify(family?.graphRequirement),
+      );
+    }
+  }
+  const velocitySeries = series.find((entry) => entry.id === 'velocity-time');
+  check(
+    'the velocity-time graph is the mandated graph-interpretation requirement',
+    sameSet(velocitySeries?.requiredBy ?? [], ['thruster-test', 'mystery-cart']),
+    (velocitySeries?.requiredBy ?? []).join(','),
+  );
+  const graphStates = (graph.states ?? []).map((state) => state.id);
+  for (const required of ['table-equivalent', 'textual-summary', 'read-value-at-time', 'empty', 'insufficient-evidence']) {
+    check(`graph state "${required}" is specified`, graphStates.includes(required), graphStates.join(','));
+  }
+  check('the graph contract forbids a graph drawn from pixel geometry', (graph.prohibited ?? []).some((rule) => /pixel/i.test(rule)));
+  check('the graph contract forbids presenting fitted data as recorded', (graph.prohibited ?? []).some((rule) => /smoothed|fitted/i.test(rule)));
+
+  // --- motion: instructional, decorative, and forbidden must all be separated (AC4).
+  const motionCategories = (design.motionContract?.categories ?? []).map((category) => category.id);
+  check(
+    'motion is split into instructional visualization, decorative polish, and a forbidden category',
+    sameSet(motionCategories, ['instructional-visualization', 'decorative-polish', 'forbidden']),
+    motionCategories.join(','),
+  );
+  const instructional = (design.motionContract?.categories ?? []).find((category) => category.id === 'instructional-visualization');
+  check('instructional motion is not the only route to any value', (instructional?.rules ?? []).some((rule) => /only route/i.test(rule)));
+  check('instructional motion must have a non-motion equivalent', (instructional?.rules ?? []).some((rule) => /non-motion equivalent/i.test(rule)));
+  check('instructional motion must be removable under reduced motion', (instructional?.rules ?? []).some((rule) => /reduced-motion/i.test(rule)));
+  for (const item of instructional?.inventory ?? []) {
+    check(
+      `instructional motion "${item.id}" names a non-motion equivalent`,
+      typeof item.nonMotionEquivalent === 'string' && item.nonMotionEquivalent.trim().length > 10,
+      item.id,
+    );
+    check(`instructional motion "${item.id}" states its reduced-motion behaviour`, typeof item.reducedMotionBehaviour === 'string' && item.reducedMotionBehaviour.length > 5, item.id);
+  }
+  const forbiddenMotion = (design.motionContract?.categories ?? []).find((category) => category.id === 'forbidden');
+  check('forbidden motion rules name frame time', (forbiddenMotion?.rules ?? []).some((rule) => /frame/i.test(rule)));
+  check('forbidden motion rules name interpolation between samples', (forbiddenMotion?.rules ?? []).some((rule) => /interpolat/i.test(rule)));
+  check('proposed timing budgets are not presented as measurements', /not measurement/i.test(String(design.motionContract?.timing?.status)), String(design.motionContract?.timing?.status));
+
+  // --- asset and originality direction (AC5).
+  const assets = design.assetDirection ?? {};
+  check('the asset direction states the originality position', /original work/i.test(String(assets.originalityPosition)));
+  check('the asset direction locks the palette', /palette/i.test(String(assets.paletteLock)) && /decision entry/i.test(String(assets.paletteLock)));
+  check('the asset direction repeats the IP boundary', /no comparator/i.test(String(assets.originalityPosition)));
+  check('assets of unknown origin may not ship', assets.assetProvenance?.unknownOriginMayNotShip === true);
+  check('generated assets must record reproducibility', assets.assetProvenance?.generatedAssetsRecordReproducibility === true);
+  check(
+    'the asset direction does not claim the originality review happened',
+    /has not occurred|pending/i.test(String(assets.reviewStatus)),
+    String(assets.reviewStatus),
+  );
+  check('the design records that no production asset exists yet', /no production asset exists/i.test(String(assets.assetProvenance?.status)));
+
+  // --- acceptance mapping, including the branch taken for AC1.
+  const mapped = design.acceptanceMapping?.criteria ?? [];
+  check('all five GAME-387 acceptance criteria are mapped', sameSet(mapped.map((entry) => entry.id), ['AC1', 'AC2', 'AC3', 'AC4', 'AC5']), mapped.map((entry) => entry.id).join(','));
+  for (const entry of mapped) {
+    check(`${entry.id} states a status`, typeof entry.status === 'string' && entry.status.length > 0, entry.id);
+    check(
+      `${entry.id} carries an honest qualifier rather than a bare pass`,
+      typeof entry.honestQualifier === 'string' && entry.honestQualifier.trim().length > 30,
+      entry.id,
+    );
+    check(
+      `${entry.id} names evidence that exists in this repository`,
+      (entry.evidence ?? []).length > 0,
+      entry.id,
+    );
+  }
+  const ac1 = mapped.find((entry) => entry.id === 'AC1');
+  check(
+    'AC1 is recorded as satisfied by the equivalent-authority branch rather than by a Figma file',
+    ac1?.status === 'satisfied-by-equivalent-branch',
+    String(ac1?.status),
+  );
+  check('AC1 records that O-01 is still open', /O-01/.test(String(ac1?.honestQualifier)), String(ac1?.honestQualifier));
+  const ac2 = mapped.find((entry) => entry.id === 'AC2');
+  check('AC2 does not confuse specification with implementation', /not implementing|Specifying a state is not implementing it/i.test(String(ac2?.honestQualifier)));
+
+  // --- ML-11 traceability: coverage complete, implementation honestly incomplete.
+  const trace = design.ml11Traceability ?? {};
+  const steps = trace.steps ?? [];
+  check('every ML-11 vertical-slice step is traced', steps.length === 12, `found ${steps.length}`);
+  const knownStates = new Set(DESIGN_REQUIRED_STATES);
+  for (const step of steps) {
+    check(`ML-11 step ${step.step} names at least one specified state`, (step.states ?? []).length > 0, String(step.step));
+    check(
+      `ML-11 step ${step.step} only references states the contract actually specifies`,
+      (step.states ?? []).every((id) => knownStates.has(id)),
+      (step.states ?? []).filter((id) => !knownStates.has(id)).join(','),
+    );
+    check(`ML-11 step ${step.step} names its owning issue`, /GAME-\d+/.test(String(step.owner)), String(step.owner));
+  }
+  check('ML-11 coverage is recorded as complete', trace.coverageComplete === true);
+  check('ML-11 implementation is recorded as incomplete', trace.implementationComplete === false);
+  check(
+    'the design states plainly that it does not make ML-11 achievable',
+    /does not make ML-11 achievable/i.test(String(trace.honestyStatement)),
+    String(trace.honestyStatement),
+  );
+
+  // --- the review record may not claim anything that has not happened.
+  const designReview = design.review ?? {};
+  check('the design review records its author model', typeof designReview.authorModel === 'string' && designReview.authorModel.length > 0);
+  check('independent review is recorded as not performed', designReview.independentReview === 'not performed', String(designReview.independentReview));
+  check('human design review is recorded as not performed', designReview.humanDesignReview === 'not performed', String(designReview.humanDesignReview));
+  check('learner playtest is recorded as not performed', designReview.learnerPlaytest === 'not performed', String(designReview.learnerPlaytest));
+  check('accessibility sign-off is recorded as not performed', designReview.accessibilitySignOff === 'not performed', String(designReview.accessibilitySignOff));
+  check(
+    'the review statement admits what machine checking cannot establish',
+    /cannot establish that a design is good/i.test(String(designReview.statement)),
+    String(designReview.statement),
+  );
+  check('the design contract records a change log entry', (design.changeLog ?? []).length > 0);
+}
+
+// --- the prose document must not drift from the contract it describes.
+const designDoc = plain(exists('docs/DESIGN.md') ? readText('docs/DESIGN.md') : '');
+check('docs/DESIGN.md names GAME-387 as the delivering issue', designDoc.includes('GAME-387'));
+check('docs/DESIGN.md states the equivalent-authority branch of AC1', /equivalent production design authority/i.test(designDoc));
+check('docs/DESIGN.md states plainly that no Figma file was produced', /No Figma file was produced/i.test(designDoc));
+check('docs/DESIGN.md records O-01 as still owner-gated', /O-01/.test(designDoc));
+check('docs/DESIGN.md records G-12 as resolved', /G-12/.test(designDoc));
+check('docs/DESIGN.md repeats the renderer-authority law', /No visual may state a scientific value that differs from authoritative domain state/i.test(designDoc));
+check('docs/DESIGN.md separates instructional motion from decorative polish', /instructional-visualization|instructional visualization/i.test(designDoc) && /decorative/i.test(designDoc));
+check('docs/DESIGN.md records the asset originality boundary', /original/i.test(designDoc) && /comparator/i.test(designDoc));
+for (const id of DESIGN_REQUIRED_STATES) {
+  check(`docs/DESIGN.md documents the "${id}" state`, designDoc.includes(id));
+}
+for (const id of DESIGN_REQUIRED_CONTROL_STATES) {
+  check(`docs/DESIGN.md documents the "${id}" control state`, designDoc.includes(id));
+}
+for (const finding of (parsed['design-system.v1.json']?.openFindings?.findings ?? [])) {
+  check(`docs/DESIGN.md records open finding ${finding.id}`, designDoc.includes(finding.id), finding.id);
+}
+check(
+  'docs/DESIGN.md does not claim the design package was reviewed by a person',
+  !/design review (passed|complete|approved)|design sign-?off/i.test(designDoc),
+);
+check(
+  'docs/DESIGN.md does not claim accessibility conformance',
+  !/WCAG (AA|AAA) conformant|accessibility sign-?off (passed|complete|approved)/i.test(designDoc),
+);
+
 
 // ---------------------------------------------------------------------------
 group('honesty guards');

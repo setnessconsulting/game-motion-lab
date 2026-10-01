@@ -82,6 +82,7 @@ The documentation index of record is [`docs/README.md`](docs/README.md). Start t
 | [`docs/RELEASE.md`](docs/RELEASE.md) | candidate identity, qualification, promotion, rollback contract |
 | [`docs/DEFINITION_OF_DONE.md`](docs/DEFINITION_OF_DONE.md) | per-issue and Epic Definition of Done |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | frozen, delegated, and owner-gated decision register |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | production design authority: tokens with measured contrast, responsive layouts, the required state inventory, control states, graph and motion contracts, asset direction, and open findings |
 | [`contracts/`](contracts/) | machine-readable contracts validated by the consistency checker |
 
 ## Machine-readable contracts
@@ -134,6 +135,14 @@ so the issue is Blocked, not Done.
 enforcement, derived measurements, immutable provenance-carrying trial evidence, append-only
 comparison sets, claim evaluation, misconception diagnosis, and deterministic replay. See
 [`docs/EXPERIMENT_MODEL.md`](docs/EXPERIMENT_MODEL.md).
+
+**ML-DESIGN (GAME-387) — design authority.** [`docs/DESIGN.md`](docs/DESIGN.md) and
+[`contracts/design-system.v1.json`](contracts/design-system.v1.json) freeze the interaction and
+visual system for every state the issue names, resolve delegated decision G-12, and record the
+contrast ratios, responsive breakpoints, control states, graph rules, motion categories, and asset
+direction. It is the AC1 **equivalent** production design authority: **no Figma file was produced**,
+the visual states are specified rather than depicted, and owner gate O-01 remains open. See
+[`docs/DESIGN.md`](docs/DESIGN.md) §1 and its open findings.
 
 The canonical missions are GAME-389 (ML-05) and the production renderer is GAME-390 (ML-06).
 No mission is scored, no graph is presented as evidence, and nothing here is a finished game.
