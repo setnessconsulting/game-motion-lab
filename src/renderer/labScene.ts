@@ -40,8 +40,13 @@ const TRACK_RAIL_MARGIN = 40;
 const COLORS = {
   background: 0x0e1726,
   track: 0x1f3350,
-  trackEdge: 0x35507a,
-  tick: 0x4a678f,
+  // GAME-387 OF-02: trackEdge measured 2.21:1 against the scene background, below the 3:1
+  // WCAG 1.4.11 non-text threshold for a meaningful boundary. Raised by a uniform channel scale
+  // so the hue is unchanged and the tick marks below stay the brightest scale cue.
+  trackEdge: 0x45689f,
+  // Also raised: at 3.10:1 this was the load-bearing ruler encoding and it sat barely over the
+  // threshold, and raising trackEdge alone would have inverted the hierarchy against it.
+  tick: 0x5a7dad,
   cart: 0x3fb6a8,
   cartDark: 0x2a7f76,
   force: 0xf2a03d,

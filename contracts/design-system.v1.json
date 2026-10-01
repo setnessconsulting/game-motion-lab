@@ -1,6 +1,6 @@
 {
   "contractId": "motion-lab.design-system",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "status": "frozen",
   "jiraAuthority": "GAME-382",
   "frozenBy": "GAME-387",
@@ -107,7 +107,7 @@
       { "token": "--surface", "value": "#0e1726", "role": "page background" },
       { "token": "--surface-raised", "value": "#16243a", "role": "panel background" },
       { "token": "--surface-sunken", "value": "#0a111c", "role": "input well, table head, canvas bed" },
-      { "token": "--border", "value": "#2b4569", "role": "panel and control boundary" },
+      { "token": "--border", "value": "#4772ad", "role": "panel and control boundary" },
       { "token": "--ink", "value": "#e8f0fa", "role": "primary text" },
       { "token": "--ink-muted", "value": "#a9bed8", "role": "secondary text, help text, axis labels" },
       { "token": "--accent", "value": "#57d2c2", "role": "primary action, current step, cart body" },
@@ -129,19 +129,10 @@
       { "foreground": "--warn", "background": "--surface-sunken", "ratio": 8.89, "verdict": "AAA text" },
       { "foreground": "--focus", "background": "--surface", "ratio": 12.46, "verdict": "focus indicator" },
       { "foreground": "--focus", "background": "--surface-raised", "ratio": 10.81, "verdict": "focus indicator" },
-      { "foreground": "--border", "background": "--surface-raised", "ratio": 1.6, "verdict": "BELOW the 3:1 non-text threshold; recorded as open finding OF-01" },
-      { "foreground": "--ink", "background": "--border", "ratio": 8.47, "verdict": "text placed on a boundary stays readable" }
+      { "foreground": "--border", "background": "--surface-raised", "ratio": 3.17, "verdict": "clears the 3:1 non-text threshold for a UI component boundary (was 1.60:1; remediated as OF-01)" },
+      { "foreground": "--ink", "background": "--border", "ratio": 4.27, "verdict": "not a supported pairing: nothing places text on the boundary, which is a 1px edge. Kept so the cost of the OF-01 fix stays visible instead of hidden." }
     ],
-    "measuredNonTextContrastFailures": [
-      {
-        "id": "OF-01",
-        "foreground": "--border",
-        "background": "--surface-raised",
-        "ratio": 1.6,
-        "threshold": 3.0,
-        "consequence": "The panel and control boundary is a UI component edge and does not reach WCAG 1.4.11 non-text contrast. Recorded as open finding OF-01; it is not claimed as a pass."
-      }
-    ],
+    "measuredNonTextContrastFailures": [],
     "focusRing": {
       "property": "outline",
       "width": "3px",
@@ -187,25 +178,16 @@
       { "name": "cart", "value": "#3fb6a8", "ratio": 7.24, "verdict": "passes non-text 3:1" },
       { "name": "cartDark", "value": "#2a7f76", "ratio": 3.76, "verdict": "passes non-text 3:1" },
       { "name": "force", "value": "#f2a03d", "ratio": 8.44, "verdict": "passes non-text 3:1 and text" },
-      { "name": "tick", "value": "#4a678f", "ratio": 3.1, "verdict": "barely passes non-text 3:1; the ruler is the scale encoding, so this is load-bearing" },
+      { "name": "tick", "value": "#5a7dad", "ratio": 4.25, "verdict": "passes non-text 3:1 with headroom; the ruler is the scale encoding, so this is load-bearing (was 3.10:1, remediated with OF-02)" },
       { "name": "progress", "value": "#6fd3c4", "ratio": 10.08, "verdict": "passes" },
       { "name": "label", "value": "#dbe7f5", "ratio": 14.34, "verdict": "AAA text" },
       { "name": "labelDim", "value": "#93a9c2", "ratio": 7.44, "verdict": "AAA text" },
       { "name": "balanced", "value": "#8fa6bd", "ratio": 7.15, "verdict": "AAA text" },
-      { "name": "trackEdge", "value": "#35507a", "ratio": 2.21, "verdict": "BELOW non-text 3:1; recorded as open finding OF-02" },
+      { "name": "trackEdge", "value": "#45689f", "ratio": 3.19, "verdict": "clears the 3:1 non-text threshold for a meaningful boundary (was 2.21:1; remediated as OF-02)" },
       { "name": "track", "value": "#1f3350", "ratio": 1.41, "verdict": "bed fill only, not a meaningful boundary; the ticks and edge carry the scale" },
       { "name": "progressTrack", "value": "#27384f", "ratio": 1.51, "verdict": "unfilled rail only; the filled portion is the encoded value" }
     ],
-    "measuredNonTextContrastFailures": [
-      {
-        "id": "OF-02",
-        "foreground": "trackEdge",
-        "background": "background",
-        "ratio": 2.21,
-        "threshold": 3.0,
-        "consequence": "The track edge is a meaningful boundary for the scale and does not reach WCAG 1.4.11 non-text contrast. The metre ticks at 3.10:1 partially carry the scale, so this is a boundary problem rather than a scale-encoding problem. Recorded as open finding OF-02; it is not claimed as a pass."
-      }
-    ],
+    "measuredNonTextContrastFailures": [],
     "directionEncoding": {
       "redundantChannels": ["arrowhead orientation", "sign of the arrow displacement", "the words in the force label", "the +x axis marker drawn on the laboratory axis"],
       "colourIsNeverSufficient": true,
@@ -242,15 +224,10 @@
     "gridSpecification": {
       "selector": ".app__grid",
       "declaredIn": "src/app/styles.css",
-      "css": "grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem",
-      "measuredBehaviour": "Two columns appear at a viewport of 688px and above, not at 1024px. Content width must reach 2 x 320px plus one 16px gap = 656px, plus 32px of container padding.",
-      "declaredTwoColumnViewportPx": 688,
-      "divergenceFromSpecification": "The shipped rule reaches two columns at 688px while this contract specifies the desktop two-column layout from 1024px.",
-      "findingId": "OF-03",
-      "severity": "low",
-      "consequence": "Between 688px and 1023px the shipped layout shows the tablet-specified single-column arrangement as a two-column desktop layout.",
-      "owner": "GAME-390 (ML-06)",
-      "decisionRequired": "Either raise the minmax floor to 496px so two columns begin at 1024px, or amend this contract's tablet row to record a 688px transition. This is a deliberate choice for the owner and the implementing issue, not a silent drift."
+      "css": "grid-template-columns: 1fr by default, with @media (min-width: 1024px) overriding to repeat(2, minmax(0, 1fr))",
+      "measuredBehaviour": "Two columns begin at exactly 1024px, matching the specified desktop breakpoint. There is no longer an emergent threshold to reconcile.",
+      "declaredTwoColumnViewportPx": 1024,
+      "resolution": "OF-03, remediated in PR #11. The shipped rule was repeat(auto-fit, minmax(320px, 1fr)), which reached two columns at 688px because that threshold was an arithmetic accident of the floor, gap and padding rather than a designed breakpoint. Raising the minmax floor to 488px would have produced exactly 1024px and is the wrong fix: a fixed floor larger than the viewport cannot shrink, so a 320px phone and 200% zoom in a narrow window would overflow horizontally and break the reflow contract. The shipped CSS now declares one column by default and two columns only from a 1024px min-width query, which is what this contract always specified, and the columns use minmax(0, 1fr) so they can shrink below any intrinsic minimum rather than overflowing it. The CSS was changed, not this contract, because the contract was already correct."
     },
     "reflow": {
       "requirement": "At 200% zoom and at 320px viewport width, content reflows with no loss of function and no two-dimensional scrolling for text.",
@@ -404,7 +381,7 @@
         "id": "disabled",
         "appliesTo": ["experiment controls during a run", "playback controls before a trial exists"],
         "specification": "opacity 0.55 with cursor not-allowed. A disabled control is also non-focusable, so every disabled control must be paired with visible help text explaining what will enable it. The playback controls are disabled until a trial exists, and the design requires the panel to say why rather than presenting inert buttons.",
-        "implementedIn": "src/app/styles.css button:disabled; disabled reasons are specified only"
+        "implementedIn": "src/app/styles.css button:disabled; the reason is now stated in static text in src/ui/InstrumentPanel.tsx and covered by a browser test, remediated as OF-04"
       },
       {
         "id": "error",
@@ -428,7 +405,7 @@
         "id": "forced-colors",
         "appliesTo": ["all controls and indicators"],
         "specification": "Nothing may rely on a background image or a subtle border to convey state, because forced-colors mode replaces both. System colour keywords and border-based indicators must survive.",
-        "implementedIn": "not implemented; specification only",
+        "implementedIn": "src/app/styles.css forced-colors: active block, added as OF-06 remediation; not yet observed in a real forced-colors browser, which remains ML-16's manual gate",
         "rationale": "Named because the focus ring's outline-based choice was made for this case, so the same reasoning should reach the other indicators."
       },
       {
@@ -670,16 +647,22 @@
     "honestyStatement": "Coverage is complete; implementation is not. Six of the twelve steps are unimplemented or partial, and GAME-395 is blocked by GAME-394 in any case. This contract does not make ML-11 achievable."
   },
 
-  "openFindings": {
-    "policy": "Recorded as open, never as passes. An unresolved finding here is not a defect in this contract; it is work the contract has identified and assigned.",
+"openFindings": {
+    "policy": "Recorded as open, never as passes. An unresolved finding here is not a defect in this contract; it is work the contract identified and assigned.",
     "findings": [
-      { "id": "OF-01", "severity": "medium", "area": "tokens", "finding": "--border on --surface-raised measures 1.60:1, below the 3:1 WCAG 1.4.11 non-text contrast for a UI component boundary.", "owner": "GAME-390 / GAME-396", "action": "Raise the boundary luminance or add a second non-colour boundary channel in ML-12 polish. Not claimed as a pass." },
-      { "id": "OF-02", "severity": "medium", "area": "renderer", "finding": "The scene track edge measures 2.21:1 against the scene background, below the 3:1 non-text contrast for a meaningful boundary.", "owner": "GAME-390 / GAME-396", "action": "Raise the track-edge contrast. The metre ticks at 3.10:1 partially carry the scale, so this is a boundary problem rather than a scale-encoding problem." },
-      { "id": "OF-03", "severity": "low", "area": "layout", "finding": "The shipped auto-fit grid reaches two columns at 688px while this contract specifies the desktop two-column layout from 1024px.", "owner": "GAME-390", "action": "Decide deliberately: raise the floor to 496px, or amend the tablet row. Recorded rather than silently reconciled." },
-      { "id": "OF-04", "severity": "low", "area": "controlStates", "finding": "Disabled playback controls give no visible reason for being disabled before a trial exists.", "owner": "GAME-391", "action": "Add the explanatory help text this contract specifies." },
       { "id": "OF-05", "severity": "medium", "area": "designAuthority", "finding": "No visual design artifact exists. Coverage is specified rather than depicted, so composition, hierarchy, and aesthetic quality are unjudged.", "owner": "GAME-387 owner / GAME-400", "action": "The owner provides or approves a real Figma file under O-01, or waives it explicitly. Human design review is ML-16's gate." },
-      { "id": "OF-06", "severity": "low", "area": "controlStates", "finding": "The forced-colors state is specified but unimplemented, and no indicator has been qualified in forced-colors mode.", "owner": "GAME-400", "action": "Qualify in ML-16's manual accessibility review." },
-      { "id": "OF-07", "severity": "medium", "area": "designAuthority", "finding": "No independent review of this design package has been performed by a different model or a human.", "owner": "GAME-387 owner", "action": "An independent reviewer, or an explicit owner waiver, before GAME-387 is treated as closed." }
+      { "id": "OF-07", "severity": "medium", "area": "designAuthority", "finding": "No independent review of this design package has been performed by a different model or a human. The package was merged to main at owner instruction, which is not a review.", "owner": "GAME-387 owner", "action": "An independent reviewer, or an explicit owner waiver, before GAME-387 is treated as closed." }
+    ]
+  },
+
+  "resolvedFindings": {
+    "policy": "Findings closed by a later change, kept so the record shows what the defect actually was rather than leaving no trace of something that was once real. A resolved finding is never counted as evidence that it never existed. Each entry declares manualGate: a fix that still needs human qualification must name it, and a fix that does not may not.",
+    "findings": [
+      { "id": "OF-01", "severityAtFinding": "medium", "area": "tokens", "manualGate": false, "was": "--border on --surface-raised measured 1.60:1, below the 3:1 WCAG 1.4.11 non-text contrast for a UI component boundary.", "now": "--border is #4772ad and measures 3.17:1 against --surface-raised.", "resolution": "Raised by a uniform channel scale of 1.65 so hue and relative saturation are unchanged. A free search for any passing colour returned saturated blues such as #204cff, which would have cleared the ratio and wrecked the palette's muted character; a hue-preserving scale is the smaller and more defensible change.", "cost": "--ink on --border falls from 8.47:1 to 4.27:1. Nothing places text on the boundary, and the pairing is recorded explicitly so the cost stays visible.", "closedBy": "GAME-387 remediation, PR #11" },
+      { "id": "OF-02", "severityAtFinding": "medium", "area": "renderer", "manualGate": false, "was": "The scene track edge measured 2.21:1 against the scene background, below the 3:1 non-text contrast for a meaningful boundary.", "now": "trackEdge is 0x45689f and measures 3.19:1 against the scene background.", "resolution": "Raised by a uniform channel scale of 1.30, so hue is unchanged. tick was raised alongside it to 0x5a7dad at 4.25:1 for two reasons: raising the edge alone would have inverted the hierarchy so the bed outline outranked the ruler, and the tick is the load-bearing scale encoding this contract had already flagged as sitting barely over the threshold at 3.10:1.", "closedBy": "GAME-387 remediation, PR #11" },
+      { "id": "OF-03", "severityAtFinding": "low", "area": "layout", "manualGate": false, "was": "The shipped auto-fit grid reached two columns at 688px while this contract specifies the desktop two-column layout from 1024px.", "now": "The shipped grid declares one column by default and two columns only from a 1024px min-width query.", "resolution": "The shipped CSS was changed, not this contract, because the 688px threshold was an arithmetic accident of a 320px floor plus a 16px gap plus 32px of padding, never a designed breakpoint, so the contract was already correct. Raising the minmax floor to 488px would have hit 1024px exactly but would have broken reflow: a fixed floor larger than the viewport cannot shrink, so a 320px phone and 200% zoom would overflow horizontally.", "closedBy": "GAME-387 remediation, PR #11" },
+      { "id": "OF-04", "severityAtFinding": "low", "area": "controlStates", "manualGate": false, "was": "Disabled playback controls gave no visible reason for being disabled before a trial exists.", "now": "The instrument panel states, in always-present text, that playback is unavailable until a trial has been recorded and names Run preview as the action that enables it.", "resolution": "A disabled control is not focusable, so an unexplained disabled button is never encountered by a keyboard or screen-reader user. The reason therefore lives in static text rather than a hover tooltip, and it names the enabling action rather than only apologising. Covered by a new browser test in tests/e2e/accessibility.spec.ts.", "closedBy": "GAME-387 remediation, PR #11" },
+      { "id": "OF-06", "severityAtFinding": "low", "area": "controlStates", "manualGate": true, "was": "The forced-colors state was specified but unimplemented, and no indicator had been qualified in forced-colors mode.", "now": "src/app/styles.css carries a forced-colors: active block that re-expresses every indicator as a system colour or a border.", "resolution": "The product already carried every distinction redundantly, so nothing had to be invented. What the block prevents is the browser's own substitutions deleting a cue: forced-colors mode replaces background colours and box-shadows, so a state expressed only by a fill would disappear. Panel, control, table, chip, disabled and fallback boundaries are all restated as borders or system colours, and the focus ring is restated against Highlight.", "stillPending": "No indicator has been observed in a real forced-colors browser. Manual qualification is ML-16's gate and has not happened; implementing the CSS is not qualifying it.", "closedBy": "GAME-387 remediation, PR #11" }
     ]
   },
 
@@ -698,6 +681,11 @@
       "date": "2026-10-01",
       "entry": "GAME-387 initial design freeze",
       "change": "Design authority statement, five design rules with enforcement mechanisms, tokens with measured contrast, renderer palette, responsive breakpoints, the required state inventory, control states, graph contract, motion contract, asset and originality direction, acceptance mapping, ML-11 traceability, and seven open findings."
+    },
+    {
+      "date": "2026-10-01",
+      "entry": "GAME-387 remediation (PR #11): OF-01, OF-02, OF-03, OF-04 and OF-06 closed",
+      "change": "Version 1.1.0. Both measured non-text contrast failures fixed by hue-preserving uniform channel scaling: --border from 1.60:1 to 3.17:1 and the scene trackEdge from 2.21:1 to 3.19:1, with the load-bearing ruler tick raised to 4.25:1 to preserve the visual hierarchy. The 688px versus 1024px grid divergence fixed in the shipped CSS rather than in this contract, because the threshold was an arithmetic accident rather than a design decision, and via a min-width query rather than a raised floor so narrow viewports cannot overflow. Disabled playback controls now state their reason in static text covered by a browser test, and a forced-colors block re-expresses every indicator as a system colour or border. OF-01 through OF-04 and OF-06 move to resolvedFindings with their was, now and resolution; OF-05 and OF-07 remain open. Every contrast ratio and the two-column breakpoint are recomputed from the shipped sources by the verifier, so none of these numbers is trusted text."
     }
   ]
 }

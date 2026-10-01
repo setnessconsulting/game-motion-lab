@@ -58,4 +58,31 @@ test.describe("automated accessibility (assistive, not sign-off)", () => {
     await expect(table.getByRole("columnheader")).toHaveCount(7);
     await expect(table.getByRole("rowheader")).toHaveCount(1);
   });
+
+  /**
+   * GAME-387 OF-04.
+   *
+   * A disabled control is not focusable, so a keyboard or screen-reader user never encounters a
+   * disabled button at all. If the only explanation were a tooltip or the absence of one, the
+   * reason for the disabled state would be unreachable for exactly the users who most need it.
+   * This asserts the reason is present as always-readable text before a trial exists, names the
+   * action that enables playback, and disappears once playback is actually available.
+   */
+  test("disabled playback states its reason in text a keyboard user can reach", async ({ page }) => {
+    await page.goto("/");
+
+    const reason = page.getByTestId("playback-disabled-reason");
+    await expect(reason).toBeVisible();
+    await expect(reason).toContainText("Run preview");
+
+    // The controls really are disabled, so the message is describing a true state.
+    await expect(page.getByTestId("toggle-runch")).toBeDisabled();
+
+    // The reason must be readable, not merely present, and must not depend on a pointer.
+    await expect(reason).not.toBeEmpty();
+
+    await page.getByTestId("run-trial").click();
+    await expect(reason).toHaveCount(0);
+    await expect(page.getByTestId("toggle-runch")).toBeEnabled();
+  });
 });

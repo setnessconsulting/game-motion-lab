@@ -99,6 +99,20 @@ export function InstrumentPanel({
         Playback controls only change what is on screen. The recorded trial values never change.
       </p>
 
+      {/*
+        GAME-387 OF-04: a disabled control is not focusable, so an unexplained disabled button
+        is invisible to a keyboard or screen-reader user — they never encounter the reason. The
+        reason therefore has to live in text that is always present, not in a tooltip on hover.
+        This panel's contract also requires that every instructional motion have a non-motion
+        equivalent, so the message names the equivalent rather than just apologising.
+      */}
+      {!canControl ? (
+        <p className="panel__hint" data-testid="playback-disabled-reason">
+          Playback is unavailable until a trial has been recorded. Set up a run and choose{" "}
+          <strong>Run preview</strong> to enable it.
+        </p>
+      ) : null}
+
       {model.reducedMotion ? (
         <p className="panel__hint" data-testid="reduced-motion-note">
           Reduced motion is on, so playback will not animate. Use <strong>Step back</strong> and{" "}
