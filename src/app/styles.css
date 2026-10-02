@@ -277,6 +277,20 @@ button:disabled {
   font-weight: 600;
 }
 
+/* GAME-423: a wide table scrolls inside its own bounded region instead of widening the page
+   (docs/DESIGN.md 5.4; contracts/design-system.v1.json `wideDataHandling`). Becoming a scroll
+   container gives this box an intrinsic minimum of zero, which is what lets the panel shrink below
+   the table's natural 464px and reflow instead of forcing the whole document sideways.
+
+   No `min-width` is declared on the table inside it, because none is needed and a decorative one
+   would be misleading: the table's automatic layout already refuses to render below its own
+   464px min-content width, measured at every viewport. The record therefore keeps its columns
+   legible and the region scrolls; it is never crushed to fit. */
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
