@@ -196,6 +196,53 @@ function stripCssComments(css) {
   return String(css ?? '').replace(/\/\*[\s\S]*?\*\//g, '');
 }
 
+/**
+ * Extract a braced CSS block starting at the first match of `header`, by counting braces.
+ *
+ * The forced-colors checks used to run `forced-colors:[\s\S]*?GrayText` over the whole file. That
+ * spans every rule after the block, so a comment anywhere in the stylesheet mentioning GrayText
+ * satisfied the check even when the rule it was meant to police had been deleted outright. Every
+ * check inside this block must now be answerable from this block alone.
+ */
+function extractCssBlock(css, header) {
+  const source = String(css ?? '');
+  const start = source.search(header);
+  if (start === -1) return '';
+  const open = source.indexOf('{', start);
+  if (open === -1) return '';
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    else if (source[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(start, index + 1);
+    }
+  }
+  return '';
+}
+
+/**
+ * Return the first argument of every `minmax()` in a rule, e.g. `minmax(0, 1fr)` -> ['0'].
+ *
+ * This exists because checking for the *absence of a token* is the wrong shape for the question
+ * being asked. The original check matched /minmax\(\s*([\d.]+)(px|rem)/, which only knows about two
+ * units: `minmax(20em, 1fr)` reintroduces exactly the cannot-shrink overflow trap OF-03 was about
+ * and sailed through. Reading the track's actual shape instead of hunting for one bad substring
+ * makes the check indifferent to which unit is used.
+ */
+function minmaxFirstArguments(rule) {
+  return [...String(rule ?? '').matchAll(/minmax\(\s*([^,)]+)/g)].map((m) => m[1].trim());
+}
+
+/**
+ * A minmax() first argument is a fixed floor unless it is zero, auto, or a flexible keyword.
+ * Anything carrying a digit-and-unit, a calc(), or a var() cannot shrink below its own size.
+ */
+function fixedMinmaxFloors(rule) {
+  const flexible = /^(?:0|0px|auto|min-content|max-content|minmax-content)$/i;
+  return minmaxFirstArguments(rule).filter((argument) => !flexible.test(argument));
+}
+
 const CONTRACT_FILES = [
   'science-conventions.v1.json',
   'mission-families.v1.json',
@@ -1332,12 +1379,14 @@ if (design) {
 
   // A fixed minmax floor larger than the viewport cannot shrink, so it turns into horizontal
   // overflow on a narrow phone and at 200% zoom. That is the trap OF-03 nearly walked into,
-  // so the floor is now asserted to be zero rather than merely noted.
-  const floor = String(gridRule).match(/minmax\(\s*([\d.]+)(px|rem)/);
+  // so the track shape is asserted rather than merely noted. The check reads the minmax() first
+  // argument rather than searching for a px/rem token, so it is indifferent to the unit: the
+  // previous regex passed `minmax(20em, 1fr)`, which is the same trap in a different unit.
+  const baseFloors = fixedMinmaxFloors(gridRule);
   check(
     'the base grid rule uses no fixed minmax floor that could overflow a narrow viewport',
-    !floor,
-    String(floor?.[0]),
+    baseFloors.length === 0,
+    `fixed floors: ${baseFloors.join(', ') || 'none'}`,
   );
 
   if (desktopQuery && inlinePx !== null) {
@@ -1347,10 +1396,12 @@ if (design) {
       queryPx === 1024 && /repeat\(\s*2\s*,/.test(desktopQuery[2]),
       `query=${queryPx}px rule=${desktopQuery[2].replace(/\s+/g, " ").trim()}`,
     );
+    const desktopFloors = fixedMinmaxFloors(desktopQuery[2]);
     check(
       'the desktop columns can shrink below any intrinsic minimum',
-      /minmax\(\s*0\s*,/.test(desktopQuery[2]) && !/minmax\(\s*[\d.]+(px|rem)/.test(desktopQuery[2]),
-      String(desktopQuery[2]),
+      /minmax\(\s*0\s*,/.test(desktopQuery[2]) && desktopFloors.length === 0,
+      `fixed floors: ${desktopFloors.join(', ') || 'none'}; ` +
+        `rule=${String(desktopQuery[2]).replace(/\s+/g, ' ').trim()}`,
     );
     check(
       'the design contract states the viewport at which the shipped grid reaches two columns',
@@ -1471,13 +1522,55 @@ if (design) {
     );
     // A remediation that fixed the number but not the thing would be a false close, so a
     // finding claiming a contrast fix has to state a ratio that now clears the threshold.
-    if (/\d\.\d+:1/.test(String(finding.now))) {
-      const ratios = [...String(finding.now).matchAll(/(\d+\.\d+):1/g)].map((m) => Number(m[1]));
+    const quotedRatios = [...String(finding.now).matchAll(/(\d+\.\d+):1/g)].map((m) => m[1]);
+    if (quotedRatios.length > 0) {
       check(
         `resolved finding ${finding.id} states a ratio that now clears the 3:1 non-text threshold`,
-        ratios.length > 0 && ratios.every((ratio) => ratio >= 3),
+        quotedRatios.every((ratio) => Number(ratio) >= 3),
         String(finding.now),
       );
+      // --- GAME-424: a ratio quoted in prose used to be trusted text. The first version of this
+      // check only asked whether the number was large enough, so rewriting OF-01's measured
+      // 3.17:1 to an invented 9.99:1 still passed 1400/1400 while the shipped colour said
+      // something else entirely. A quoted ratio must now be backed by a `nowMeasurements` entry
+      // that is recomputed from the shipped tokens or renderer palette, and the prose must
+      // repeat the recomputed value, so prose and measurement cannot drift apart.
+      const measurements = finding.nowMeasurements;
+      check(
+        `resolved finding ${finding.id} backs every ratio it quotes with a recomputed measurement`,
+        Array.isArray(measurements) && measurements.length > 0,
+        Array.isArray(measurements) ? `${measurements.length} entries` : String(measurements),
+      );
+      for (const measurement of Array.isArray(measurements) ? measurements : []) {
+        const declared = measurement?.ratio;
+        let computed = null;
+        if (measurement?.source === 'token') {
+          const fg = tokenByName[String(measurement.foreground ?? '').replace(/^--/, '')];
+          const bg = tokenByName[String(measurement.background ?? '').replace(/^--/, '')];
+          computed = fg && bg ? contrastRatio(fg, bg) : null;
+        } else if (measurement?.source === 'renderer') {
+          const hex =
+            measurement.foreground === 'sceneBackground'
+              ? shippedScene.background
+              : shippedScene[String(measurement.foreground ?? '')];
+          computed = hex && sceneBackground ? contrastRatio(hex, sceneBackground) : null;
+        }
+        const label = `${measurement?.foreground} on ${measurement?.background}`;
+        check(
+          `resolved finding ${finding.id} recomputes its stated ratio for ${label}`,
+          typeof computed === 'number' &&
+            typeof declared === 'number' &&
+            Math.abs(computed - declared) <= 0.02,
+          `declared=${declared} recomputed=${computed === null ? 'unresolvable' : computed.toFixed(2)}`,
+        );
+        // The prose and the measurement are two renderings of one number; a check that only
+        // looked at the measurement would let the sentence drift back to the old value.
+        check(
+          `resolved finding ${finding.id} quotes its recomputed ratio for ${label} in prose`,
+          typeof declared === 'number' && String(finding.now).includes(`${declared.toFixed(2)}:1`),
+          `prose="${String(finding.now)}" declared=${declared}`,
+        );
+      }
     }
     // A fix that still needs human qualification must say so, and a fix that does not must not
     // carry the flag. Checking stillPending only when present let a manual gate be deleted
@@ -1501,17 +1594,35 @@ if (design) {
 
   // --- a shipped forced-colors block is asserted, because "specified but unimplemented" was
   // itself a finding (OF-06) and the fix must not be reverted silently.
+  //
+  // Every check below runs against the block itself, extracted from comment-stripped CSS. The
+  // earlier whole-file regexes could be satisfied by a CSS comment that merely mentioned the
+  // system colour, so deleting the rule they were meant to police still passed. A check that
+  // cannot fail is worse than no check, because it reads as coverage.
+  const strippedStyles = stripCssComments(stylesCss);
+  const forcedColorsBlock = extractCssBlock(strippedStyles, /@media\s*\(forced-colors:\s*active\)/);
+  const disabledRule = extractCssBlock(forcedColorsBlock, /button:disabled/);
   check(
     'the stylesheet ships a forced-colors block',
-    /@media\s*\(forced-colors:\s*active\)/.test(stylesCss),
+    forcedColorsBlock.length > 0,
+    `${forcedColorsBlock.length} chars extracted`,
   );
   check(
     'the forced-colors block restates the focus ring against a system colour',
-    /forced-colors:[\s\S]*?focus-visible[\s\S]*?Highlight/.test(stylesCss),
+    /:focus-visible\s*\{[^}]*outline[^}]*\bHighlight/.test(forcedColorsBlock),
+    forcedColorsBlock.replace(/\s+/g, ' ').slice(0, 160),
   );
+  // The disabled affordance was originally expressed by reduced opacity, which this mode
+  // overrides, so the block must both restore opacity and name the system colour. Checking only
+  // the colour let `opacity: 1` be deleted and left a disabled control indistinguishable.
   check(
     'the forced-colors block does not leave a disabled control relying on opacity',
-    /forced-colors:[\s\S]*?button:disabled[\s\S]*?GrayText/.test(stylesCss),
+    disabledRule.length > 0 &&
+      /opacity\s*:\s*1\s*;/.test(disabledRule) &&
+      /border[^;}]*GrayText/.test(disabledRule) &&
+      /color\s*:\s*GrayText/.test(disabledRule),
+    disabledRule.replace(/\s+/g, ' ').trim() ||
+      'no button:disabled rule inside the forced-colors block',
   );
   // The reason must be rendered under a canControl guard. Asserting only that "canControl" and
   // the testid appear in the file was not enough: the file already contains disabled={!canControl}
@@ -1613,7 +1724,45 @@ if (design) {
   // --- the review record may not claim anything that has not happened.
   const designReview = design.review ?? {};
   check('the design review records its author model', typeof designReview.authorModel === 'string' && designReview.authorModel.length > 0);
-  check('independent review is recorded as not performed', designReview.independentReview === 'not performed', String(designReview.independentReview));
+  // --- GAME-424: the independent review of PR #11 has now happened (GAME-387 comment 15634), so
+  // asserting that it was *not* performed encoded a fact that time had invalidated. The check now
+  // holds in both directions: "not performed" is always honest, and a claim of a completed review
+  // must cite its evidence and be corroborated by the finding that recorded closing it.
+  const independentReview = String(designReview.independentReview ?? '');
+  const reviewIsClaimed = independentReview !== '' && independentReview !== 'not performed';
+  const citedReviewComment = independentReview.match(/comment\s*(\d+)/i)?.[1] ?? null;
+  check(
+    'the design states whether an independent review was performed',
+    independentReview.length > 0,
+    String(designReview.independentReview),
+  );
+  check(
+    'a claimed independent review names the Jira comment that records it',
+    !reviewIsClaimed || Boolean(citedReviewComment),
+    String(designReview.independentReview),
+  );
+  check(
+    'a claimed independent review is corroborated by the resolved finding that closed it',
+    !reviewIsClaimed ||
+      resolved.some(
+        (finding) =>
+          finding.id === 'OF-07' &&
+          new RegExp(`comment\\s*${citedReviewComment}\\b`, 'i').test(String(finding.resolution)) &&
+          new RegExp(`comment\\s*${citedReviewComment}\\b`, 'i').test(String(finding.closedBy)),
+      ),
+    `cited=${citedReviewComment ?? 'none'}`,
+  );
+  // The owner approval is a separate fact from the review it followed, and both are recorded
+  // separately: a review cannot stand in for an approval, and the approval did not create the
+  // review. The next check on humanDesignReview remains "not performed", so recording the AI
+  // review cannot quietly stand in for the human gate either.
+  const of07 = resolved.find((finding) => finding.id === 'OF-07');
+  const of07Comments = [...String(of07?.resolution ?? '').matchAll(/comment\s*(\d+)/gi)].map((m) => m[1]);
+  check(
+    'the finding closing the review gap records the owner approval as separate evidence',
+    !reviewIsClaimed || (of07Comments.length >= 2 && new Set(of07Comments).size >= 2),
+    `OF-07 cites comments: ${of07Comments.join(', ') || 'none'}`,
+  );
   check('human design review is recorded as not performed', designReview.humanDesignReview === 'not performed', String(designReview.humanDesignReview));
   check('learner playtest is recorded as not performed', designReview.learnerPlaytest === 'not performed', String(designReview.learnerPlaytest));
   check('accessibility sign-off is recorded as not performed', designReview.accessibilitySignOff === 'not performed', String(designReview.accessibilitySignOff));
@@ -1628,6 +1777,24 @@ if (design) {
 // --- the prose document must not drift from the contract it describes.
 const designDoc = plain(exists('docs/DESIGN.md') ? readText('docs/DESIGN.md') : '');
 check('docs/DESIGN.md names GAME-387 as the delivering issue', designDoc.includes('GAME-387'));
+// --- GAME-424: docs/DESIGN.md shipped with two "### 4.2" headings, because PR #10 and PR #11
+// each added a subsection and neither noticed. Nothing checked it, so a third duplicate would
+// have shipped the same way. Matched on the raw file, because plain() strips the heading marks.
+const designHeadingNumbers = [
+  ...String(exists('docs/DESIGN.md') ? readText('docs/DESIGN.md') : '').matchAll(
+    /^#{1,4}[ \t]+(\d+(?:\.\d+)*)[ \t]/gm,
+  ),
+].map((m) => m[1]);
+const duplicateSectionNumbers = designHeadingNumbers.filter(
+  (number, index) => designHeadingNumbers.indexOf(number) !== index,
+);
+check(
+  'docs/DESIGN.md has no duplicate section numbers',
+  duplicateSectionNumbers.length === 0,
+  duplicateSectionNumbers.length > 0
+    ? `duplicated: ${[...new Set(duplicateSectionNumbers)].join(', ')}`
+    : `${designHeadingNumbers.length} numbered headings, all unique`,
+);
 check('docs/DESIGN.md states the equivalent-authority branch of AC1', /equivalent production design authority/i.test(designDoc));
 check('docs/DESIGN.md states plainly that no Figma file was produced', /No Figma file was produced/i.test(designDoc));
 check('docs/DESIGN.md records O-01 as still owner-gated', /O-01/.test(designDoc));

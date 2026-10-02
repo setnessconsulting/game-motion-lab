@@ -163,7 +163,7 @@ so the trade is visible to the next reader.
 
 A design gate that reported those as passing would be worse than useless.
 
-### 4.2 The focus ring
+### 4.3 The focus ring
 
 A **3px solid `--focus` outline with a 2px offset and 4px radius**, applied through `:focus-visible`.
 
@@ -177,7 +177,7 @@ Three choices are load-bearing:
 
 Measured contrast of `--focus`: **12.46:1** on surface, **10.81:1** on raised surface.
 
-### 4.3 Typography
+### 4.4 Typography
 
 Instrument numbers are the design's critical typographic decision: **tabular figures are mandatory**
 wherever changing numbers are compared side by side, so digits do not shift horizontally while a
@@ -197,7 +197,7 @@ would make the cart's readout reflow mid-run.
 
 Canvas type is monospace: force label 18px, position line 15px, axis label 15px, progress line 14px.
 
-### 4.4 Spacing and radii
+### 4.5 Spacing and radii
 
 `--gap` is `1rem`. The derived rhythm: 0.25rem inside a field, 0.5rem between actions, 1rem panel
 padding, 1rem panel stack, 1rem section rhythm. Radii: 10px panel, 8px control, 6px input well,
@@ -591,18 +591,25 @@ guards against everywhere else.
 ## 13. Open findings
 
 Recorded as **open, never as passes**. These are not defects in this contract; they are work the
-contract identified and assigned. **Both remaining ones cannot be discharged by an automated agent.**
+contract identified and assigned. **The one remaining finding cannot be discharged by an automated
+agent.**
 
 | ID | Severity | Finding | Owner |
 | --- | --- | --- | --- |
 | OF-05 | medium | No visual design artifact exists — coverage is specified, not depicted, so composition, hierarchy, and aesthetic quality are unjudged | GAME-387 owner / GAME-400 |
-| OF-07 | medium | No independent review of this package by a different model or a human. The package was merged to `main` at owner instruction, **which is not a review** | GAME-387 owner |
+
+**OF-05 is the one open design limitation, and closing the review gap did not touch it.** OF-07 is
+now resolved, but it was a *review* finding: the package was checked by a different model. It was
+never a statement that a design artifact exists, because none does. The owner's O-01 decision
+approved the equivalent production design authority — the recorded specification — and explicitly
+did not convert that into a visual artifact or a human design review.
 
 ### Resolved
 
-Closed by the GAME-387 remediation. Kept so the record shows what the defect actually was, rather
-than leaving no trace of something that was once real. **A resolved finding is never evidence that
-it never existed**, and none of these counts as a quality claim.
+Kept so the record shows what the defect actually was, rather than leaving no trace of something
+that was once real. **A resolved finding is never evidence that it never existed**, and none of
+these counts as a quality claim. OF-01 through OF-04 and OF-06 were closed by the GAME-387
+remediation; OF-07 was closed by the independent review that followed it.
 
 | ID | Was | Now | Closed by |
 | --- | --- | --- | --- |
@@ -611,6 +618,12 @@ it never existed**, and none of these counts as a quality claim.
 | OF-03 | shipped grid reached two columns at 688px, not the specified 1024px | explicit single-column base plus a 1024px min-width query, using `minmax(0, 1fr)` | PR #11 |
 | OF-04 | disabled playback controls gave no reason | the panel states the reason in always-present text and names **Run preview** | PR #11 |
 | OF-06 | forced-colors specified but unimplemented | a `forced-colors: active` block re-expresses every indicator as a system colour or border | PR #11 |
+| OF-07 | no independent review by a different model or a human; merging at owner instruction **is not a review** | a different-model independent review of PR #11 at its exact head, recorded in GAME-387 comment **15634**, with the owner's O-01 approval in comment **15640** | GAME-387 review, comments 15634 and 15640 |
+
+**OF-07 closed on a different-model review, not a human one.** That is what the finding asked for
+and it is what happened; it is not a human design review, and the check on `humanDesignReview`
+still reads `not performed`. The review also did not observe the design in a real forced-colors
+browser or at 200% zoom.
 
 **OF-06 is implemented, not qualified.** No indicator has been observed in a real forced-colors
 browser; that manual gate is ML-16's and has not happened.
