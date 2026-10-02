@@ -285,7 +285,8 @@ button:disabled {
    No `min-width` is declared on the table inside it, because none is needed and a decorative one
    would be misleading: the table's automatic layout already refuses to render below its own
    464px min-content width, measured at every viewport. The record therefore keeps its columns
-   legible and the region scrolls; it is never crushed to fit. */
+   legible and the region scrolls wherever the record is wider than the region; it is never
+   crushed to fit. */
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;

@@ -137,9 +137,9 @@ test.describe("bootstrap", () => {
    * GAME-423.
    *
    * The reflow assertions above only ever measure the initial, no-trial state, which is why a
-   * seven-column trial table that was intrinsically ~463px wide survived: recording a trial was
-   * the first moment the page could overflow, by 177px at 320px and 107px at 390px. These assert
-   * the state the contract actually governs, with a trial recorded.
+   * seven-column trial table that was intrinsically 464px wide survived: recording a trial was the
+   * first moment the page could overflow, by 177px at 320px and 107px at 390px. These assert the
+   * state the contract actually governs, with a trial recorded.
    */
   test("does not scroll the page sideways once a trial is recorded", async ({ page }) => {
     for (const width of [320, 390]) {
